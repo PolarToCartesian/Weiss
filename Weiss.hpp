@@ -254,7 +254,13 @@ namespace WS
 	constexpr const float HALF_TAU    = PI;
 	constexpr const float QUARTER_TAU = HALF_PI;
 
-	constexpr const size_t WEISS__FRAME_BUFFER_COUNT = 2u;
+	static constexpr const size_t WEISS__FRAME_BUFFER_COUNT = 2u;
+
+#ifdef __WEISS__OS_WINDOWS
+
+	static constexpr const size_t WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP = 1024u;
+
+#endif // __WEISS__OS_WINDOWS
 
 	/*
 	* // //////////////////-\\\\\\\\\\\\\\\\\\ \\
@@ -2600,7 +2606,7 @@ namespace WS
 			{
 			public:
 				D3D12DescriptorHeap() = default;
-
+				
 				D3D12DescriptorHeap(D3D12DeviceObjectWrapper &pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type,
 									const uint32_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_FLAGS &flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
 
@@ -2839,6 +2845,52 @@ namespace WS
 				[[nodiscard]] inline D3D12_STATIC_SAMPLER_DESC GetSamplerDesc() const noexcept { return this->m_samplerDesc; }
 			};
 
+			struct D3D12CPUDescriptorHandles {
+				CD3DX12_CPU_DESCRIPTOR_HANDLE m_start;
+				CD3DX12_CPU_DESCRIPTOR_HANDLE m_current;
+				CD3DX12_CPU_DESCRIPTOR_HANDLE m_end;
+			};
+
+			struct D3D12GPUDescriptorHandles {
+				CD3DX12_GPU_DESCRIPTOR_HANDLE m_start;
+				CD3DX12_GPU_DESCRIPTOR_HANDLE m_current;
+				CD3DX12_GPU_DESCRIPTOR_HANDLE m_end;
+			};
+
+			struct D3D12DescriptorHandles {
+				D3D12CPUDescriptorHandles m_cpuHandles;
+				D3D12GPUDescriptorHandles m_gpuHandles;
+			};
+
+			class D3D12DescriptorHeapManager {
+			private:
+				std::vector<std::array<std::unique_ptr<D3D12DescriptorHeap>, WEISS__FRAME_BUFFER_COUNT>> m_heaps;
+
+				std::vector<std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT>> m_handles;
+
+				std::array<std::vector<ID3D12DescriptorHeap*>, WEISS__FRAME_BUFFER_COUNT> m_nativeHeapsPtr;
+
+				D3D12Device* m_pDevice = nullptr;
+
+				UINT m_incrementSize = 0u;
+
+			private:
+				void CreateHeapPerFrameBuffer();
+
+			public:
+				D3D12DescriptorHeapManager() = default;
+
+				D3D12DescriptorHeapManager(D3D12Device& device);
+
+				D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&& other) noexcept;
+
+				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors);
+
+				void Bind(D3D12CommandList& commandList, const size_t frameIndex) const noexcept;
+
+				~D3D12DescriptorHeapManager() = default;
+			};
+
 			typedef D3D12ObjectWrapper<ID3D12PipelineState> D3D12RenderPipelineObjectWrapper;
 
 			class D3D12RenderPipeline : public D3D12RenderPipelineObjectWrapper
@@ -2851,9 +2903,10 @@ namespace WS
 				std::vector<uint32_t> m_constantBufferIndices;
 				std::vector<uint32_t> m_textureIndices;
 
-				D3D12DescriptorHeap m_gpuDescHeaps[WEISS__FRAME_BUFFER_COUNT];
+				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> m_handles;
 
 				D3D12Device *m_pDevice = nullptr;
+				D3D12DescriptorHeapManager* m_pDescriptorHeapManager = nullptr;
 
 				std::vector<Texture *> m_pTextures;
 				std::vector<ConstantBuffer *> m_pConstantBuffers;
@@ -2865,7 +2918,8 @@ namespace WS
 				D3D12RenderPipeline(D3D12RenderPipeline &&other);
 
 				D3D12RenderPipeline(D3D12Device &pDevice, const RenderPipelineDesc &pipelineDesc,
-									std::vector<ConstantBuffer *> &pConstantBuffers, std::vector<Texture *> pTextures, std::vector<D3D12TextureSampler *> pTextureSamplers);
+									std::vector<ConstantBuffer *> &pConstantBuffers, std::vector<Texture *> pTextures,
+									std::vector<D3D12TextureSampler *> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager);
 
 				D3D12RenderPipeline &operator=(D3D12RenderPipeline &&other) noexcept;
 
@@ -2909,6 +2963,7 @@ namespace WS
 				D3D12SwapChain m_pSwapChain;
 				D3D12DescriptorHeap m_pDescriptorHeap;
 				D3D12DepthBuffer m_pDepthBuffer;
+				D3D12DescriptorHeapManager m_descriptorHeapManager;
 
 				std::array<D3D12RenderTarget, WEISS__FRAME_BUFFER_COUNT> m_pRenderTargets;
 
@@ -2955,6 +3010,7 @@ namespace WS
 		}; // namespace D3D12
 
 #endif // __WEISS__OS_WINDOWS
+
 	}; // Internal
 
 	class SceneObject
@@ -6568,6 +6624,106 @@ namespace WS {
 			}
 
 			/*
+			 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12DescriptorHeapManager---------|| \\
+			 * // |\____________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
+			 */
+
+			void D3D12DescriptorHeapManager::CreateHeapPerFrameBuffer()
+			{
+				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> handles;
+
+				this->m_heaps.resize(this->m_heaps.size() + 1u);
+
+				for (size_t i = 0u; i < WEISS__FRAME_BUFFER_COUNT; i++)
+				{
+					this->m_heaps[this->m_heaps.size() - 1u][i] = std::make_unique<D3D12DescriptorHeap>(*this->m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP,
+						D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+
+					handles[i].m_cpuHandles.m_start   = (*this->m_heaps[this->m_heaps.size() - 1u][i])->GetCPUDescriptorHandleForHeapStart();
+					handles[i].m_cpuHandles.m_current = handles[i].m_cpuHandles.m_start;
+					handles[i].m_cpuHandles.m_end     = handles[i].m_cpuHandles.m_start;
+					handles[i].m_cpuHandles.m_end.Offset(WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP, this->m_incrementSize);
+
+					handles[i].m_gpuHandles.m_start   = (*this->m_heaps[this->m_heaps.size() - 1u][i])->GetGPUDescriptorHandleForHeapStart();
+					handles[i].m_gpuHandles.m_current = handles[i].m_gpuHandles.m_start;
+					handles[i].m_gpuHandles.m_end     = handles[i].m_gpuHandles.m_start;
+					handles[i].m_gpuHandles.m_end.Offset(WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP, this->m_incrementSize);
+
+					this->m_nativeHeapsPtr[i].push_back(*this->m_heaps[this->m_heaps.size() - 1u][i]);
+				}
+
+				this->m_handles.push_back(handles);
+			}
+
+			D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(D3D12Device& device)
+				: m_pDevice(&device)
+			{
+				this->m_incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+			}
+
+			D3D12DescriptorHeapManager& D3D12DescriptorHeapManager::operator=(D3D12DescriptorHeapManager&& other) noexcept
+			{
+				this->m_handles = std::move(other.m_handles);
+
+				this->m_heaps.reserve(other.m_heaps.size());
+				for (size_t i = 0u; i < this->m_heaps.size(); i++)
+					for (size_t j = 0u; j < WEISS__FRAME_BUFFER_COUNT; j++)
+						this->m_heaps[i][j] = std::move(other.m_heaps[i][j]);
+
+				this->m_incrementSize = std::move(other.m_incrementSize);
+				this->m_pDevice = std::move(other.m_pDevice);
+
+				return *this;
+			}
+
+			std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> D3D12DescriptorHeapManager::AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors)
+			{
+				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> starts;
+
+				const UINT numDescriptors = static_cast<UINT>(descriptors.size());
+				const UINT totalSize      = numDescriptors * this->m_incrementSize;
+
+				std::optional<size_t> destIndex;
+
+				for (size_t i = 0u; i < this->m_handles.size(); i++)
+				{
+					const D3D12CPUDescriptorHandles& cpuHandle = this->m_handles[i][0u].m_cpuHandles;
+
+					if (cpuHandle.m_end.ptr - cpuHandle.m_current.ptr >= totalSize) {
+						destIndex = i;
+						break;
+					}
+				}
+
+				if (!destIndex.has_value())
+				{
+					this->CreateHeapPerFrameBuffer();
+
+					destIndex = this->m_heaps.size() - 1u;
+				}
+
+				for (size_t j = 0u; j < WEISS__FRAME_BUFFER_COUNT; j++) {
+					starts[j] = this->m_handles[destIndex.value()][j];
+
+					for (size_t k = 0u; k < numDescriptors; k++) {
+						std::cout << k << '\n';
+						(*this->m_pDevice)->CopyDescriptorsSimple(1u, this->m_handles[destIndex.value()][j].m_cpuHandles.m_current, descriptors[k][j], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+						this->m_handles[destIndex.value()][j].m_cpuHandles.m_current.Offset(1u, this->m_incrementSize);
+					}
+				}
+
+				return starts;
+			}
+
+			void D3D12DescriptorHeapManager::Bind(D3D12CommandList& commandList, const size_t frameIndex) const noexcept
+			{
+				commandList->SetDescriptorHeaps(this->m_heaps.size(), this->m_nativeHeapsPtr[frameIndex].data());
+			}
+
+			/*
 			 * // ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12RenderPipeline---------|| \\
@@ -6587,9 +6743,10 @@ namespace WS {
 			}
 
 			D3D12RenderPipeline::D3D12RenderPipeline(D3D12Device& pDevice, const RenderPipelineDesc& pipelineDesc,
-													std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<D3D12TextureSampler*> pTextureSamplers)
+													 std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures,
+													 std::vector<D3D12TextureSampler*> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager)
 				: m_pDevice(&pDevice), m_constantBufferIndices(pipelineDesc.constantBufferIndices), m_textureIndices(pipelineDesc.textureIndices),
-				m_pConstantBuffers(pConstantBuffers), m_pTextures(pTextures), m_pTextureSamplers(pTextureSamplers)
+				m_pConstantBuffers(pConstantBuffers), m_pTextures(pTextures), m_pTextureSamplers(pTextureSamplers), m_pDescriptorHeapManager(&descriptorHeapManager)
 			{
 				// Specify Compilation Flags
 				UINT compileFlags = 0u;
@@ -6765,32 +6922,36 @@ namespace WS {
 				if (DX_FAILED(pDevice->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)&this->m_pObject)))
 					throw std::runtime_error("[DIRECTX 12] Failed To Create Graphics Pipeline State");
 
-				for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
-				{
-					D3D12DescriptorHeap& gpuDescHeap = this->m_gpuDescHeaps[frameIndex];
+				
+					std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>> srcCpuDescriptorHandles;
+					srcCpuDescriptorHandles.resize(this->m_constantBufferIndices.size() + this->m_textureIndices.size());
 
-					gpuDescHeap = D3D12DescriptorHeap(pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, this->m_constantBufferIndices.size() + this->m_textureIndices.size(),
-													D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "before\n");
 
-					CD3DX12_CPU_DESCRIPTOR_HANDLE gpuDescHeapHandleEnd(gpuDescHeap->GetCPUDescriptorHandleForHeapStart());
-					const UINT incrementSize = pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
+					size_t i = 0u;
 					for (const size_t cbIndex : this->m_constantBufferIndices) {
 						D3D12ConstantBuffer& cbBuffer = *dynamic_cast<D3D12ConstantBuffer*>(pConstantBuffers[cbIndex]);
 
-						pDevice->CopyDescriptorsSimple(1u, gpuDescHeapHandleEnd, cbBuffer.GetDescriptorHeap(frameIndex)->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+						for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
+							srcCpuDescriptorHandles[i][frameIndex] = cbBuffer.GetDescriptorHeap(frameIndex)->GetCPUDescriptorHandleForHeapStart();
 
-						gpuDescHeapHandleEnd.Offset(1u, incrementSize);
+						i++;
 					}
+
+					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "mid\n");
 
 					for (const size_t texIndex : this->m_textureIndices) {
 						D3D12Texture& texture = *dynamic_cast<D3D12Texture*>(pTextures[texIndex]);
 
-						pDevice->CopyDescriptorsSimple(1u, gpuDescHeapHandleEnd, texture.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-						gpuDescHeapHandleEnd.Offset(1u, incrementSize);
+						for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
+							srcCpuDescriptorHandles[i][frameIndex] = texture.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+						
+						i++;
 					}
-				}
+
+					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "after\n");
+
+					this->m_handles = this->m_pDescriptorHeapManager->AddDesriptors(srcCpuDescriptorHandles);
 			}
 
 			D3D12RenderPipeline& D3D12RenderPipeline::operator=(D3D12RenderPipeline&& other) noexcept
@@ -6801,10 +6962,8 @@ namespace WS {
 				this->m_pRootSignature = std::move(other.m_pRootSignature);
 				this->m_constantBufferIndices = other.m_constantBufferIndices;
 				this->m_textureIndices = other.m_textureIndices;
-
-				size_t i = 0u;
-				for (D3D12DescriptorHeap& gpuHeap : this->m_gpuDescHeaps)
-					gpuHeap = std::move(other.m_gpuDescHeaps[i++]);
+				this->m_pDescriptorHeapManager = std::move(other.m_pDescriptorHeapManager);
+				this->m_handles = std::move(other.m_handles);
 
 				return *this;
 			}
@@ -6816,8 +6975,7 @@ namespace WS {
 
 				pCommandList->SetGraphicsRootSignature(this->m_pRootSignature);
 				pCommandList->SetPipelineState(this->m_pObject);
-				pCommandList->SetDescriptorHeaps(1u, this->m_gpuDescHeaps[frameIndex].GetPtr());
-				pCommandList->SetGraphicsRootDescriptorTable(0u, this->m_gpuDescHeaps[frameIndex]->GetGPUDescriptorHandleForHeapStart());
+				pCommandList->SetGraphicsRootDescriptorTable(0u, this->m_handles[frameIndex].m_gpuHandles.m_start);
 				pCommandList->IASetPrimitiveTopology(this->m_topology);
 			}
 
@@ -6914,8 +7072,6 @@ namespace WS {
 
 				this->m_commandSubmitter = D3D12CommandSubmitter(this->m_pDevice);
 
-				this->currentFrameIndex = this->m_pSwapChain->GetCurrentBackBufferIndex();
-
 				this->m_viewport.TopLeftX = 0;
 				this->m_viewport.TopLeftY = 0;
 				this->m_viewport.Width    = pWindow->GetClientWidth();
@@ -6927,13 +7083,15 @@ namespace WS {
 				this->m_scissors.top    = 0;
 				this->m_scissors.right  = pWindow->GetClientWidth();
 				this->m_scissors.bottom = pWindow->GetClientHeight();
+
+				this->m_descriptorHeapManager = D3D12DescriptorHeapManager(this->m_pDevice);
 			}
 
 			void D3D12RenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs)
 			{
 				// Create Pipelines
 				for (const RenderPipelineDesc& pipelineDesc : pipelineDescs)
-					this->m_renderPipelines.emplace_back(this->m_pDevice, pipelineDesc, this->m_pConstantBuffers, this->m_pTextures, this->m_pTextureSamplers);
+					this->m_renderPipelines.emplace_back(this->m_pDevice, pipelineDesc, this->m_pConstantBuffers, this->m_pTextures, this->m_pTextureSamplers, this->m_descriptorHeapManager);
 			}
 
 			void D3D12RenderAPI::Draw(const Drawable& drawable, const size_t nVertices)
@@ -6968,6 +7126,8 @@ namespace WS {
 				pGfxCommandList->RSSetViewports(1u, &this->m_viewport);
 				pGfxCommandList->RSSetScissorRects(1u, &this->m_scissors);
 				pGfxCommandList->OMSetRenderTargets(1u, &m_currentRtvHandle, FALSE, this->m_pDepthBuffer);
+
+				this->m_descriptorHeapManager.Bind(pGfxCommandList, this->currentFrameIndex);
 
 				this->Fill();
 			}
@@ -7286,6 +7446,8 @@ namespace WS {
 #undef VK_FAILED
 
 /*
+ * Let's be honest, you just came down here to see the SLOC.
+ *
  * // //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
  * // ||-------------------------------EOF-------------------------------|| \\
