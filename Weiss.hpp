@@ -310,6 +310,12 @@ namespace WS
 		LOG_ERROR
 	};
 
+	// //////////////--\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------Rect------------| \\
+	// |\__________________________/| \\
+	// \\\\\\\\\\\\\\--////////////// \\
+
 	struct Rect
 	{ // basicly Window's RECT
 		uint16_t left   = 0u;
@@ -317,12 +323,14 @@ namespace WS
 		uint16_t right  = 0u;
 		uint16_t bottom = 0u;
 
-		Rect() {}
+		Rect() = default;
 
 #ifdef __WEISS__OS_WINDOWS
+
 		Rect(const RECT &rect);
 
 		inline operator const RECT&() const noexcept { return RECT{ left, top, right, bottom }; }
+
 #endif // __WEISS__OS_WINDOWS
 	};
 
@@ -331,6 +339,12 @@ namespace WS
 		const char *name;
 		ShaderInputElementType type;
 	};
+
+	// ////////////////-\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------Coloru8------------| \\
+	// |\_____________________________/| \\
+	// \\\\\\\\\\\\\\\\-//////////////// \\
 
 	struct Coloru8
 	{
@@ -342,6 +356,7 @@ namespace WS
 				uint8_t b;
 				uint8_t a;
 			};
+
 			struct
 			{
 				uint8_t red;
@@ -349,6 +364,8 @@ namespace WS
 				uint8_t blue;
 				uint8_t alpha;
 			};
+
+			uint32_t color32;
 		};
 	};
 
@@ -357,6 +374,12 @@ namespace WS
 	constexpr const Coloru8 COLOR_U8_BLUE  = Coloru8{ 0u,   0u,   255u, 255u };
 	constexpr const Coloru8 COLOR_U8_WHITE = Coloru8{ 255u, 255u, 255u, 255u };
 	constexpr const Coloru8 COLOR_U8_BLACK = Coloru8{ 0u,   0u,   0u,   255u };
+
+	// ////////////////--\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------Colorf32------------| \\
+	// |\______________________________/| \\
+	// \\\\\\\\\\\\\\\\--//////////////// \\
 
 	struct Colorf32
 	{
@@ -389,6 +412,12 @@ namespace WS
 	constexpr const Colorf32 COLOR_F32_WHITE = Colorf32{1.f, 1.f, 1.f, 1.f};
 	constexpr const Colorf32 COLOR_F32_BLACK = Colorf32{0.f, 0.f, 0.f, 1.f};
 
+	// /////////////////-\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |---------Matrix<T, R, C>---------| \\
+	// |\_______________________________/| \\
+	// \\\\\\\\\\\\\\\\\-///////////////// \\
+
 	template <typename T, size_t R, size_t C>
 	class Matrix
 	{
@@ -399,39 +428,51 @@ namespace WS
 		Matrix() = default;
 
 		template <typename T2>
-		Matrix(const std::initializer_list<std::initializer_list<T2>> &data);
+		Matrix(const std::initializer_list<std::initializer_list<T2>> &data)
+		{
+			size_t r = 0, c = 0;
+			for (const std::initializer_list<T2>& row : data) {
+				for (const T2& cell : row)
+					this->m[r][c++] = static_cast<T>(cell);
+
+				r++;
+			}
+		}
 
 		template <typename T2, size_t R2, size_t C2>
-		Matrix(const Matrix<T2, R2, C2> &other);
+		Matrix(const Matrix<T2, R2, C2> &other)
+		{
+			if constexpr (R == R2 && C == C2 && std::is_same<T, T2>()) {
+				std::memcpy(this->m, other.m, sizeof(this->m));
+			} else {
+				const size_t _R = std::min(R, R2);
+				const size_t _C = std::min(C, C2);
 
+				for (size_t r = 0u; r < _R; r++)
+					for (size_t c = 0u; c < _C; c++)
+						this->m[r][c] = static_cast<T>(other.m[r][c]);
+			}
+		}
+		
 #ifdef __WEISS__OS_WINDOWS
 
 		Matrix(const DirectX::XMMATRIX &other);
 
 #endif // __WEISS__OS_WINDOWS
 
-		[[nodiscard]] inline size_t GetRowCount() const noexcept { return R; }
+		[[nodiscard]] inline size_t GetRowCount() const noexcept;
 
-		[[nodiscard]] inline size_t GetColCount() const noexcept { return C; }
+		[[nodiscard]] inline size_t GetColCount() const noexcept;
 
-		[[nodiscard]] inline T* operator[](const size_t r) { return this->m[r]; }
+		[[nodiscard]] inline T* operator[](const size_t r);
 
-		[[nodiscard]] inline T&       Get     (const size_t r, const size_t c) noexcept       { return this->m[r][c]; }
-		[[nodiscard]] inline const T& GetValue(const size_t r, const size_t c) const noexcept { return this->m[r][c]; }
+		[[nodiscard]] inline T&       Get     (const size_t r, const size_t c) noexcept;
+		[[nodiscard]] inline const T& GetValue(const size_t r, const size_t c) const noexcept;
 
-		[[nodiscard]] inline Matrix<T, R, C> GetTransposed() const noexcept
-		{
-			Matrix<T, R, C> transposed(*this);
-
-			for (size_t r = 0u; r < R; r++)
-				for (size_t c = 0u; c < C; c++)
-					transposed[r][c] = this->m[c][r];
-
-			return transposed;
-		}
+		[[nodiscard]] inline Matrix<T, R, C> GetTransposed() const noexcept;
 
 		template <typename T2, size_t R2, size_t C2>
-		[[nodiscard]] inline bool operator==(const Matrix<T2, R2, C2> &other) const noexcept
+		[[nodiscard]] inline bool operator==(const Matrix<T2, R2, C2>& other) const noexcept
 		{
 			if constexpr (R == R2 && C == C2 && std::is_same<T, T2>())
 			{
@@ -445,39 +486,12 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		[[nodiscard]] inline operator DirectX::XMMATRIX() const noexcept
-		{
-			DirectX::XMFLOAT4X4 float4x4;
-
-			if constexpr (R == 4u && C == 4u && std::is_same<T, float>())
-			{
-				std::memcpy(&float4x4, this->m, sizeof(this->m));
-			}
-			else
-			{
-				const size_t _R = std::min(R, 4u);
-				const size_t _C = std::min(C, 4u);
-
-				for (size_t r = 0u; r < _R; r++)
-					for (size_t c = 0u; c < _C; c++)
-						float4x4[r][c] = static_cast<T>(this->m[r][c]);
-			}
-
-			return DirectX::XMLoadFloat4x4(&float4x4);
-		}
+		[[nodiscard]] inline operator DirectX::XMMATRIX() const noexcept;
 
 #endif // __WEISS__OS_WINDOWS
 
 	public:
-		[[nodiscard]] static inline constexpr Matrix<T, R, C> MakeIdentity()
-		{
-			Matrix<T, R, C> mat;
-			if constexpr (R == C)
-				for (size_t i = 0; i < R; i++)
-					mat[i][i] = 1.0f;
-
-			return mat;
-		}
+		[[nodiscard]] static inline constexpr Matrix<T, R, C> MakeIdentity();
 	};
 
 	template <typename T, size_t R, size_t C>
@@ -485,6 +499,12 @@ namespace WS
 
 	typedef Matrix<float, 3u, 3u> Mat3x3f;
 	typedef Matrix<float, 4u, 4u> Mat4x4f;
+
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |---------Vector2D<T>---------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
 
 	template <typename T>
 	struct Vector2D
@@ -509,70 +529,70 @@ namespace WS
 		Vector2D(const K &x, const L &y) : x(static_cast<T>(x)), y(static_cast<T>(y)) {}
 
 		template <typename K>
-		inline void operator+=(const Vector2D<K> &v)
+		inline void operator+=(const Vector2D<K> &v) noexcept
 		{
 			this->x += v.x;
 			this->y += v.y;
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector2D<K> &v)
+		inline void operator-=(const Vector2D<K> &v) noexcept
 		{
 			this->x -= v.x;
 			this->y -= v.y;
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector2D<K> &v)
+		inline void operator*=(const Vector2D<K> &v) noexcept
 		{
 			this->x *= v.x;
 			this->y *= v.y;
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector2D<K> &v)
+		inline void operator/=(const Vector2D<K> &v) noexcept
 		{
 			this->x /= v.x;
 			this->y /= v.y;
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n)
+		inline void operator+=(const K &n) noexcept
 		{
 			this->x += n;
 			this->y += n;
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n)
+		inline void operator-=(const K &n) noexcept
 		{
 			this->x -= n;
 			this->y -= n;
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n)
+		inline void operator*=(const K &n) noexcept
 		{
 			this->x *= n;
 			this->y *= n;
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n)
+		inline void operator/=(const K &n) noexcept
 		{
 			this->x /= n;
 			this->y /= n;
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector2D<K> &v) { return this->x == v.x && this->y == v.y; }
+		[[nodiscard]] inline bool operator==(const Vector2D<K> &v) noexcept { return this->x == v.x && this->y == v.y; }
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector2D<K> &v) { return this->x != v.x || this->y != v.y; }
+		[[nodiscard]] inline bool operator!=(const Vector2D<K> &v) noexcept { return this->x != v.x || this->y != v.y; }
 
 #ifdef __WEISS__OS_WINDOWS
 
-		inline operator DirectX::XMVECTOR() const noexcept
+		inline operator DirectX::XMVECTOR() const
 		{
 			return DirectX::XMVectorSet(this->x, this->y, 0.0f, 0.0f);
 		}
@@ -588,28 +608,34 @@ namespace WS
 	}
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &a, const Vector2D<K> &b) { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &a, const Vector2D<K> &b) { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &a, const Vector2D<K> &b) { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &a, const Vector2D<K> &b) { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &v, const K &n) { return Vector2D<T>{v.x + n, v.y + n}; }
+	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x + n, v.y + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &v, const K &n) { return Vector2D<T>{v.x - n, v.y - n}; }
+	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x - n, v.y - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &v, const K &n) { return Vector2D<T>{v.x * n, v.y * n}; }
+	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x * n, v.y * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &v, const K &n) { return Vector2D<T>{v.x / n, v.y / n}; }
+	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x / n, v.y / n}; }
+
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |---------Vector3D<T>---------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
 
 	template <typename T>
 	struct Vector3D : Vector2D<T>
@@ -636,35 +662,35 @@ namespace WS
 		Vector3D(const Vector2D<T2> &v) : Vector2D<T>(v) {}
 
 		template <typename K>
-		inline void operator+=(const Vector2D<K> &v)
+		inline void operator+=(const Vector2D<K> &v) noexcept
 		{
 			this->x += v.x;
 			this->y += v.y;
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector2D<K> &v)
+		inline void operator-=(const Vector2D<K> &v) noexcept
 		{
 			this->x -= v.x;
 			this->y -= v.y;
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector2D<K> &v)
+		inline void operator*=(const Vector2D<K> &v) noexcept
 		{
 			this->x *= v.x;
 			this->y *= v.y;
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector2D<K> &v)
+		inline void operator/=(const Vector2D<K> &v) noexcept
 		{
 			this->x /= v.x;
 			this->y /= v.y;
 		}
 
 		template <typename K>
-		inline void operator+=(const Vector3D<K> &v)
+		inline void operator+=(const Vector3D<K> &v) noexcept
 		{
 			this->x += v.x;
 			this->y += v.y;
@@ -672,7 +698,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector3D<K> &v)
+		inline void operator-=(const Vector3D<K> &v) noexcept
 		{
 			this->x -= v.x;
 			this->y -= v.y;
@@ -680,7 +706,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector3D<K> &v)
+		inline void operator*=(const Vector3D<K> &v) noexcept
 		{
 			this->x *= v.x;
 			this->y *= v.y;
@@ -688,7 +714,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector3D<K> &v)
+		inline void operator/=(const Vector3D<K> &v) noexcept
 		{
 			this->x /= v.x;
 			this->y /= v.y;
@@ -696,7 +722,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n)
+		inline void operator+=(const K &n) noexcept
 		{
 			this->x += n;
 			this->y += n;
@@ -704,7 +730,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n)
+		inline void operator-=(const K &n) noexcept
 		{
 			this->x -= n;
 			this->y -= n;
@@ -712,7 +738,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n)
+		inline void operator*=(const K &n) noexcept
 		{
 			this->x *= n;
 			this->y *= n;
@@ -720,7 +746,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n)
+		inline void operator/=(const K &n) noexcept
 		{
 			this->x /= n;
 			this->y /= n;
@@ -728,10 +754,10 @@ namespace WS
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector3D<K> &v) { return this->x == v.x && this->y == v.y && this->z == v.z; }
+		[[nodiscard]] inline bool operator==(const Vector3D<K> &v) noexcept { return this->x == v.x && this->y == v.y && this->z == v.z; }
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector3D<K> &v) { return this->x != v.x || this->y != v.y || this->z != v.z; }
+		[[nodiscard]] inline bool operator!=(const Vector3D<K> &v) noexcept { return this->x != v.x || this->y != v.y || this->z != v.z; }
 
 #ifdef __WEISS__OS_WINDOWS
 
@@ -744,47 +770,53 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector2D<K> &b) { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector2D<K> &b) { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector2D<K> &b) { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector2D<K> &b) { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector3D<K> &b) { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector3D<K> &b) { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector3D<K> &b) { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector3D<K> &b) { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &v, const K &n) { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &v, const K &n) { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &v, const K &n) { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &v, const K &n) { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
 
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector3D<T> &v)
+	inline std::ostream &operator<<(std::ostream &os, const Vector3D<T> &v) noexcept
 	{
 		os << '(' << v.x << ", " << v.y << ", " << v.z << ")";
 		return os;
 	}
+
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |---------Vector4D<T>---------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
 
 	template <typename T>
 	struct Vector4D : Vector3D<T>
@@ -812,7 +844,7 @@ namespace WS
 		Vector4D(const Vector3D<T2> &v) : Vector3D<T>(v) {}
 
 		template <typename K>
-		inline void operator+=(const Vector4D<K> &v)
+		inline void operator+=(const Vector4D<K> &v) noexcept
 		{
 			this->x += v.x;
 			this->y += v.y;
@@ -821,7 +853,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector4D<K> &v)
+		inline void operator-=(const Vector4D<K> &v) noexcept
 		{
 			this->x -= v.x;
 			this->y -= v.y;
@@ -830,7 +862,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector4D<K> &v)
+		inline void operator*=(const Vector4D<K> &v) noexcept
 		{
 			this->x *= v.x;
 			this->y *= v.y;
@@ -839,7 +871,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector4D<K> &v)
+		inline void operator/=(const Vector4D<K> &v) noexcept
 		{
 			this->x /= v.x;
 			this->y /= v.y;
@@ -848,7 +880,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n)
+		inline void operator+=(const K &n) noexcept
 		{
 			this->x += n;
 			this->y += n;
@@ -857,7 +889,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n)
+		inline void operator-=(const K &n) noexcept
 		{
 			this->x -= n;
 			this->y -= n;
@@ -866,7 +898,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n)
+		inline void operator*=(const K &n) noexcept
 		{
 			this->x *= n;
 			this->y *= n;
@@ -875,7 +907,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n)
+		inline void operator/=(const K &n) noexcept
 		{
 			this->x /= n;
 			this->y /= n;
@@ -884,13 +916,13 @@ namespace WS
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector4D<K> &v)
+		[[nodiscard]] inline bool operator==(const Vector4D<K> &v) noexcept
 		{
 			return this->x == v.x && this->y == v.y && this->z == v.z && this->w == v.w;
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector4D<K> &v)
+		[[nodiscard]] inline bool operator!=(const Vector4D<K> &v) noexcept
 		{
 			return this->x != v.x || this->y != v.y || this->z != v.z || this->w != v.w;
 		}
@@ -906,31 +938,31 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &a, const Vector4D<K> &b) { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &a, const Vector4D<K> &b) { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &a, const Vector4D<K> &b) { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &a, const Vector4D<K> &b) { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &v, const K &n) { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
+	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &v, const K &n) { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
+	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &v, const K &n) { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
+	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &v, const K &n) { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
+	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
 
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector4D<T> &v)
+	inline std::ostream &operator<<(std::ostream &os, const Vector4D<T> &v) noexcept
 	{
 		os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
 		return os;
@@ -965,6 +997,12 @@ namespace WS
 	typedef Vector4D<uint16_t> Vec4u16;
 	typedef Vector4D<uint32_t> Vec4u32;
 	typedef Vector4D<uint64_t> Vec4u64;
+
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------Transform----------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
 
 	struct Transform
 	{
@@ -1073,8 +1111,20 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
+		// ////////////-\\\\\\\\\\\\ \\
+		// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+		// |----------WIN----------| \\
+		// |\_____________________/| \\
+		// \\\\\\\\\\\\-//////////// \\
+
 		namespace WIN
 		{
+
+			// ////////////////--\\\\\\\\\\\\\\\\ \\
+			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			// |----------WindowsImage----------| \\
+			// |\______________________________/| \\
+			// \\\\\\\\\\\\\\\\--//////////////// \\
 
 			class WindowsImage : public ImageBase
 			{
@@ -1119,6 +1169,12 @@ namespace WS
 		virtual void __OnWindowUpdateEnd()   {}
 	};
 
+	// ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------MouseEventInterface----------| \\
+	// |\_____________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
+
 	class MouseEventInterface
 	{
 	protected:
@@ -1143,6 +1199,12 @@ namespace WS
 		inline void OnMouseMove (const std::function<void(const Vec2u16, const Vec2i16)>& functor) noexcept { this->m_onMouseMoveFunctors.push_back(functor);  }
 		inline void OnCursorMove(const std::function<void(const Vec2u16, const Vec2i16)>& functor) noexcept { this->m_onCursorMoveFunctors.push_back(functor); }
 	};
+
+	// ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |-----------------Mouse-----------------| \\
+	// |\_____________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 
 	class Mouse : public MouseEventInterface
 	{
@@ -1184,6 +1246,12 @@ namespace WS
 		virtual void Clip(const Rect &rect) const noexcept = 0;
 	};
 
+	// ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |---------KeyboardEventInterface---------| \\
+	// |\______________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\--//////////////////// \\
+
 	class KeyboardEventInterface
 	{
 	protected:
@@ -1196,6 +1264,12 @@ namespace WS
 		inline void OnKeyUp  (const std::function<void(const uint8_t)>& functor) noexcept { this->m_onKeyUpFunctors.push_back(functor);   }
 		inline void OnKeyDown(const std::function<void(const uint8_t)>& functor) noexcept { this->m_onKeyDownFunctors.push_back(functor); }
 	};
+
+	// ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------------Keyboard----------------| \\
+	// |\______________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\--//////////////////// \\
 
 	class Keyboard : public KeyboardEventInterface
 	{
@@ -1312,89 +1386,123 @@ namespace WS
 		inline operator Window *()  noexcept { return this->pWindow; }
 	};
 
+	// /////////////////////--\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |-----------------Internal-----------------| \\
+	// |\________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
+
+	namespace Internal {
+
 #ifdef __WEISS__OS_WINDOWS
 
-	namespace WIN
-	{
+		// /////////////////////-\\\\\\\\\\\\\\\\\\\\\ \\
+		// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+		// |-------------------WIN-------------------| \\
+		// |\_______________________________________/| \\
+		// \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 
-		class WindowsPeripheralDevice : public PeripheralDevice
+		namespace WIN
 		{
-		public:
-			virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) = 0;
-		};
 
-		class WindowsMouse : public Mouse,
-							 public WindowsPeripheralDevice
-		{
-		public:
-			WindowsMouse();
+			// ///////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			// |-------------------WindowsPeripheralDevice-------------------| \\
+			// |\___________________________________________________________/| \\
+			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////// \\
 
-			virtual inline void Show() const noexcept override { ShowCursor(true);  }
-			virtual inline void Hide() const noexcept override { ShowCursor(false); }
+			class WindowsPeripheralDevice : public PeripheralDevice
+			{
+			public:
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) = 0;
+			};
 
-			virtual void Clip(const Rect &rect) const noexcept override;
+			// ///////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			// |-------------------------WindowsMouse-------------------------| \\
+			// |\____________________________________________________________/| \\
+			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--/////////////////////////////// \\
 
-			virtual void __OnWindowUpdateBegin() override;
+			class WindowsMouse : public Mouse,
+								 public WindowsPeripheralDevice
+			{
+			public:
+				WindowsMouse();
 
-			virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
+				virtual inline void Show() const noexcept override { ShowCursor(true);  }
+				virtual inline void Hide() const noexcept override { ShowCursor(false); }
 
-			virtual void __OnWindowUpdateEnd() override;
-		};
+				virtual void Clip(const Rect &rect) const noexcept override;
 
-		class WindowsKeyboard : public Keyboard,
-								public WindowsPeripheralDevice
-		{
-		public:
-			virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
-		};
+				virtual void __OnWindowUpdateBegin() override;
 
-		LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
 
-		class WindowsWindow : public Window
-		{
-			friend LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
+				virtual void __OnWindowUpdateEnd() override;
+			};
 
-		private:
-			HWND m_handle = 0;
+			// /////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			// |-------------------------WindowsKeyboard-------------------------| \\
+			// |\_______________________________________________________________/| \\
+			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\
 
-		public:
-			WindowsWindow(const WindowDescriptor &descriptor);
+			class WindowsKeyboard : public Keyboard,
+									public WindowsPeripheralDevice
+			{
+			public:
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
+			};
 
-			// <<<<---- Getters ---->>>> //
+			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
 
-			[[nodiscard]] inline HWND GetHandle()              const noexcept { return this->m_handle;        }
-			[[nodiscard]] inline HDC  GetDeviceContextHandle() const noexcept { return GetDC(this->m_handle); }
+			class WindowsWindow : public Window
+			{
+				friend LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
 
-			[[nodiscard]] virtual Rect GetWindowRectangle() const noexcept override;
+			private:
+				HWND m_handle = 0;
 
-			[[nodiscard]] virtual Rect GetClientRectangle() const noexcept override;
+			public:
+				WindowsWindow(const WindowDescriptor &descriptor);
 
-			// <<<<---- Setters ---->>>> //
+				// <<<<---- Getters ---->>>> //
 
-			virtual void SetWindowSize(const uint16_t width, const uint16_t height) override;
+				[[nodiscard]] inline HWND GetHandle()              const noexcept { return this->m_handle;        }
+				[[nodiscard]] inline HDC  GetDeviceContextHandle() const noexcept { return GetDC(this->m_handle); }
 
-			virtual void SetClientSize(const uint16_t width, const uint16_t height) override;
+				[[nodiscard]] virtual Rect GetWindowRectangle() const noexcept override;
 
-			virtual void SetTitle(const char *title) const noexcept override;
+				[[nodiscard]] virtual Rect GetClientRectangle() const noexcept override;
 
-			virtual void SetIcon(const char *pathname) override;
+				// <<<<---- Setters ---->>>> //
 
-			// <<<<---- Misc ---->>>> //
+				virtual void SetWindowSize(const uint16_t width, const uint16_t height) override;
 
-			[[nodiscard]] LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+				virtual void SetClientSize(const uint16_t width, const uint16_t height) override;
 
-			virtual void Update() override;
+				virtual void SetTitle(const char *title) const noexcept override;
 
-			void Destroy() noexcept;
+				virtual void SetIcon(const char *pathname) override;
 
-			~WindowsWindow();
-		};
+				// <<<<---- Misc ---->>>> //
 
-		LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+				[[nodiscard]] LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
 
-	}; // namespace WIN
+				virtual void Update() override;
+
+				void Destroy() noexcept;
+
+				~WindowsWindow();
+			};
+
+			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+		}; // namespace WIN
 
 #endif // __WEISS__OS_WINDOWS
+
+	}; // namespace Internal
 
 	// //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 	// |-------------------------------------------------------------------| \\
@@ -1433,6 +1541,12 @@ namespace WS
 		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) = 0;
 	};
 
+	// ///////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |--------------------------PerspectiveCamera--------------------------| \\
+	// |\___________________________________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\
+
 	struct PerspectiveCameraDescriptor
 	{
 		const Vec3f position;
@@ -1464,6 +1578,12 @@ namespace WS
 
 		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) override;
 	};
+
+	// //////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |-------------------------OrthographicCamera-------------------------| \\
+	// |\__________________________________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////////// \\
 
 	struct OrthographicCameraDescriptor
 	{
@@ -1524,6 +1644,12 @@ namespace WS
 		}
 	};
 
+	// ////////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------------------------IndexBuffer------------------------------| \\
+	// |\_____________________________________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-//////////////////////////////////// \\
+
 	class IndexBuffer
 	{
 	protected:
@@ -1553,6 +1679,12 @@ namespace WS
 			this->GetIndex(indexIndex) = index;
 		}
 	};
+
+	// /////////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------------------------ConstantBuffer------------------------------| \\
+	// |\________________________________________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////////////////// \\
 
 	class ConstantBuffer
 	{
@@ -1620,6 +1752,12 @@ namespace WS
 	};
 
 	class RenderAPIHandle;
+
+	// ///////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |------------------------------RenderAPI------------------------------| \\
+	// |\___________________________________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\
 
 	class RenderAPI
 	{
@@ -2203,8 +2341,14 @@ namespace WS
 		namespace D3D11
 		{
 			/*
-			* To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
-			* in any class that inherits from this base class.
+			 * // /////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------------D3D11ObjectWrapper---------------|| \\
+			 * // |\________________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////// \\
+			 * 
+			 * To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
+			 * in any class that inherits from this base class.
 			*/
 			template <typename T>
 			class D3D11ObjectWrapper
@@ -2236,6 +2380,14 @@ namespace WS
 
 			typedef D3D11ObjectWrapper<IDXGISwapChain> D3D11SwapChainObjectWrapper;
 
+			/*
+			 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------------D3D11SwapChain---------------|| \\
+			 * // |\____________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
+			 */
+
 			class D3D11SwapChain : public D3D11SwapChainObjectWrapper
 			{
 			public:
@@ -2250,6 +2402,14 @@ namespace WS
 
 			typedef D3D11ObjectWrapper<ID3D11RenderTargetView> D3D11RenderTargetbjectWrapper;
 
+			/*
+			 * // ///////////////////////-\\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------------D3D11RenderTarget-------------|| \\
+			 * // |\___________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\
+			 */
+
 			class D3D11RenderTarget : public D3D11RenderTargetbjectWrapper
 			{
 			public:
@@ -2261,6 +2421,14 @@ namespace WS
 
 				void SetCurrent(D3D11DeviceContextObjectWrapper &pDeviceContext) const noexcept;
 			};
+
+			/*
+			 * // //////////////////////--\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------------D3D11DepthBuffer-------------|| \\
+			 * // |\__________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\--////////////////////// \\
+			 */
 
 			class D3D11DepthBuffer
 			{
@@ -2277,6 +2445,14 @@ namespace WS
 
 				void Bind(D3D11DeviceContextObjectWrapper &pDeviceContext, D3D11RenderTargetbjectWrapper &pRenderTarget);
 			};
+
+			/*
+			 * // //////////////////////-\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------------D3D11VertexShader------------|| \\
+			 * // |\_________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
+			 */
 
 			class D3D11VertexShader
 			{
@@ -2295,6 +2471,14 @@ namespace WS
 
 				void Bind() const noexcept;
 			};
+
+			/*
+			 * // /////////////////////--\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------------D3D11PixelShader------------|| \\
+			 * // |\________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
+			 */
 
 			class D3D11PixelShader
 			{
@@ -2317,8 +2501,16 @@ namespace WS
 			typedef D3D11ObjectWrapper<ID3D11Buffer> D3D11IndexBufferObjectWrapper;
 			typedef D3D11ObjectWrapper<ID3D11Buffer> D3D11ConstantBufferObjectWrapper;
 
+			/*
+			 * // /////////////////////-\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-----------D3D11VertexBuffer-----------|| \\
+			 * // |\_______________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
+			 */
+
 			class D3D11VertexBuffer : public D3D11VertexBufferObjectWrapper,
-									public VertexBuffer
+									  public VertexBuffer
 			{
 			private:
 				size_t m_vertexSize = 0u;
@@ -2338,6 +2530,14 @@ namespace WS
 
 				virtual void Update() override;
 			};
+
+			/*
+			 * // ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-----------D3D11IndexBuffer-----------|| \\
+			 * // |\______________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\--//////////////////// \\
+			 */
 
 			class D3D11IndexBuffer : public D3D11IndexBufferObjectWrapper,
 									public IndexBuffer
@@ -2360,6 +2560,14 @@ namespace WS
 
 				virtual void Update() override;
 			};
+
+			/*
+			 * // ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D11ConstantBuffer---------|| \\
+			 * // |\_____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
+			 */
 
 			class D3D11ConstantBuffer : public D3D11ConstantBufferObjectWrapper,
 										public ConstantBuffer
@@ -2386,6 +2594,14 @@ namespace WS
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11ShaderResourceView> D3D11TextureObjectWrapper;
+
+			/*
+			 * // ////////////////--\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D11Texture---------|| \\
+			 * // |\______________________________/| \\
+			 * // \\\\\\\\\\\\\\\\--//////////////// \\
+			 */
 
 			class D3D11Texture : public Texture,
 								public D3D11TextureObjectWrapper
@@ -2414,6 +2630,14 @@ namespace WS
 
 			typedef D3D11ObjectWrapper<ID3D11SamplerState> D3D11SamplerStateObjectWrapper;
 
+			/*
+			 * // /////////////////-\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D11TextureSampler------|| \\
+			 * // |\_______________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\-///////////////// \\
+			 */
+
 			class D3D11TextureSampler : public D3D11SamplerStateObjectWrapper
 			{
 			private:
@@ -2430,6 +2654,14 @@ namespace WS
 
 				void Bind() const noexcept;
 			};
+
+			/*
+			 * // /////////////////-\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D11RenderPipeline------|| \\
+			 * // |\_______________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\-///////////////// \\
+			 */
 
 			class D3D11RenderPipeline
 			{
@@ -2455,6 +2687,14 @@ namespace WS
 			};
 
 			class D3D11RenderPipeline;
+
+			/*
+			 * // //////////////--\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D11RenderAPI------|| \\
+			 * // |\__________________________/| \\
+			 * // \\\\\\\\\\\\\\--////////////// \\
+			 */
 
 			class D3D11RenderAPI : public RenderAPI
 			{
@@ -2501,8 +2741,14 @@ namespace WS
 		{
 
 			/*
-			* To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
-			* in any class that inherits from this base class.
+			 * // //////////////////-\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D12ObjectWrapper<T>------|| \\
+			 * // |\_________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\-////////////////// \\
+			 *
+			 * To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
+			 * in any class that inherits from this base class.
 			*/
 			template <typename T>
 			class D3D12ObjectWrapper
@@ -2532,6 +2778,14 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<IDXGIAdapter1> D3D12AdapterObjectWrapper;
 
+			/*
+			 * // /////////////--\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D12Adapter------|| \\
+			 * // |\________________________/| \\
+			 * // \\\\\\\\\\\\\--///////////// \\
+			 */
+
 			class D3D12Adapter : public D3D12AdapterObjectWrapper
 			{
 			public:
@@ -2541,6 +2795,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Device2> D3D12DeviceObjectWrapper;
+
+			/*
+			 * // /////////////-\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------D3D12Device------|| \\
+			 * // |\_______________________/| \\
+			 * // \\\\\\\\\\\\\-///////////// \\
+			 */
 
 			class D3D12Device : public D3D12DeviceObjectWrapper
 			{
@@ -2553,6 +2815,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Fence> D3D12FenceObjectWrapper;
+
+			/*
+			 * // /////////////--\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------D3D12Fence-------|| \\
+			 * // |\________________________/| \\
+			 * // \\\\\\\\\\\\\--///////////// \\
+			 */
 
 			class D3D12Fence : public D3D12FenceObjectWrapper
 			{
@@ -2573,6 +2843,14 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<ID3D12CommandQueue> D3D12CommandQueueObjectWrapper;
 
+			/*
+			 * // /////////////////-\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------D3D12CommandQueue-------|| \\
+			 * // |\_______________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\-///////////////// \\
+			 */
+
 			class D3D12CommandQueue : public D3D12CommandQueueObjectWrapper
 			{
 			public:
@@ -2582,6 +2860,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<IDXGISwapChain3> D3D12SwapChainObjectWrapper;
+
+			/*
+			 * // /////////////////--\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12SwapChain---------|| \\
+			 * // |\________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\--///////////////// \\
+			 */
 
 			class D3D12SwapChain : public D3D12SwapChainObjectWrapper
 			{
@@ -2602,6 +2888,14 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<ID3D12DescriptorHeap> D3D12DescriptorHeapObjectWrapper;
 
+			/*
+			 * // ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12DescriptorHeap---------|| \\
+			 * // |\_____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
+			 */
+
 			class D3D12DescriptorHeap : public D3D12DescriptorHeapObjectWrapper
 			{
 			public:
@@ -2614,6 +2908,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Resource> D3D12RenderTargetObjectWrapper;
+
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12RenderTarget---------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
 
 			class D3D12RenderTarget : public D3D12RenderTargetObjectWrapper
 			{
@@ -2631,6 +2933,14 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<ID3D12CommandAllocator> D3D12CommandAllocatorObjectWrapper;
 
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------D3D12CommandAllocator-------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
+
 			class D3D12CommandAllocator : public D3D12CommandAllocatorObjectWrapper
 			{
 			public:
@@ -2642,6 +2952,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12GraphicsCommandList> D3D12CommandListObjectWrapper;
+
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----------D3D12CommandList----------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
 
 			class D3D12CommandList : public D3D12CommandListObjectWrapper
 			{
@@ -2663,6 +2981,14 @@ namespace WS
 				void TransitionResource(ID3D12Resource *pResource, const D3D12_RESOURCE_STATES &before, const D3D12_RESOURCE_STATES &after);
 			};
 
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----------D3D12DepthBuffer----------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
+
 			class D3D12DepthBuffer
 			{
 			private:
@@ -2683,6 +3009,14 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<ID3D12RootSignature> D3D12RootSignatureObjectWrapper;
 
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12RootSignature---------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
+
 			class D3D12RootSignature : public D3D12RootSignatureObjectWrapper
 			{
 			public:
@@ -2696,11 +3030,19 @@ namespace WS
 
 			typedef D3D12ObjectWrapper<ID3D12Resource> D3D12CommittedResourceObjectWrapper;
 
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------D3D12CommittedResource-------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
+
 			class D3D12CommittedResource : public D3D12CommittedResourceObjectWrapper
 			{
 			private:
 				D3D12_RESOURCE_STATES m_originalState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
-				D3D12_RESOURCE_STATES m_currentState = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
+				D3D12_RESOURCE_STATES m_currentState  = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
 
 			public:
 				D3D12CommittedResource() = default;
@@ -2723,6 +3065,14 @@ namespace WS
 					this->TransitionTo(pCommandList, this->m_originalState);
 				}
 			};
+
+			/*
+			 * // ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----------D3D12VertexBuffer----------|| \\
+			 * // |\_____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
+			 */
 
 			class D3D12VertexBuffer : public VertexBuffer
 			{
@@ -2748,6 +3098,14 @@ namespace WS
 				virtual void Update() override;
 			};
 
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----------D3D12IndexBuffer----------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
+
 			class D3D12IndexBuffer : public IndexBuffer
 			{
 			private:
@@ -2771,6 +3129,14 @@ namespace WS
 
 				virtual void Update() override;
 			};
+
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||--------D3D12ConstantBuffer--------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
 
 			class D3D12ConstantBuffer : public ConstantBuffer
 			{
@@ -2806,6 +3172,14 @@ namespace WS
 				void UpdateHeap(const size_t heapIndex);
 			};
 
+			/*
+			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------------D3D12Texture------------|| \\
+			 * // |\____________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
+			 */
+
 			class D3D12Texture : public Texture
 			{
 			private:
@@ -2831,6 +3205,14 @@ namespace WS
 
 				virtual void Update() override;
 			};
+
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||--------D3D12TextureSampler--------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
 
 			class D3D12TextureSampler
 			{
@@ -2860,14 +3242,35 @@ namespace WS
 			struct D3D12DescriptorHandles {
 				D3D12CPUDescriptorHandles m_cpuHandles;
 				D3D12GPUDescriptorHandles m_gpuHandles;
+
+				inline void OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) noexcept;
 			};
 
+			/*
+			 *
+			 * // //////////////////--\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----D3D12DescriptorHeapManager----|| \\
+			 * // |\__________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\--////////////////// \\
+			 *
+			 * The goal of this class is to limit the number of calls to "SetDescriptorHeaps()" as
+			 * it is a costly operation. This is done by creating descriptor heaps that are filled
+			 * by every single pipeline. We need a "std::vector" of descriptor heaps because the size of a descriptor heap
+			 * is limited, it's maximum descriptor count is stored in "WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP".
+			 * We also need one of each frame buffer since Weiss supports "n-buffering" (see WEISS__FRAME_BUFFER_COUNT).
+			 */
 			class D3D12DescriptorHeapManager {
 			private:
 				std::vector<std::array<std::unique_ptr<D3D12DescriptorHeap>, WEISS__FRAME_BUFFER_COUNT>> m_heaps;
 
 				std::vector<std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT>> m_handles;
 
+				/*
+				 * "m_nativeHeapsPtr" is a "std::array" of native "ID3D12DescriptorHeap*" used to call
+				 * "SetDescriptorHeaps()" without the need to use any additionally loops at runtime to get
+				 * the pointers to the needed descriptor heaps for each frame buffer.
+				 */
 				std::array<std::vector<ID3D12DescriptorHeap*>, WEISS__FRAME_BUFFER_COUNT> m_nativeHeapsPtr;
 
 				D3D12Device* m_pDevice = nullptr;
@@ -2875,7 +3278,8 @@ namespace WS
 				UINT m_incrementSize = 0u;
 
 			private:
-				void CreateHeapPerFrameBuffer();
+				// Adds a new array of frame buffer descriptor heaps
+				void AddHeapToVector();
 
 			public:
 				D3D12DescriptorHeapManager() = default;
@@ -2884,6 +3288,12 @@ namespace WS
 
 				D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&& other) noexcept;
 
+				/*
+				 * Given an array of descriptor handles to a single descriptor each,
+				 * the function "AddDesriptors" copies the descriptors pointed to by
+				 * each of the descriptor handles into each frame buffer descriptor heap.
+				 * Its return value is an array of the frame buffer descriptors' handles.
+				 */
 				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors);
 
 				void Bind(D3D12CommandList& commandList, const size_t frameIndex) const noexcept;
@@ -2892,6 +3302,14 @@ namespace WS
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12PipelineState> D3D12RenderPipelineObjectWrapper;
+
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||--------D3D12RenderPipeline--------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
 
 			class D3D12RenderPipeline : public D3D12RenderPipelineObjectWrapper
 			{
@@ -2926,6 +3344,14 @@ namespace WS
 				void Bind(D3D12CommandList &pCommandList, const size_t frameIndex) noexcept;
 			};
 
+			/*
+			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||-------D3D12CommandSubmitter-------|| \\
+			 * // |\___________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
+			 */
+
 			class D3D12CommandSubmitter
 			{
 			private:
@@ -2953,6 +3379,14 @@ namespace WS
 				[[nodiscard]] inline D3D12CommandList* GetCommandListPr()                noexcept { return &this->m_pCommandList;        }
 				[[nodiscard]] inline D3D12Fence&       GetFence(const size_t frameIndex) noexcept { return *this->m_pFences[frameIndex]; }
 			};
+
+			/*
+			 * // //////////////////--\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||----------D3D12RenderAPI----------|| \\
+			 * // |\__________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\--////////////////// \\
+			 */
 
 			class D3D12RenderAPI : public RenderAPI
 			{
@@ -3013,15 +3447,39 @@ namespace WS
 
 	}; // Internal
 
+	/*
+	 * // //////////////-\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-------SceneObject-------|| \\
+	 * // |\_________________________/| \\
+	 * // \\\\\\\\\\\\\\-////////////// \\
+	 */
+
 	class SceneObject
 	{
 	private:
 	};
 
+	/*
+	 * // //////////////-\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||--------SceneNode--------|| \\
+	 * // |\_________________________/| \\
+	 * // \\\\\\\\\\\\\\-////////////// \\
+	 */
+
 	class SceneNode
 	{
 	private:
 	};
+
+	/*
+	 * // //////////////-\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------Scene----------|| \\
+	 * // |\_________________________/| \\
+	 * // \\\\\\\\\\\\\\-////////////// \\
+	 */
 
 	class Scene
 	{
@@ -3031,6 +3489,14 @@ namespace WS
 	public:
 		Scene() = default;
 	};
+
+	/*
+	 * // //////////////////--\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------GraphicsEngine----------|| \\
+	 * // |\__________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\--////////////////// \\
+	 */
 
 	class GraphicsEngine
 	{
@@ -3051,6 +3517,14 @@ namespace WS
 		~GraphicsEngine() = default;
 	};
 
+	/*
+	 * // /////////////////--\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------ClientSocket----------|| \\
+	 * // |\________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\--///////////////// \\
+	 */
+
 	class ClientSocket
 	{
 	private:
@@ -3069,6 +3543,14 @@ namespace WS
 
 		void Disconnect() noexcept;
 	};
+
+	/*
+	 * // /////////////////--\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------ServerSocket----------|| \\
+	 * // |\________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\--///////////////// \\
+	 */
 
 	class ServerSocket
 	{
@@ -3113,7 +3595,23 @@ std::vector<VkRenderPass> WS::Internal::VK::VKRenderPass::m_renderPasses = { };
  * ██████████████████████████████████████████████████████████████████████████████
 */
 
+/*
+ * // ////////////--\\\\\\\\\\\\ \\
+ * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+ * // ||----------WS----------|| \\
+ * // |\______________________/| \\
+ * // \\\\\\\\\\\\--//////////// \\
+ */
+
 namespace WS {
+
+	/*
+	 * // ///////////////////////-\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------------Vector2D<T>----------------|| \\
+	 * // |\___________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\
+	 */
 
 #ifdef __WEISS__OS_WINDOWS
 
@@ -3128,6 +3626,14 @@ namespace WS {
 
 #endif // __WEISS__OS_WINDOWS
 
+	/*
+	 * // ///////////////////////-\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------------Vector3D<T>----------------|| \\
+	 * // |\___________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\
+	 */
+
 #ifdef __WEISS__OS_WINDOWS
 
 	template <typename T>
@@ -3140,6 +3646,14 @@ namespace WS {
 	}
 
 #endif // __WEISS__OS_WINDOWS
+
+	/*
+	 * // ///////////////////////-\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||----------------Vector4D<T>----------------|| \\
+	 * // |\___________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\
+	 */
 
 #ifdef __WEISS__OS_WINDOWS
 
@@ -3154,6 +3668,14 @@ namespace WS {
 
 #endif // __WEISS__OS_WINDOWS
 
+	/*
+	 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||--------------------Rect--------------------|| \\
+	 * // |\____________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
+	 */
+
 #ifdef __WEISS__OS_WINDOWS
 
 	Rect::Rect(const RECT& rect)
@@ -3166,7 +3688,64 @@ namespace WS {
 
 #endif // __WEISS__OS_WINDOWS
 
+	/*
+	 * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||--------------------MATRIX<T, R, C>--------------------|| \\
+	 * // |\_______________________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
+	 */
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline size_t Matrix<T, R, C>::GetRowCount() const noexcept { return R; }
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline size_t Matrix<T, R, C>::GetColCount() const noexcept { return C; }
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline T* Matrix<T, R, C>::operator[](const size_t r) { return this->m[r]; }
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline T& Matrix<T, R, C>::Get(const size_t r, const size_t c) noexcept { return this->m[r][c]; }
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline const T& Matrix<T, R, C>::GetValue(const size_t r, const size_t c) const noexcept { return this->m[r][c]; }
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline Matrix<T, R, C> Matrix<T, R, C>::GetTransposed() const noexcept
+	{
+		Matrix<T, R, C> transposed(*this);
+
+		for (size_t r = 0u; r < R; r++)
+			for (size_t c = 0u; c < C; c++)
+				transposed[r][c] = this->m[c][r];
+
+		return transposed;
+	}
+
 #ifdef __WEISS__OS_WINDOWS
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline Matrix<T, R, C>::operator DirectX::XMMATRIX() const noexcept
+	{
+		DirectX::XMFLOAT4X4 float4x4;
+
+		if constexpr (R == 4u && C == 4u && std::is_same<T, float>())
+		{
+			std::memcpy(&float4x4, this->m, sizeof(this->m));
+		}
+		else
+		{
+			const size_t _R = std::min(R, 4u);
+			const size_t _C = std::min(C, 4u);
+
+			for (size_t r = 0u; r < _R; r++)
+				for (size_t c = 0u; c < _C; c++)
+					float4x4[r][c] = static_cast<T>(this->m[r][c]);
+		}
+
+		return DirectX::XMLoadFloat4x4(&float4x4);
+	}
 
 	template <typename T, size_t R, size_t C>
 	Matrix<T, R, C>::Matrix(const DirectX::XMMATRIX& other)
@@ -3186,7 +3765,33 @@ namespace WS {
 		}
 	}
 
+	template <typename T, size_t R, size_t C>
+	std::ostream& operator<<(std::ostream& stream, const Matrix<T, R, C>& matrix)
+	{
+		for (size_t r = 0u; r < R; r++)
+		{
+			stream << '|';
+			for (size_t c = 0u; c < C - 1u; c++)
+				stream << matrix.GetValue(r, c) << ", ";
+
+			stream << matrix.GetValue(r, C - 1u) << "|\n";
+		}
+
+		return stream;
+	}
+
 #endif // __WEISS__OS_WINDOWS
+
+	template <typename T, size_t R, size_t C>
+	[[nodiscard]] inline constexpr Matrix<T, R, C> Matrix<T, R, C>::MakeIdentity()
+	{
+		Matrix<T, R, C> mat;
+		if constexpr (R == C)
+			for (size_t i = 0; i < R; i++)
+				mat[i][i] = 1.0f;
+
+		return mat;
+	}
 
 	/*
 	 * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -3274,8 +3879,24 @@ namespace WS {
 		WS::LOG::__Print(logType, message0, args..., '\n');
 	}
 
+	/*
+	 * // ////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-----------------------Internal-----------------------|| \\
+	 * // |\______________________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////// \\
+	 */
+
 	namespace Internal {
 
+		/*
+		 * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+		 * // ||--------------------------WIN--------------------------|| \\
+		 * // |\_______________________________________________________/| \\
+		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
+		 */
+		
 		namespace WIN {
 
 			/*
@@ -3445,6 +4066,7 @@ namespace WS {
 					throw std::runtime_error("[WIC] Failed To Commit Bitmap Encoder");
 			}
 		}; // namespace WIN
+
 	}; // Internal
 
 	/*
@@ -3464,22 +4086,43 @@ namespace WS {
 			delete this->m_pKeyboard;
 	}
 
-	namespace WIN {
+	/*
+	 * // ////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-----------------------Internal-----------------------|| \\
+	 * // |\______________________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////// \\
+	 */
+
+	namespace Internal {
+
+		/*
+		 * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+		 * // ||--------------------------WIN--------------------------|| \\
+		 * // |\_______________________________________________________/| \\
+		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
+		 */
+
+#ifdef __WEISS__OS_WINDOWS
+
+		namespace WIN {
+
 			/*
 			* // //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 			* // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			* // ||--------------------------WINDOWS MOUSE--------------------------|| \\
 			* // |\_________________________________________________________________/| \\
-			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\ 
+			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
 			*/
 
 			WindowsMouse::WindowsMouse()
 			{
 				RAWINPUTDEVICE mouseInputDevice;
 				mouseInputDevice.usUsagePage = 0x01;
-				mouseInputDevice.usUsage     = 0x02;
-				mouseInputDevice.dwFlags     = 0;
-				mouseInputDevice.hwndTarget  = nullptr;
+				mouseInputDevice.usUsage = 0x02;
+				mouseInputDevice.dwFlags = 0;
+				mouseInputDevice.hwndTarget = nullptr;
 
 				RegisterRawInputDevices(&mouseInputDevice, 1, sizeof(RAWINPUTDEVICE));
 			}
@@ -3506,7 +4149,6 @@ namespace WS {
 				{
 					UINT size = 0;
 
-					// WINDOWS API LOGIC
 					if (!GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER)))
 					{
 						std::vector<char> rawBuffer(size);
@@ -3597,7 +4239,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||-------------------------WINDOWS KEYBOARD-------------------------|| \\
 			 * // |\__________________________________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////////// \\
 			 */
 
 			bool WindowsKeyboard::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
@@ -3640,7 +4282,7 @@ namespace WS {
 			* // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			* // ||--------------------------WINDOWS WINDOW--------------------------|| \\
 			* // |\__________________________________________________________________/| \\
-			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\ 
+			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\
 			*/
 
 			WindowsWindow::WindowsWindow(const WindowDescriptor& descriptor)
@@ -3648,10 +4290,10 @@ namespace WS {
 				WNDCLASSA wc;
 				ZeroMemory(&wc, sizeof(WNDCLASSA));
 
-				wc.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-				wc.lpfnWndProc   = WindowProcessMessages;
-				wc.hInstance     = GetModuleHandle(NULL);
-				wc.hCursor       = LoadCursor(nullptr, IDC_ARROW);
+				wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+				wc.lpfnWndProc = WindowProcessMessages;
+				wc.hInstance = GetModuleHandle(NULL);
+				wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
 				wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
 				wc.lpszClassName = "WEISS_WNDCLASSA";
 
@@ -3683,7 +4325,7 @@ namespace WS {
 
 	#endif
 
-				this->m_pMouse    = new WindowsMouse();
+				this->m_pMouse = new WindowsMouse();
 				this->m_pKeyboard = new WindowsKeyboard();
 
 				ShowWindow(this->m_handle, SW_SHOW);
@@ -3796,23 +4438,27 @@ namespace WS {
 
 			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
-#ifdef __WEISS__PLATFORM_X64
+	#ifdef __WEISS__PLATFORM_X64
 
-				WindowsWindow* window = (WindowsWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+					WindowsWindow* window = (WindowsWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-#else
+	#else
 
-				WindowsWindow* window = (WindowsWindow*)GetWindowLong(hwnd, GWLP_USERDATA);
+					WindowsWindow* window = (WindowsWindow*)GetWindowLong(hwnd, GWLP_USERDATA);
 
-#endif
+	#endif
 
-				if (window != NULL)
-					return window->HandleMessage(msg, wParam, lParam);
+					if (window != NULL)
+						return window->HandleMessage(msg, wParam, lParam);
 
-				return DefWindowProc(hwnd, msg, wParam, lParam);
-			}
+					return DefWindowProc(hwnd, msg, wParam, lParam);
+				}
 
-	}; // namespace WIN
+		}; // namespace WIN
+
+#endif // __WEISS__OS_WINDOWS
+
+	}; // namespace Internal
 
 	/*
 	 * // ////////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -3935,6 +4581,14 @@ namespace WS {
 
 #endif // __WEISS__OS_WINDOWS
 	}
+
+	/*
+	 * // //////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-------------------------Internal-------------------------|| \\
+	 * // |\__________________________________________________________/| \\
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////// \\
+	 */
 
 	namespace Internal {
 
@@ -4134,7 +4788,7 @@ namespace WS {
 
 				VkWin32SurfaceCreateInfoKHR createInfo = {};
 				createInfo.sType     = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-				createInfo.hwnd      = reinterpret_cast<const WS::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				createInfo.hwnd      = reinterpret_cast<const WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
 				createInfo.hinstance = GetModuleHandle(NULL);
 
 				if (VK_FAILED(vkCreateWin32SurfaceKHR(*this->m_pInstance->GetPtr(), &createInfo, nullptr, &this->m_object)))
@@ -5218,7 +5872,7 @@ namespace WS {
 				scd.SampleDesc.Quality = 0;
 				scd.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 				scd.BufferCount  = WEISS__FRAME_BUFFER_COUNT;
-				scd.OutputWindow = reinterpret_cast<WS::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				scd.OutputWindow = reinterpret_cast<WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
 				scd.Windowed     = TRUE;
 				scd.SwapEffect   = DXGI_SWAP_EFFECT_DISCARD;
 				scd.Flags = 0;
@@ -6087,7 +6741,7 @@ namespace WS {
 				swapChainDesc.BufferDesc   = backBufferDesc;
 				swapChainDesc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 				swapChainDesc.SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-				swapChainDesc.OutputWindow = reinterpret_cast<const WS::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				swapChainDesc.OutputWindow = reinterpret_cast<const WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
 				swapChainDesc.SampleDesc   = sampleDesc;
 				swapChainDesc.Windowed     = true; 
 				swapChainDesc.Flags        = D3D12SwapChain::IsTearingSupported() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
@@ -6624,6 +7278,20 @@ namespace WS {
 			}
 
 			/*
+			 * // /////////////////////--\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||---------D3D12DescriptorHandles---------|| \\
+			 * // |\________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
+			 */
+
+			inline void D3D12DescriptorHandles::OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) noexcept
+			{
+				this->m_cpuHandles.m_current.Offset(numDescriptors, incrementSize);
+				this->m_gpuHandles.m_current.Offset(numDescriptors, incrementSize);
+			}
+
+			/*
 			 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12DescriptorHeapManager---------|| \\
@@ -6631,7 +7299,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
 			 */
 
-			void D3D12DescriptorHeapManager::CreateHeapPerFrameBuffer()
+			void D3D12DescriptorHeapManager::AddHeapToVector()
 			{
 				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> handles;
 
@@ -6640,7 +7308,7 @@ namespace WS {
 				for (size_t i = 0u; i < WEISS__FRAME_BUFFER_COUNT; i++)
 				{
 					this->m_heaps[this->m_heaps.size() - 1u][i] = std::make_unique<D3D12DescriptorHeap>(*this->m_pDevice, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP,
-						D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
+																										D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE);
 
 					handles[i].m_cpuHandles.m_start   = (*this->m_heaps[this->m_heaps.size() - 1u][i])->GetCPUDescriptorHandleForHeapStart();
 					handles[i].m_cpuHandles.m_current = handles[i].m_cpuHandles.m_start;
@@ -6674,13 +7342,16 @@ namespace WS {
 						this->m_heaps[i][j] = std::move(other.m_heaps[i][j]);
 
 				this->m_incrementSize = std::move(other.m_incrementSize);
-				this->m_pDevice = std::move(other.m_pDevice);
+				this->m_pDevice       = std::move(other.m_pDevice);
 
 				return *this;
 			}
 
 			std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> D3D12DescriptorHeapManager::AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors)
 			{
+				if (descriptors.size() > WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP)
+					throw std::runtime_error("[D3D12] Too Many Descriptors !");
+
 				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> starts;
 
 				const UINT numDescriptors = static_cast<UINT>(descriptors.size());
@@ -6688,6 +7359,7 @@ namespace WS {
 
 				std::optional<size_t> destIndex;
 
+				// Try to find space for the needed heaps
 				for (size_t i = 0u; i < this->m_handles.size(); i++)
 				{
 					const D3D12CPUDescriptorHandles& cpuHandle = this->m_handles[i][0u].m_cpuHandles;
@@ -6698,20 +7370,23 @@ namespace WS {
 					}
 				}
 
+				// If no place was found in existing descriptor heaps, create a new "std::array" of frame buffer descriptor heaps
 				if (!destIndex.has_value())
 				{
-					this->CreateHeapPerFrameBuffer();
+					this->AddHeapToVector();
 
 					destIndex = this->m_heaps.size() - 1u;
 				}
 
+				// Copy every descriptor to the correct frame buffer heaps
 				for (size_t j = 0u; j < WEISS__FRAME_BUFFER_COUNT; j++) {
 					starts[j] = this->m_handles[destIndex.value()][j];
 
 					for (size_t k = 0u; k < numDescriptors; k++) {
-						std::cout << k << '\n';
-						(*this->m_pDevice)->CopyDescriptorsSimple(1u, this->m_handles[destIndex.value()][j].m_cpuHandles.m_current, descriptors[k][j], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-						this->m_handles[destIndex.value()][j].m_cpuHandles.m_current.Offset(1u, this->m_incrementSize);
+						(*this->m_pDevice)->CopyDescriptorsSimple(1u, this->m_handles[destIndex.value()][j].m_cpuHandles.m_current,
+																  descriptors[k][j], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+						
+						this->m_handles[destIndex.value()][j].OffsetCurrent(1u, this->m_incrementSize);
 					}
 				}
 
@@ -6922,36 +7597,30 @@ namespace WS {
 				if (DX_FAILED(pDevice->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)&this->m_pObject)))
 					throw std::runtime_error("[DIRECTX 12] Failed To Create Graphics Pipeline State");
 
-				
-					std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>> srcCpuDescriptorHandles;
-					srcCpuDescriptorHandles.resize(this->m_constantBufferIndices.size() + this->m_textureIndices.size());
+				// Fill GPU Descriptor Heap
+				std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>> srcCpuDescriptorHandles;
+				srcCpuDescriptorHandles.resize(this->m_constantBufferIndices.size() + this->m_textureIndices.size());
 
-					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "before\n");
+				size_t i = 0u;
+				for (const size_t cbIndex : this->m_constantBufferIndices) {
+					D3D12ConstantBuffer& cbBuffer = *dynamic_cast<D3D12ConstantBuffer*>(pConstantBuffers[cbIndex]);
 
-					size_t i = 0u;
-					for (const size_t cbIndex : this->m_constantBufferIndices) {
-						D3D12ConstantBuffer& cbBuffer = *dynamic_cast<D3D12ConstantBuffer*>(pConstantBuffers[cbIndex]);
+					for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
+						srcCpuDescriptorHandles[i][frameIndex] = cbBuffer.GetDescriptorHeap(frameIndex)->GetCPUDescriptorHandleForHeapStart();
 
-						for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
-							srcCpuDescriptorHandles[i][frameIndex] = cbBuffer.GetDescriptorHeap(frameIndex)->GetCPUDescriptorHandleForHeapStart();
+					i++;
+				}
 
-						i++;
-					}
+				for (const size_t texIndex : this->m_textureIndices) {
+					D3D12Texture& texture = *dynamic_cast<D3D12Texture*>(pTextures[texIndex]);
 
-					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "mid\n");
-
-					for (const size_t texIndex : this->m_textureIndices) {
-						D3D12Texture& texture = *dynamic_cast<D3D12Texture*>(pTextures[texIndex]);
-
-						for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
-							srcCpuDescriptorHandles[i][frameIndex] = texture.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
+					for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
+						srcCpuDescriptorHandles[i][frameIndex] = texture.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
 						
-						i++;
-					}
+					i++;
+				}
 
-					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "after\n");
-
-					this->m_handles = this->m_pDescriptorHeapManager->AddDesriptors(srcCpuDescriptorHandles);
+				this->m_handles = this->m_pDescriptorHeapManager->AddDesriptors(srcCpuDescriptorHandles);
 			}
 
 			D3D12RenderPipeline& D3D12RenderPipeline::operator=(D3D12RenderPipeline&& other) noexcept
@@ -7224,7 +7893,7 @@ namespace WS {
 
 	void GraphicsEngine::Run(const size_t fps)
 	{
-	while (this->m_windowHandle->IsRunning())
+		while (this->m_windowHandle->IsRunning())
 		{
 			this->m_windowHandle->Update();
 
@@ -7399,7 +8068,7 @@ namespace WS {
 	{
 #ifdef __WEISS__OS_WINDOWS
 
-		return {new WIN::WindowsWindow(descriptor)};
+		return {new WS::Internal::WIN::WindowsWindow(descriptor)};
 
 #endif // __WEISS__OS_WINDOWS
 
