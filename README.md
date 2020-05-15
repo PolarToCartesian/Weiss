@@ -1,6 +1,12 @@
-# Weiss
+![Weiss Logo](logo.png)
 
 > Weiss II is cross-platform, api-agnostic and header-only rendering engine built with c++17. It is intended to be a wrapper around low-level apis to make the developpement of 2D and 3D applications simpler and faster.
+
+## Contributions
+
+Many thanks to :
+
+  + [Red-Rapious](https://github.com/Red-Rapious) for the amazing logo!
 
 ## Current Support
 
