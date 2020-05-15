@@ -3537,7 +3537,7 @@ namespace WS
 		SOCKET m_socket = INVALID_SOCKET;
 
 	public:
-		ClientSocket();
+		ClientSocket() = default;
 
 		~ClientSocket() { this->Disconnect(); }
 
@@ -3566,7 +3566,7 @@ namespace WS
 		std::vector<SOCKET> m_clients;
 
 	public:
-		ServerSocket();
+		ServerSocket() = default;
 
 		~ServerSocket() { this->Disconnect(); }
 
@@ -3581,7 +3581,22 @@ namespace WS
 		void Disconnect() noexcept;
 	};
 
+	/*
+	 * To Be Declared By The User
+	*/
+	int WeissEntryPoint(int argc, char** argv);
+
 }; // WS
+
+/*
+ * // ////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+ * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+ * // ||--------------------------Entry Point--------------------------|| \\
+ * // |\_______________________________________________________________/| \\
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////////////// \\
+ */
+
+int main(int argc, char** argv);
 
 // LOG Static Class
 std::mutex                WS::LOG::m_sPrintMutex                         = std::mutex();
@@ -3805,7 +3820,7 @@ namespace WS {
 	// |\___________________________/| \\
 	// \\\\\\\\\\\\\\\-/////////////// \\
 
-	void Transform::CalculateTransform()
+	void Transform::CalculateTransform() noexcept
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -4006,9 +4021,6 @@ namespace WS {
 				Microsoft::WRL::ComPtr<IWICBitmapDecoder>     bitmapDecoder;
 				Microsoft::WRL::ComPtr<IWICImagingFactory>    factory;
 				Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> frameDecoder;
-
-				if (DX_FAILED(CoInitialize(NULL)))
-					throw std::runtime_error("[COM] Failed To Init COM");
 
 				if (DX_FAILED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory))))
 					throw std::runtime_error("[WIC] Could Not Create IWICImagingFactory");
@@ -7989,14 +8001,6 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
 	 */
 
-	ClientSocket::ClientSocket()
-	{
-#ifdef __WEISS__OS_WINDOWS
-		WSADATA wsaData;
-		WSAStartup(MAKEWORD(2, 0), &wsaData);
-#endif // __WEISS__OS_WINDOWS
-	}
-
 	void ClientSocket::Connect(const char* host, const unsigned int port)
 	{
 		sockaddr_in sockAddr;
@@ -8039,10 +8043,6 @@ namespace WS {
 		this->m_socket = INVALID_SOCKET;
 
 		closesocket(this->m_socket);
-
-#ifdef __WEISS__OS_WINDOWS
-		WSACleanup();
-#endif // __WEISS__OS_WINDOWS
 	}
 
 	/*
@@ -8052,14 +8052,6 @@ namespace WS {
 	 * // |\______________________________/| \\
 	 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
 	 */
-
-	ServerSocket::ServerSocket()
-	{
-#ifdef __WEISS__OS_WINDOWS
-		WSADATA wsaData;
-		WSAStartup(MAKEWORD(2, 0), &wsaData);
-#endif // __WEISS__OS_WINDOWS
-	}
 
 	void ServerSocket::Bind(const unsigned int port)
 	{
@@ -8123,11 +8115,7 @@ namespace WS {
 		this->m_socket = INVALID_SOCKET;
 
 		closesocket(this->m_socket);
-
-#ifdef __WEISS__OS_WINDOWS
-		WSACleanup();
-#endif // __WEISS__OS_WINDOWS
-	} 
+	}
 
 	/*
 	 * // ////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -8169,6 +8157,41 @@ namespace WS {
 	}
 
 }; // WS
+
+/*
+ * // ////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+ * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+ * // ||--------------------------Entry Point--------------------------|| \\
+ * // |\_______________________________________________________________/| \\
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////////////// \\
+ */
+
+int main(int argc, char** argv)
+{
+#ifdef __WEISS__OS_WINDOWS
+
+	if (WIN_FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)))
+		throw std::runtime_error("[COM] Failed To CoInitialize");
+
+	WSADATA wsaData;
+	if (WIN_FAILED(WSAStartup(MAKEWORD(2, 0), &wsaData)))
+		throw std::runtime_error("[WINSOCK] Failed To WSAStartup");
+
+#endif // __WEISS__OS_WINDOWS
+
+	const int returnCode = WS::WeissEntryPoint(argc, argv);
+
+#ifdef __WEISS__OS_WINDOWS
+
+	if (WIN_FAILED(WSACleanup()))
+		throw std::runtime_error("[WINSOCK] Failed To WSACleanup");
+
+	CoUninitialize();
+
+#endif // __WEISS__OS_WINDOWS
+
+	return returnCode;
+}
 
 /*
  * // /////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
