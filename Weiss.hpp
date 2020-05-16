@@ -203,6 +203,30 @@
 #endif
 
 /*
+ * // //////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+ * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+ * // ||-------------TO THROW OR NOT TO THROW------------|| \\
+ * // |\_________________________________________________/| \\
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////// \\
+ * 
+ * The use of noexcept can speed up execution but exceptions are needed in debug mode
+ */
+
+#ifdef __WEISS__DEBUG_MODE
+
+	#define __WEISS__THROWS true
+	#define WS_THROW(errorMsg) (throw std::runtime_error(errorMsg)) 
+
+#else
+
+	#define __WEISS__THROWS false
+	#define WS_THROW(errorMsg) {}
+
+#endif
+
+#define WS_NOEXCEPT noexcept(!__WEISS__THROWS)
+
+/*
  * // //////////////////////-\\\\\\\\\\\\\\\\\\\\\\ \\
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
  * // ||--------------HELPER MACROS--------------|| \\
@@ -327,9 +351,9 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		Rect(const RECT &rect);
+		Rect(const RECT &rect) noexcept;
 
-		inline operator const RECT&() const noexcept { return RECT{ left, top, right, bottom }; }
+		inline operator const RECT&() const WS_NOEXCEPT { return RECT{ left, top, right, bottom }; }
 
 #endif // __WEISS__OS_WINDOWS
 	};
@@ -428,7 +452,7 @@ namespace WS
 		Matrix() = default;
 
 		template <typename T2>
-		Matrix(const std::initializer_list<std::initializer_list<T2>> &data)
+		Matrix(const std::initializer_list<std::initializer_list<T2>> &data) WS_NOEXCEPT
 		{
 			size_t r = 0, c = 0;
 			for (const std::initializer_list<T2>& row : data) {
@@ -440,7 +464,7 @@ namespace WS
 		}
 
 		template <typename T2, size_t R2, size_t C2>
-		Matrix(const Matrix<T2, R2, C2> &other)
+		Matrix(const Matrix<T2, R2, C2> &other) WS_NOEXCEPT
 		{
 			if constexpr (R == R2 && C == C2 && std::is_same<T, T2>()) {
 				std::memcpy(this->m, other.m, sizeof(this->m));
@@ -456,23 +480,23 @@ namespace WS
 		
 #ifdef __WEISS__OS_WINDOWS
 
-		Matrix(const DirectX::XMMATRIX &other);
+		Matrix(const DirectX::XMMATRIX &other) WS_NOEXCEPT;
 
 #endif // __WEISS__OS_WINDOWS
 
-		[[nodiscard]] inline size_t GetRowCount() const noexcept;
+		[[nodiscard]] inline size_t GetRowCount() const WS_NOEXCEPT;
 
-		[[nodiscard]] inline size_t GetColCount() const noexcept;
+		[[nodiscard]] inline size_t GetColCount() const WS_NOEXCEPT;
 
 		[[nodiscard]] inline T* operator[](const size_t r);
 
-		[[nodiscard]] inline T&       Get     (const size_t r, const size_t c) noexcept;
-		[[nodiscard]] inline const T& GetValue(const size_t r, const size_t c) const noexcept;
+		[[nodiscard]] inline T&       Get     (const size_t r, const size_t c) WS_NOEXCEPT;
+		[[nodiscard]] inline const T& GetValue(const size_t r, const size_t c) const WS_NOEXCEPT;
 
-		[[nodiscard]] inline Matrix<T, R, C> GetTransposed() const noexcept;
+		[[nodiscard]] inline Matrix<T, R, C> GetTransposed() const WS_NOEXCEPT;
 
 		template <typename T2, size_t R2, size_t C2>
-		[[nodiscard]] inline bool operator==(const Matrix<T2, R2, C2>& other) const noexcept
+		[[nodiscard]] inline bool operator==(const Matrix<T2, R2, C2>& other) const WS_NOEXCEPT
 		{
 			if constexpr (R == R2 && C == C2 && std::is_same<T, T2>())
 			{
@@ -486,12 +510,12 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		[[nodiscard]] inline operator DirectX::XMMATRIX() const noexcept;
+		[[nodiscard]] inline operator DirectX::XMMATRIX() const WS_NOEXCEPT;
 
 #endif // __WEISS__OS_WINDOWS
 
 	public:
-		[[nodiscard]] static inline constexpr Matrix<T, R, C> MakeIdentity();
+		[[nodiscard]] static inline constexpr Matrix<T, R, C> MakeIdentity() WS_NOEXCEPT;
 	};
 
 	template <typename T, size_t R, size_t C>
@@ -516,83 +540,83 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		Vector2D(const DirectX::XMVECTOR &other);
+		Vector2D(const DirectX::XMVECTOR &other) WS_NOEXCEPT;
 
 #endif // __WEISS__OS_WINDOWS
 
 		template <typename K>
-		Vector2D(const K &n) : x(static_cast<T>(n)), y(static_cast<T>(n))
+		Vector2D(const K &n) WS_NOEXCEPT : x(static_cast<T>(n)), y(static_cast<T>(n))
 		{
 		}
 
 		template <typename K, typename L>
-		Vector2D(const K &x, const L &y) : x(static_cast<T>(x)), y(static_cast<T>(y)) {}
+		Vector2D(const K &x, const L &y) WS_NOEXCEPT : x(static_cast<T>(x)), y(static_cast<T>(y)) {}
 
 		template <typename K>
-		inline void operator+=(const Vector2D<K> &v) noexcept
+		inline void operator+=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x += v.x;
 			this->y += v.y;
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector2D<K> &v) noexcept
+		inline void operator-=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x -= v.x;
 			this->y -= v.y;
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector2D<K> &v) noexcept
+		inline void operator*=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x *= v.x;
 			this->y *= v.y;
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector2D<K> &v) noexcept
+		inline void operator/=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x /= v.x;
 			this->y /= v.y;
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n) noexcept
+		inline void operator+=(const K &n) WS_NOEXCEPT
 		{
 			this->x += n;
 			this->y += n;
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n) noexcept
+		inline void operator-=(const K &n) WS_NOEXCEPT
 		{
 			this->x -= n;
 			this->y -= n;
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n) noexcept
+		inline void operator*=(const K &n) WS_NOEXCEPT
 		{
 			this->x *= n;
 			this->y *= n;
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n) noexcept
+		inline void operator/=(const K &n) WS_NOEXCEPT
 		{
 			this->x /= n;
 			this->y /= n;
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector2D<K> &v) noexcept { return this->x == v.x && this->y == v.y; }
+		[[nodiscard]] inline bool operator==(const Vector2D<K> &v) WS_NOEXCEPT { return this->x == v.x && this->y == v.y; }
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector2D<K> &v) noexcept { return this->x != v.x || this->y != v.y; }
+		[[nodiscard]] inline bool operator!=(const Vector2D<K> &v) WS_NOEXCEPT { return this->x != v.x || this->y != v.y; }
 
 #ifdef __WEISS__OS_WINDOWS
 
-		inline operator DirectX::XMVECTOR() const
+		inline operator DirectX::XMVECTOR() const WS_NOEXCEPT
 		{
 			return DirectX::XMVectorSet(this->x, this->y, 0.0f, 0.0f);
 		}
@@ -601,35 +625,35 @@ namespace WS
 	};
 
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector2D<T> &v)
+	inline std::ostream &operator<<(std::ostream &os, const Vector2D<T> &v) WS_NOEXCEPT
 	{
 		os << '(' << v.x << ", " << v.y << ")";
 		return os;
 	}
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &a, const Vector2D<K> &b) noexcept { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
+	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x + n, v.y + n}; }
+	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x + n, v.y + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x - n, v.y - n}; }
+	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x - n, v.y - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x * n, v.y * n}; }
+	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x * n, v.y * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &v, const K &n) noexcept { return Vector2D<T>{v.x / n, v.y / n}; }
+	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x / n, v.y / n}; }
 
 	// ///////////////-\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -646,51 +670,51 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		Vector3D(const DirectX::XMVECTOR &other);
+		Vector3D(const DirectX::XMVECTOR &other) WS_NOEXCEPT;
 
 #endif // __WEISS__OS_WINDOWS
 
 		template <typename K>
-		Vector3D(const K &n) : Vector2D<T>(n), z(static_cast<T>(n))
+		Vector3D(const K &n) WS_NOEXCEPT : Vector2D<T>(n), z(static_cast<T>(n))
 		{
 		}
 
 		template <typename K, typename L, typename M>
-		Vector3D(const K &x, const L &y, const M &z) : Vector2D<T>(x, y), z(static_cast<T>(z)) {}
+		Vector3D(const K &x, const L &y, const M &z) WS_NOEXCEPT : Vector2D<T>(x, y), z(static_cast<T>(z)) {}
 
 		template <typename T2>
-		Vector3D(const Vector2D<T2> &v) : Vector2D<T>(v) {}
+		Vector3D(const Vector2D<T2> &v) WS_NOEXCEPT : Vector2D<T>(v) {}
 
 		template <typename K>
-		inline void operator+=(const Vector2D<K> &v) noexcept
+		inline void operator+=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x += v.x;
 			this->y += v.y;
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector2D<K> &v) noexcept
+		inline void operator-=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x -= v.x;
 			this->y -= v.y;
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector2D<K> &v) noexcept
+		inline void operator*=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x *= v.x;
 			this->y *= v.y;
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector2D<K> &v) noexcept
+		inline void operator/=(const Vector2D<K> &v) WS_NOEXCEPT
 		{
 			this->x /= v.x;
 			this->y /= v.y;
 		}
 
 		template <typename K>
-		inline void operator+=(const Vector3D<K> &v) noexcept
+		inline void operator+=(const Vector3D<K> &v) WS_NOEXCEPT
 		{
 			this->x += v.x;
 			this->y += v.y;
@@ -698,7 +722,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector3D<K> &v) noexcept
+		inline void operator-=(const Vector3D<K> &v) WS_NOEXCEPT
 		{
 			this->x -= v.x;
 			this->y -= v.y;
@@ -706,7 +730,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector3D<K> &v) noexcept
+		inline void operator*=(const Vector3D<K> &v) WS_NOEXCEPT
 		{
 			this->x *= v.x;
 			this->y *= v.y;
@@ -714,7 +738,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector3D<K> &v) noexcept
+		inline void operator/=(const Vector3D<K> &v) WS_NOEXCEPT
 		{
 			this->x /= v.x;
 			this->y /= v.y;
@@ -722,7 +746,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n) noexcept
+		inline void operator+=(const K &n) WS_NOEXCEPT
 		{
 			this->x += n;
 			this->y += n;
@@ -730,7 +754,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n) noexcept
+		inline void operator-=(const K &n) WS_NOEXCEPT
 		{
 			this->x -= n;
 			this->y -= n;
@@ -738,7 +762,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n) noexcept
+		inline void operator*=(const K &n) WS_NOEXCEPT
 		{
 			this->x *= n;
 			this->y *= n;
@@ -746,7 +770,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n) noexcept
+		inline void operator/=(const K &n) WS_NOEXCEPT
 		{
 			this->x /= n;
 			this->y /= n;
@@ -754,14 +778,14 @@ namespace WS
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector3D<K> &v) noexcept { return this->x == v.x && this->y == v.y && this->z == v.z; }
+		[[nodiscard]] inline bool operator==(const Vector3D<K> &v) WS_NOEXCEPT { return this->x == v.x && this->y == v.y && this->z == v.z; }
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector3D<K> &v) noexcept { return this->x != v.x || this->y != v.y || this->z != v.z; }
+		[[nodiscard]] inline bool operator!=(const Vector3D<K> &v) WS_NOEXCEPT { return this->x != v.x || this->y != v.y || this->z != v.z; }
 
 #ifdef __WEISS__OS_WINDOWS
 
-		inline operator DirectX::XMVECTOR() const noexcept
+		inline operator DirectX::XMVECTOR() const WS_NOEXCEPT
 		{
 			return DirectX::XMVectorSet(this->x, this->y, this->z, 0.0f);
 		}
@@ -770,43 +794,43 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector2D<K> &b) noexcept { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector3D<K> &b) noexcept { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
+	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
+	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
+	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &v, const K &n) noexcept { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
+	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
 
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector3D<T> &v) noexcept
+	inline std::ostream &operator<<(std::ostream &os, const Vector3D<T> &v) WS_NOEXCEPT
 	{
 		os << '(' << v.x << ", " << v.y << ", " << v.z << ")";
 		return os;
@@ -827,24 +851,24 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		Vector4D(const DirectX::XMVECTOR &other);
+		Vector4D(const DirectX::XMVECTOR &other) WS_NOEXCEPT;
 
 #endif // __WEISS__OS_WINDOWS
 
 		template <typename K>
-		Vector4D(const K &n) : Vector3D<T>(n), w(static_cast<T>(w)) {  }
+		Vector4D(const K &n) WS_NOEXCEPT : Vector3D<T>(n), w(static_cast<T>(w)) {  }
 
 		template <typename K, typename L, typename M, typename N>
-		Vector4D(const K &x, const L &y, const M &z, const N &w) : Vector3D<T>(x, y, z), w(static_cast<T>(w)) {}
+		Vector4D(const K &x, const L &y, const M &z, const N &w) WS_NOEXCEPT : Vector3D<T>(x, y, z), w(static_cast<T>(w)) {}
 
 		template <typename T2>
-		Vector4D(const Vector2D<T2> &v) : Vector2D<T>(v) {}
+		Vector4D(const Vector2D<T2> &v) WS_NOEXCEPT : Vector2D<T>(v) {}
 
 		template <typename T2>
-		Vector4D(const Vector3D<T2> &v) : Vector3D<T>(v) {}
+		Vector4D(const Vector3D<T2> &v) WS_NOEXCEPT : Vector3D<T>(v) {}
 
 		template <typename K>
-		inline void operator+=(const Vector4D<K> &v) noexcept
+		inline void operator+=(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			this->x += v.x;
 			this->y += v.y;
@@ -853,7 +877,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const Vector4D<K> &v) noexcept
+		inline void operator-=(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			this->x -= v.x;
 			this->y -= v.y;
@@ -862,7 +886,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const Vector4D<K> &v) noexcept
+		inline void operator*=(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			this->x *= v.x;
 			this->y *= v.y;
@@ -871,7 +895,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const Vector4D<K> &v) noexcept
+		inline void operator/=(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			this->x /= v.x;
 			this->y /= v.y;
@@ -880,7 +904,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator+=(const K &n) noexcept
+		inline void operator+=(const K &n) WS_NOEXCEPT
 		{
 			this->x += n;
 			this->y += n;
@@ -889,7 +913,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator-=(const K &n) noexcept
+		inline void operator-=(const K &n) WS_NOEXCEPT
 		{
 			this->x -= n;
 			this->y -= n;
@@ -898,7 +922,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator*=(const K &n) noexcept
+		inline void operator*=(const K &n) WS_NOEXCEPT
 		{
 			this->x *= n;
 			this->y *= n;
@@ -907,7 +931,7 @@ namespace WS
 		}
 
 		template <typename K>
-		inline void operator/=(const K &n) noexcept
+		inline void operator/=(const K &n) WS_NOEXCEPT
 		{
 			this->x /= n;
 			this->y /= n;
@@ -916,20 +940,20 @@ namespace WS
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator==(const Vector4D<K> &v) noexcept
+		[[nodiscard]] inline bool operator==(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			return this->x == v.x && this->y == v.y && this->z == v.z && this->w == v.w;
 		}
 
 		template <typename K>
-		[[nodiscard]] inline bool operator!=(const Vector4D<K> &v) noexcept
+		[[nodiscard]] inline bool operator!=(const Vector4D<K> &v) WS_NOEXCEPT
 		{
 			return this->x != v.x || this->y != v.y || this->z != v.z || this->w != v.w;
 		}
 
 #ifdef __WEISS__OS_WINDOWS
 
-		inline operator DirectX::XMVECTOR() const noexcept
+		inline operator DirectX::XMVECTOR() const WS_NOEXCEPT
 		{
 			return DirectX::XMVectorSet(this->x, this->y, this->z, this->w);
 		}
@@ -938,31 +962,31 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &a, const Vector4D<K> &b) noexcept { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
+	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
+	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
+	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
+	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &v, const K &n) noexcept { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
+	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
 
 	template <typename T>
-	inline std::ostream &operator<<(std::ostream &os, const Vector4D<T> &v) noexcept
+	inline std::ostream &operator<<(std::ostream &os, const Vector4D<T> &v) WS_NOEXCEPT
 	{
 		os << '(' << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
 		return os;
@@ -1015,19 +1039,19 @@ namespace WS
 	public:
 		Transform() = default;
 
-		[[nodiscard]] inline Vec3f GetRotation()    const noexcept { return this->m_rotation;    }
-		[[nodiscard]] inline Vec3f GetTranslation() const noexcept { return this->m_translation; }
+		[[nodiscard]] inline Vec3f GetRotation()    const WS_NOEXCEPT { return this->m_rotation;    }
+		[[nodiscard]] inline Vec3f GetTranslation() const WS_NOEXCEPT { return this->m_translation; }
 
-		inline void SetRotation   (const Vec3f &rotation)    noexcept { this->m_rotation    = rotation;    }
-		inline void SetTranslation(const Vec3f &translation) noexcept { this->m_translation = translation; }
+		inline void SetRotation   (const Vec3f &rotation)    WS_NOEXCEPT { this->m_rotation    = rotation;    }
+		inline void SetTranslation(const Vec3f &translation) WS_NOEXCEPT { this->m_translation = translation; }
 
-		inline void Rotate   (const Vec3f &delta) noexcept { this->m_rotation += delta; }
-		inline void Translate(const Vec3f &delta) noexcept { this->m_translation += delta; }
+		inline void Rotate   (const Vec3f &delta) WS_NOEXCEPT { this->m_rotation += delta; }
+		inline void Translate(const Vec3f &delta) WS_NOEXCEPT { this->m_translation += delta; }
 
-		[[nodiscard]] inline Mat4x4f GetTransform()           const noexcept { return this->m_transform;                 }
-		[[nodiscard]] inline Mat4x4f GetTransposedTransform() const noexcept { return this->m_transform.GetTransposed(); }
+		[[nodiscard]] inline Mat4x4f GetTransform()           const WS_NOEXCEPT { return this->m_transform;                 }
+		[[nodiscard]] inline Mat4x4f GetTransposedTransform() const WS_NOEXCEPT { return this->m_transform.GetTransposed(); }
 
-		void CalculateTransform() noexcept;
+		void CalculateTransform() WS_NOEXCEPT;
 	};
 
 	// ////////////////-\\\\\\\\\\\\\\\\ \\
@@ -1058,14 +1082,14 @@ namespace WS
 
 	private:
 		template <typename T, typename ...Args>
-		static void __Print(const LOG_TYPE logType, const T& message0, Args... args);
+		static void __Print(const LOG_TYPE logType, const T& message0, Args... args) WS_NOEXCEPT;
 
 	public:
 		template <typename T, typename ...Args>
-		static inline void Print(const LOG_TYPE logType,   const T& message0, Args... args);
+		static inline void Print(const LOG_TYPE logType,   const T& message0, Args... args) WS_NOEXCEPT;
 
 		template <typename T, typename ...Args>
-		static inline void Println(const LOG_TYPE logType, const T& message0, Args... args);
+		static inline void Println(const LOG_TYPE logType, const T& message0, Args... args) WS_NOEXCEPT;
 
 	};
 
@@ -1103,16 +1127,16 @@ namespace WS
 			uint32_t m_nPixels = 0;
 
 		public:
-			[[nodiscard]] inline uint16_t GetWidth()      const noexcept { return this->m_width;      }
-			[[nodiscard]] inline uint16_t GetHeight()     const noexcept { return this->m_height;     }
-			[[nodiscard]] inline uint32_t GetPixelCount() const noexcept { return this->m_nPixels;    }
-			[[nodiscard]] inline Coloru8* GetBuffer()     const noexcept { return this->m_buff.get(); }
+			[[nodiscard]] inline uint16_t GetWidth()      const WS_NOEXCEPT { return this->m_width;      }
+			[[nodiscard]] inline uint16_t GetHeight()     const WS_NOEXCEPT { return this->m_height;     }
+			[[nodiscard]] inline uint32_t GetPixelCount() const WS_NOEXCEPT { return this->m_nPixels;    }
+			[[nodiscard]] inline Coloru8* GetBuffer()     const WS_NOEXCEPT { return this->m_buff.get(); }
 
-			[[nodiscard]] inline Coloru8  Sample(const uint16_t x, const uint16_t y) const noexcept { return this->m_buff[y * this->m_width + x]; }
+			[[nodiscard]] inline Coloru8  Sample(const uint16_t x, const uint16_t y) const WS_NOEXCEPT { return this->m_buff[y * this->m_width + x]; }
 
-			inline void Set(const uint16_t x, const uint16_t y, const Coloru8 &color) { this->m_buff[y * this->m_width + x] = color; }
+			inline void Set(const uint16_t x, const uint16_t y, const Coloru8 &color) WS_NOEXCEPT { this->m_buff[y * this->m_width + x] = color; }
 
-			virtual void Write(const char *filename) const = 0;
+			virtual void Write(const char *filename) const WS_NOEXCEPT = 0;
 		};
 
 #ifdef __WEISS__OS_WINDOWS
@@ -1137,17 +1161,17 @@ namespace WS
 			public:
 				WindowsImage() = default;
 
-				WindowsImage(WindowsImage &&other);
+				WindowsImage(WindowsImage &&other) noexcept;
 
-				WindowsImage(const WindowsImage &other);
+				WindowsImage(const WindowsImage &other) noexcept;
 
-				WindowsImage(const char *filename);
+				WindowsImage(const char *filename) WS_NOEXCEPT;
 
-				WindowsImage(const uint16_t width, const uint16_t height, const Coloru8 &fillColor = {255u, 255u, 255u, 255u});
+				WindowsImage(const uint16_t width, const uint16_t height, const Coloru8 &fillColor = {255u, 255u, 255u, 255u}) WS_NOEXCEPT;
 
-				WindowsImage& operator=(const WindowsImage& other) noexcept;
+				WindowsImage& operator=(const WindowsImage& other) WS_NOEXCEPT;
 
-				virtual void Write(const char *filename) const override;
+				virtual void Write(const char *filename) const WS_NOEXCEPT override;
 			};
 
 		}; // namespace WIN
@@ -1196,14 +1220,14 @@ namespace WS
 		std::vector<std::function<void(const Vec2u16, const Vec2i16)>> m_onCursorMoveFunctors;
 
 	public:
-		inline void OnLeftButtonUp   (const std::function<void(Vec2u16)>& functor) noexcept { this->m_onLeftButtonUpFunctors.push_back(functor);    }
-		inline void OnLeftButtonDown (const std::function<void(Vec2u16)>& functor) noexcept { this->m_onLeftButtonDownFunctors.push_back(functor);  }
-		inline void OnRightButtonUp  (const std::function<void(Vec2u16)>& functor) noexcept { this->m_onRightButtonUpFunctors.push_back(functor);   }
-		inline void OnRightButtonDown(const std::function<void(Vec2u16)>& functor) noexcept { this->m_onRightButtonDownFunctors.push_back(functor); }
+		inline void OnLeftButtonUp   (const std::function<void(Vec2u16)>& functor) WS_NOEXCEPT { this->m_onLeftButtonUpFunctors.push_back(functor);    }
+		inline void OnLeftButtonDown (const std::function<void(Vec2u16)>& functor) WS_NOEXCEPT { this->m_onLeftButtonDownFunctors.push_back(functor);  }
+		inline void OnRightButtonUp  (const std::function<void(Vec2u16)>& functor) WS_NOEXCEPT { this->m_onRightButtonUpFunctors.push_back(functor);   }
+		inline void OnRightButtonDown(const std::function<void(Vec2u16)>& functor) WS_NOEXCEPT { this->m_onRightButtonDownFunctors.push_back(functor); }
 
-		inline void OnWheelTurn (const std::function<void(const int16_t)> &functor)                noexcept { this->m_onWheelTurnFunctors.push_back(functor); }
-		inline void OnMouseMove (const std::function<void(const Vec2u16, const Vec2i16)>& functor) noexcept { this->m_onMouseMoveFunctors.push_back(functor);  }
-		inline void OnCursorMove(const std::function<void(const Vec2u16, const Vec2i16)>& functor) noexcept { this->m_onCursorMoveFunctors.push_back(functor); }
+		inline void OnWheelTurn (const std::function<void(const int16_t)> &functor)                WS_NOEXCEPT { this->m_onWheelTurnFunctors.push_back(functor); }
+		inline void OnMouseMove (const std::function<void(const Vec2u16, const Vec2i16)>& functor) WS_NOEXCEPT { this->m_onMouseMoveFunctors.push_back(functor);  }
+		inline void OnCursorMove(const std::function<void(const Vec2u16, const Vec2i16)>& functor) WS_NOEXCEPT { this->m_onCursorMoveFunctors.push_back(functor); }
 	};
 
 	// ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
@@ -1233,23 +1257,23 @@ namespace WS
 
 		virtual ~Mouse() = default;
 
-		[[nodiscard]] inline bool IsLeftButtonUp()   const { return !this->m_isLeftButtonDown; }
-		[[nodiscard]] inline bool IsLeftButtonDown() const { return this->m_isLeftButtonDown;  }
+		[[nodiscard]] inline bool IsLeftButtonUp()   const WS_NOEXCEPT { return !this->m_isLeftButtonDown; }
+		[[nodiscard]] inline bool IsLeftButtonDown() const WS_NOEXCEPT { return this->m_isLeftButtonDown;  }
 
-		[[nodiscard]] inline bool IsRightButtonUp()   const { return !this->m_isRightButtonDown; }
-		[[nodiscard]] inline bool IsRightButtonDown() const { return this->m_isRightButtonDown;  }
+		[[nodiscard]] inline bool IsRightButtonUp()   const WS_NOEXCEPT { return !this->m_isRightButtonDown; }
+		[[nodiscard]] inline bool IsRightButtonDown() const WS_NOEXCEPT { return this->m_isRightButtonDown;  }
 
-		[[nodiscard]] inline bool IsCursorInWindow() const { return this->m_isCursorInWindow; }
+		[[nodiscard]] inline bool IsCursorInWindow() const WS_NOEXCEPT { return this->m_isCursorInWindow; }
 
-		virtual inline void Show() const noexcept = 0;
-		virtual inline void Hide() const noexcept = 0;
+		virtual inline void Show() const WS_NOEXCEPT = 0;
+		virtual inline void Hide() const WS_NOEXCEPT = 0;
 
 		/*
 		 * Limits the mouse movements to a specific "Rect"
 		 * This may be used in games to make the cursor stay
 		 * inside of the window
 		*/
-		virtual void Clip(const Rect &rect) const noexcept = 0;
+		virtual void Clip(const Rect &rect) const WS_NOEXCEPT = 0;
 	};
 
 	// ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
@@ -1267,8 +1291,8 @@ namespace WS
 		std::vector<std::function<void(const uint8_t)>> m_onKeyDownFunctors;
 
 	public:
-		inline void OnKeyUp  (const std::function<void(const uint8_t)>& functor) noexcept { this->m_onKeyUpFunctors.push_back(functor);   }
-		inline void OnKeyDown(const std::function<void(const uint8_t)>& functor) noexcept { this->m_onKeyDownFunctors.push_back(functor); }
+		inline void OnKeyUp  (const std::function<void(const uint8_t)>& functor) WS_NOEXCEPT { this->m_onKeyUpFunctors.push_back(functor);   }
+		inline void OnKeyDown(const std::function<void(const uint8_t)>& functor) WS_NOEXCEPT { this->m_onKeyDownFunctors.push_back(functor); }
 	};
 
 	// ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
@@ -1287,7 +1311,7 @@ namespace WS
 
 		virtual ~Keyboard() = default;
 
-		[[nodiscard]] inline bool IsKeyDown(const uint8_t key) const noexcept
+		[[nodiscard]] inline bool IsKeyDown(const uint8_t key) const WS_NOEXCEPT
 		{
 			return this->m_downKeys.end() != std::find(this->m_downKeys.begin(), this->m_downKeys.end(), key);
 		}
@@ -1325,47 +1349,47 @@ namespace WS
 	public:
 		Window() = default;
 
-		virtual ~Window();
+		virtual ~Window() WS_NOEXCEPT;
 
 		// <<<<---- Events ---->>>> \\
 
-		inline void OnResize(const std::function<void(const Vec2u16)> &functor) noexcept { this->m_onResizeFunctors.push_back(functor); }
+		inline void OnResize(const std::function<void(const Vec2u16)> &functor) WS_NOEXCEPT { this->m_onResizeFunctors.push_back(functor); }
 
 		// <<<<---- Getters ---->>>> \\
 
-		[[nodiscard]] inline bool IsRunning() const noexcept { return this->m_isRunning; }
+		[[nodiscard]] inline bool IsRunning() const WS_NOEXCEPT { return this->m_isRunning; }
 
-		[[nodiscard]] inline Mouse&    GetMouse()    noexcept { return *this->m_pMouse;    }
-		[[nodiscard]] inline Keyboard& GetKeyboard() noexcept { return *this->m_pKeyboard; }
+		[[nodiscard]] inline Mouse&    GetMouse()    WS_NOEXCEPT { return *this->m_pMouse;    }
+		[[nodiscard]] inline Keyboard& GetKeyboard() WS_NOEXCEPT { return *this->m_pKeyboard; }
 
-		[[nodiscard]] inline uint16_t GetWindowPositionX() const noexcept { return static_cast<uint16_t>(this->GetWindowRectangle().left);   }
-		[[nodiscard]] inline uint16_t GetWindowPositionY() const noexcept { return static_cast<uint16_t>(this->GetWindowRectangle().top);    }
-		[[nodiscard]] inline uint16_t GetClientWidth()     const noexcept { return static_cast<uint16_t>(this->GetClientRectangle().right);  }
-		[[nodiscard]] inline uint16_t GetClientHeight()    const noexcept { return static_cast<uint16_t>(this->GetClientRectangle().bottom); }
+		[[nodiscard]] inline uint16_t GetWindowPositionX() const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetWindowRectangle().left);   }
+		[[nodiscard]] inline uint16_t GetWindowPositionY() const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetWindowRectangle().top);    }
+		[[nodiscard]] inline uint16_t GetClientWidth()     const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetClientRectangle().right);  }
+		[[nodiscard]] inline uint16_t GetClientHeight()    const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetClientRectangle().bottom); }
 
-		[[nodiscard]] inline uint16_t GetWindowWidth() const noexcept
+		[[nodiscard]] inline uint16_t GetWindowWidth() const WS_NOEXCEPT
 		{
 			const Rect rect = this->GetWindowRectangle();
 
 			return static_cast<uint16_t>(rect.right - rect.left);
 		}
 
-		[[nodiscard]] inline uint16_t GetWindowHeight() const noexcept
+		[[nodiscard]] inline uint16_t GetWindowHeight() const WS_NOEXCEPT
 		{
 			const Rect rect = this->GetWindowRectangle();
 
 			return static_cast<uint16_t>(rect.bottom - rect.top);
 		}
 
-		[[nodiscard]] virtual Rect GetWindowRectangle() const noexcept = 0;
-		[[nodiscard]] virtual Rect GetClientRectangle() const noexcept = 0;
+		[[nodiscard]] virtual Rect GetWindowRectangle() const WS_NOEXCEPT = 0;
+		[[nodiscard]] virtual Rect GetClientRectangle() const WS_NOEXCEPT = 0;
 
 		// <<<<---- Setters ---->>>> \\
 
-		virtual void SetWindowSize(const uint16_t width, const uint16_t height) = 0;
-		virtual void SetClientSize(const uint16_t width, const uint16_t height) = 0;
-		virtual void SetTitle(const char *title) const = 0;
-		virtual void SetIcon (const char *pathname) = 0;
+		virtual void SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT = 0;
+		virtual void SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT = 0;
+		virtual void SetTitle(const char *title) const WS_NOEXCEPT = 0;
+		virtual void SetIcon (const char *pathname) WS_NOEXCEPT = 0;
 
 		// <<<<---- Msc ---->>>> \\
 
@@ -1373,7 +1397,7 @@ namespace WS
 
 	public:
 		// To Be Defined Per Platform
-		static WindowHandle Create(const WindowDescriptor &descriptor = WindowDescriptor{});
+		static WindowHandle Create(const WindowDescriptor &descriptor = WindowDescriptor{}) WS_NOEXCEPT;
 	};
 
 	/*
@@ -1388,8 +1412,8 @@ namespace WS
 
 		~WindowHandle() { delete pWindow; }
 
-		inline Window *operator->() noexcept { return this->pWindow; }
-		inline operator Window *()  noexcept { return this->pWindow; }
+		inline Window *operator->() const WS_NOEXCEPT { return this->pWindow; }
+		inline operator Window *()  const WS_NOEXCEPT { return this->pWindow; }
 	};
 
 	// /////////////////////--\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1420,7 +1444,7 @@ namespace WS
 			class WindowsPeripheralDevice : public PeripheralDevice
 			{
 			public:
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) = 0;
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT = 0;
 			};
 
 			// ///////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1433,18 +1457,18 @@ namespace WS
 								 public WindowsPeripheralDevice
 			{
 			public:
-				WindowsMouse();
+				WindowsMouse() WS_NOEXCEPT;
 
-				virtual inline void Show() const noexcept override { ShowCursor(true);  }
-				virtual inline void Hide() const noexcept override { ShowCursor(false); }
+				virtual inline void Show() const WS_NOEXCEPT override { ShowCursor(true);  }
+				virtual inline void Hide() const WS_NOEXCEPT override { ShowCursor(false); }
 
-				virtual void Clip(const Rect &rect) const noexcept override;
+				virtual void Clip(const Rect &rect) const WS_NOEXCEPT override;
 
-				virtual void __OnWindowUpdateBegin() override;
+				virtual void __OnWindowUpdateBegin() WS_NOEXCEPT override;
 
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT override;
 
-				virtual void __OnWindowUpdateEnd() override;
+				virtual void __OnWindowUpdateEnd() WS_NOEXCEPT override;
 			};
 
 			// /////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1457,7 +1481,7 @@ namespace WS
 									public WindowsPeripheralDevice
 			{
 			public:
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) override;
+				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT override;
 			};
 
 			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
@@ -1470,36 +1494,36 @@ namespace WS
 				HWND m_handle = 0;
 
 			public:
-				WindowsWindow(const WindowDescriptor &descriptor);
+				WindowsWindow(const WindowDescriptor &descriptor) WS_NOEXCEPT;
 
 				// <<<<---- Getters ---->>>> //
 
-				[[nodiscard]] inline HWND GetHandle()              const noexcept { return this->m_handle;        }
-				[[nodiscard]] inline HDC  GetDeviceContextHandle() const noexcept { return GetDC(this->m_handle); }
+				[[nodiscard]] inline HWND GetHandle()              const WS_NOEXCEPT { return this->m_handle;        }
+				[[nodiscard]] inline HDC  GetDeviceContextHandle() const WS_NOEXCEPT { return GetDC(this->m_handle); }
 
-				[[nodiscard]] virtual Rect GetWindowRectangle() const noexcept override;
+				[[nodiscard]] virtual Rect GetWindowRectangle() const WS_NOEXCEPT override;
 
-				[[nodiscard]] virtual Rect GetClientRectangle() const noexcept override;
+				[[nodiscard]] virtual Rect GetClientRectangle() const WS_NOEXCEPT override;
 
 				// <<<<---- Setters ---->>>> //
 
-				virtual void SetWindowSize(const uint16_t width, const uint16_t height) override;
+				virtual void SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT override;
 
-				virtual void SetClientSize(const uint16_t width, const uint16_t height) override;
+				virtual void SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT override;
 
-				virtual void SetTitle(const char *title) const noexcept override;
+				virtual void SetTitle(const char *title) const WS_NOEXCEPT override;
 
-				virtual void SetIcon(const char *pathname) override;
+				virtual void SetIcon(const char *pathname) WS_NOEXCEPT override;
 
 				// <<<<---- Misc ---->>>> //
 
-				[[nodiscard]] LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam);
+				[[nodiscard]] LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 
-				void Destroy() noexcept;
+				void Destroy() WS_NOEXCEPT;
 
-				~WindowsWindow();
+				~WindowsWindow() WS_NOEXCEPT;
 			};
 
 			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -1529,22 +1553,22 @@ namespace WS
 
 		Camera(const Vec3f& position, const Vec3f& rotation) : m_position(position), m_rotation(rotation) { }
 
-		[[nodiscard]] inline Mat4x4f GetTransform()           const noexcept { return this->m_transform;                 }
-		[[nodiscard]] inline Mat4x4f GetTransposedTransform() const noexcept { return this->m_transform.GetTransposed(); }
+		[[nodiscard]] inline Mat4x4f GetTransform()           const WS_NOEXCEPT { return this->m_transform;                 }
+		[[nodiscard]] inline Mat4x4f GetTransposedTransform() const WS_NOEXCEPT { return this->m_transform.GetTransposed(); }
 
-		[[nodiscard]] inline const Vec3f& GetPosition() const noexcept { return this->m_position; }
-		[[nodiscard]] inline const Vec3f& GetRotation() const noexcept { return this->m_rotation; }
+		[[nodiscard]] inline const Vec3f& GetPosition() const WS_NOEXCEPT { return this->m_position; }
+		[[nodiscard]] inline const Vec3f& GetRotation() const WS_NOEXCEPT { return this->m_rotation; }
 
-		inline void Rotate     (const Vec3f &delta)    noexcept { this->m_rotation += delta;   }
-		inline void SetRotation(const Vec3f &rotation) noexcept { this->m_rotation = rotation; }
+		inline void Rotate     (const Vec3f &delta)    WS_NOEXCEPT { this->m_rotation += delta;   }
+		inline void SetRotation(const Vec3f &rotation) WS_NOEXCEPT { this->m_rotation = rotation; }
 
-		inline void Translate  (const Vec3f &delta)    noexcept { this->m_position += delta;   }
-		inline void SetPosition(const Vec3f &position) noexcept { this->m_position = position; }
+		inline void Translate  (const Vec3f &delta)    WS_NOEXCEPT { this->m_position += delta;   }
+		inline void SetPosition(const Vec3f &position) WS_NOEXCEPT { this->m_position = position; }
 
 		virtual void CalculateTransform() = 0;
 
-		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) = 0;
-		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) = 0;
+		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) WS_NOEXCEPT = 0;
+		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT = 0;
 	};
 
 	// ///////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1576,13 +1600,13 @@ namespace WS
 		float m_fov = 0.0f, m_aspectRatio = 0.0f, m_zNear = 0.0f, m_zFar = 0.0f;
 
 	public:
-		PerspectiveCamera(Window *pWindow, const PerspectiveCameraDescriptor &descriptor);
+		PerspectiveCamera(Window *pWindow, const PerspectiveCameraDescriptor &descriptor) WS_NOEXCEPT;
 
-		virtual void CalculateTransform() override;
+		virtual void CalculateTransform() WS_NOEXCEPT override;
 
-		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) override;
+		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) WS_NOEXCEPT override;
 
-		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) override;
+		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT override;
 	};
 
 	// //////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1603,13 +1627,13 @@ namespace WS
 		float m_InvAspectRatio = 0.0f;
 
 	public:
-		OrthographicCamera(Window *pWindow, const OrthographicCameraDescriptor &descriptor);
+		OrthographicCamera(Window *pWindow, const OrthographicCameraDescriptor &descriptor) WS_NOEXCEPT;
 
-		virtual void CalculateTransform() override;
+		virtual void CalculateTransform() WS_NOEXCEPT override;
 
-		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) override;
+		virtual void HandleMouseMovements(Mouse &mouse, const float sensitivity) WS_NOEXCEPT override;
 
-		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) override;
+		virtual void HandleKeyboardInputs(Keyboard &keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT override;
 	};
 
 	// //////////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1624,27 +1648,27 @@ namespace WS
 		std::vector<int8_t> m_vertexData;
 
 	public:
-		virtual void Update() = 0;
+		virtual void Update() WS_NOEXCEPT = 0;
 
-		inline void Set(const void *buff, const size_t bufferSize) noexcept
+		inline void Set(const void *buff, const size_t bufferSize) WS_NOEXCEPT
 		{
 			std::memcpy(this->m_vertexData.data(), buff, bufferSize);
 		}
 
 		template <typename CONTAINER>
-		inline void Set(const CONTAINER &container) noexcept
+		inline void Set(const CONTAINER &container) WS_NOEXCEPT
 		{
 			this->Set(container.data(), container.size() * sizeof(container[0]));
 		}
 
 		template <typename T>
-		inline T& GetVertex(const size_t vertexIndex) noexcept
+		inline T& GetVertex(const size_t vertexIndex) WS_NOEXCEPT
 		{
 			return *(((T *)(this->m_vertexData.data())) + vertexIndex);
 		}
 
 		template <typename T>
-		inline void SetVertex(const size_t vertexIndex, const T &vertex) noexcept
+		inline void SetVertex(const size_t vertexIndex, const T &vertex) WS_NOEXCEPT
 		{
 			this->GetVertex<T>(vertexIndex) = vertex;
 		}
@@ -1662,25 +1686,25 @@ namespace WS
 		std::vector<uint32_t> m_indexData;
 
 	public:
-		virtual void Update() = 0;
+		virtual void Update() WS_NOEXCEPT = 0;
 
-		inline void Set(const void *buff, const size_t nIndices) noexcept
+		inline void Set(const void *buff, const size_t nIndices) WS_NOEXCEPT
 		{
 			std::memcpy(this->m_indexData.data(), buff, nIndices * sizeof(uint32_t));
 		}
 
 		template <typename CONTAINER>
-		inline void Set(const CONTAINER &container) noexcept
+		inline void Set(const CONTAINER &container) WS_NOEXCEPT
 		{
 			this->Set(container.data(), container.size());
 		}
 
-		inline uint32_t &GetIndex(const size_t indexIndex) noexcept
+		inline uint32_t &GetIndex(const size_t indexIndex) WS_NOEXCEPT
 		{
 			return this->m_indexData[indexIndex];
 		}
 
-		inline void SetIndex(const size_t indexIndex, const uint32_t index) noexcept
+		inline void SetIndex(const size_t indexIndex, const uint32_t index) WS_NOEXCEPT
 		{
 			this->GetIndex(indexIndex) = index;
 		}
@@ -1698,16 +1722,16 @@ namespace WS
 		std::vector<int8_t> m_constantBufferData;
 
 	public:
-		virtual void Update() = 0;
+		virtual void Update() WS_NOEXCEPT = 0;
 
 		template <typename T>
-		inline T &Get()
+		inline T &Get() WS_NOEXCEPT
 		{
 			return *((T *)this->m_constantBufferData.data());
 		}
 
 		template <typename T>
-		inline void Set(const T &obj)
+		inline void Set(const T &obj) WS_NOEXCEPT
 		{
 			this->Get<T>() = obj;
 		}
@@ -1727,9 +1751,9 @@ namespace WS
 	public:
 		virtual void Update() = 0;
 
-		[[nodiscard]] inline const Image& GetImage() const noexcept { return this->m_image; }
+		[[nodiscard]] inline const Image& GetImage() const WS_NOEXCEPT { return this->m_image; }
 
-		[[nodiscard]] inline void SetImage(const Image& image) noexcept { this->m_image = image; }
+		[[nodiscard]] inline void SetImage(const Image& image) WS_NOEXCEPT { this->m_image = image; }
 	};
 
 	// ///////////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1779,14 +1803,14 @@ namespace WS
 	public:
 		RenderAPI(const RenderAPIName &apiName) : m_apiName(apiName) {  }
 
-		virtual ~RenderAPI() = default;
+		virtual ~RenderAPI() WS_NOEXCEPT { }
 
 		// ----- Virtual Functions ----- //
 
-		virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps = 144u) = 0;
-		virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) = 0;
+		virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps = 144u) WS_NOEXCEPT = 0;
+		virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) WS_NOEXCEPT = 0;
 
-		virtual void Draw(const Drawable &drawable, const size_t nVertices) = 0;
+		virtual void Draw(const Drawable &drawable, const size_t nVertices) WS_NOEXCEPT = 0;
 
 		/*
 		 * This structure is used to take advantage of recent rendering apis such as directx12 and vulkan.
@@ -1794,29 +1818,29 @@ namespace WS
 		 * (such as game logic and physics). The present method is then called to swap buffers.
 		 * This is why dealing with gpu memory after calling "EndFrame()" is undefined behavior.
 		 */
-		virtual void BeginDrawing() = 0;
-		virtual void EndDrawing()   = 0;
+		virtual void BeginDrawing() WS_NOEXCEPT = 0;
+		virtual void EndDrawing()   WS_NOEXCEPT = 0;
 
 		virtual void Present(const bool vSync) = 0;
 
-		virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) = 0;
-		virtual size_t CreateIndexBuffer   (const size_t nIndices) = 0;
-		virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) = 0;
-		virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) = 0;
-		virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) = 0;
+		virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) WS_NOEXCEPT = 0;
+		virtual size_t CreateIndexBuffer   (const size_t nIndices) WS_NOEXCEPT = 0;
+		virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) WS_NOEXCEPT = 0;
+		virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) WS_NOEXCEPT = 0;
+		virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT = 0;
 
 		virtual void Fill(const Colorf32 &color = {1.f, 1.f, 1.f, 1.f}) = 0;
 
 		// ----- Non-Virtual Functions ----- //
 
-		inline VertexBuffer&   GetVertexBuffer  (const size_t vertexBufferIndex)   noexcept { return *this->m_pVertexBuffers[vertexBufferIndex];     }
-		inline IndexBuffer&    GetIndexBuffer   (const size_t indexBufferIndex)    noexcept { return *this->m_pIndexBuffers[indexBufferIndex];       }
-		inline ConstantBuffer& GetConstantBuffer(const size_t constantBufferIndex) noexcept { return *this->m_pConstantBuffers[constantBufferIndex]; }
-		inline Texture&        GetTexture       (const size_t textureIndex)        noexcept { return *this->m_pTextures[textureIndex];               }
+		inline VertexBuffer&   GetVertexBuffer  (const size_t vertexBufferIndex)   WS_NOEXCEPT { return *this->m_pVertexBuffers[vertexBufferIndex];     }
+		inline IndexBuffer&    GetIndexBuffer   (const size_t indexBufferIndex)    WS_NOEXCEPT { return *this->m_pIndexBuffers[indexBufferIndex];       }
+		inline ConstantBuffer& GetConstantBuffer(const size_t constantBufferIndex) WS_NOEXCEPT { return *this->m_pConstantBuffers[constantBufferIndex]; }
+		inline Texture&        GetTexture       (const size_t textureIndex)        WS_NOEXCEPT { return *this->m_pTextures[textureIndex];               }
 
 		// ----- Non-Virtual Virtual Overloads ----- //
 
-		inline size_t CreateVertexBuffer(const void *buff, const size_t nVertices, const size_t vertexSize)
+		inline size_t CreateVertexBuffer(const void *buff, const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 		{
 			const size_t i = this->CreateVertexBuffer(nVertices, vertexSize);
 
@@ -1827,12 +1851,12 @@ namespace WS
 		}
 
 		template <typename CONTAINER>
-		inline size_t CreateVertexBuffer(const CONTAINER &container)
+		inline size_t CreateVertexBuffer(const CONTAINER &container) WS_NOEXCEPT
 		{
 			return this->CreateVertexBuffer(container.data(), container.size() * sizeof(container[0]), sizeof(container[0]));
 		}
 
-		inline size_t CreateIndexBuffer(const void *buff, const size_t nIndices)
+		inline size_t CreateIndexBuffer(const void *buff, const size_t nIndices) WS_NOEXCEPT
 		{
 			const size_t i = this->CreateIndexBuffer(nIndices);
 
@@ -1843,13 +1867,13 @@ namespace WS
 		}
 
 		template <typename CONTAINER>
-		inline size_t CreateIndexBuffer(const CONTAINER &container)
+		inline size_t CreateIndexBuffer(const CONTAINER &container) WS_NOEXCEPT
 		{
 			return this->CreateIndexBuffer(container.data(), container.size());
 		}
 
 		template <typename T>
-		inline size_t CreateConstantBuffer(const T &obj, const size_t slotVS, const size_t slotPS)
+		inline size_t CreateConstantBuffer(const T &obj, const size_t slotVS, const size_t slotPS) WS_NOEXCEPT
 		{
 			const size_t constantBufferIndex = this->CreateConstantBuffer(sizeof(T), slotVS, slotPS);
 			this->GetConstantBuffer(constantBufferIndex).Set(obj);
@@ -1858,7 +1882,7 @@ namespace WS
 			return constantBufferIndex;
 		}
 
-		inline size_t CreateTexture(Image &image, const size_t slot, const bool useMipmaps = false)
+		inline size_t CreateTexture(Image &image, const size_t slot, const bool useMipmaps = false) WS_NOEXCEPT
 		{
 			const size_t textureIndex = this->CreateTexture(image.GetWidth(), image.GetHeight(), false);
 			this->GetTexture(textureIndex).SetImage(image);
@@ -1869,10 +1893,10 @@ namespace WS
 
 		// ----- Getter Functions ----- //
 
-		[[nodiscard]] RenderAPIName GetRenderAPIName() const noexcept { return this->m_apiName; }
+		[[nodiscard]] RenderAPIName GetRenderAPIName() const WS_NOEXCEPT { return this->m_apiName; }
 
 		// ----- Creation ----- //
-		static RenderAPIHandle Create(const RenderAPIName &apiName);
+		static RenderAPIHandle Create(const RenderAPIName &apiName) WS_NOEXCEPT;
 	};
 
 	/*
@@ -1888,12 +1912,12 @@ namespace WS
 
 	public:
 		RenderAPIHandle() = default;
-		RenderAPIHandle(RenderAPI* pRenderAPI) : m_pRenderAPI(pRenderAPI) {  }
+		RenderAPIHandle(RenderAPI* pRenderAPI) WS_NOEXCEPT : m_pRenderAPI(pRenderAPI) {  }
 
-		~RenderAPIHandle() { delete this->m_pRenderAPI; }
+		~RenderAPIHandle() WS_NOEXCEPT { delete this->m_pRenderAPI; }
 
-		inline operator RenderAPI*  () noexcept { return this->m_pRenderAPI; }
-		inline RenderAPI* operator->() noexcept { return this->m_pRenderAPI; }
+		inline operator RenderAPI*  () WS_NOEXCEPT { return this->m_pRenderAPI; }
+		inline RenderAPI* operator->() WS_NOEXCEPT { return this->m_pRenderAPI; }
 	};
 
 	namespace Internal {
@@ -1920,14 +1944,14 @@ namespace WS
 			public:
 				VKObjectWrapper() = default;
 
-				VKObjectWrapper<T>& operator=(VKObjectWrapper<T>&& other) noexcept;
+				VKObjectWrapper<T>& operator=(VKObjectWrapper<T>&& other) WS_NOEXCEPT;
 
-				inline operator T&() noexcept;
-				inline operator T() const noexcept;
+				inline operator T&() WS_NOEXCEPT;
+				inline operator T() const WS_NOEXCEPT;
 
-				inline T& GetRef() noexcept;
-				inline T* GetPtr() noexcept;
-				inline const T* GetPtr() const noexcept;
+				inline T& GetRef() WS_NOEXCEPT;
+				inline T* GetPtr() WS_NOEXCEPT;
+				inline const T* GetPtr() const WS_NOEXCEPT;
 
 				~VKObjectWrapper();
 			};
@@ -1959,7 +1983,7 @@ namespace WS
 
 				VKInstance(const char* appName);
 
-				VKInstance& operator=(VKInstance&& other) noexcept;
+				VKInstance& operator=(VKInstance&& other) WS_NOEXCEPT;
 
 				~VKInstance();
 			};
@@ -1981,11 +2005,11 @@ namespace WS
 			public:
 				VKSurface() = default;
 
-				VKSurface(const VKInstance& instance, Window* pWindow);
+				VKSurface(const VKInstance& instance, Window* pWindow) WS_NOEXCEPT;
 
-				VKSurface& operator=(VKSurface&& other) noexcept;
+				VKSurface& operator=(VKSurface&& other) WS_NOEXCEPT;
 
-				[[nodiscard]] inline Vec2u16 GetDimensions() const noexcept;
+				[[nodiscard]] inline Vec2u16 GetDimensions() const WS_NOEXCEPT;
 
 				~VKSurface();
 			};
@@ -2019,9 +2043,9 @@ namespace WS
 					};
 				};
 
-				VKPhysicalDeviceData() {  }
+				VKPhysicalDeviceData() WS_NOEXCEPT {  }
 
-				VKPhysicalDeviceData(const VkPhysicalDevice& physicalDevice, const VKSurface& surface);
+				VKPhysicalDeviceData(const VkPhysicalDevice& physicalDevice, const VKSurface& surface) WS_NOEXCEPT;
 			};
 
 			/*
@@ -2041,11 +2065,11 @@ namespace WS
 			public:
 				VKDevice() = default;
 
-				VKDevice(const VKInstance& instance, const VKSurface& surface);
+				VKDevice(const VKInstance& instance, const VKSurface& surface) WS_NOEXCEPT;
 
-				[[nodiscard]] inline VKPhysicalDeviceData GetPhysicalDeviceData() const noexcept;
+				[[nodiscard]] inline VKPhysicalDeviceData GetPhysicalDeviceData() const WS_NOEXCEPT;
 
-				VKDevice& operator=(VKDevice&& other) noexcept;
+				VKDevice& operator=(VKDevice&& other) WS_NOEXCEPT;
 
 				~VKDevice();
 			};
@@ -2062,9 +2086,9 @@ namespace WS
 			public:
 				VKQueue() = default;
 
-				VKQueue(const VKDevice& device, const size_t queueIndex);
+				VKQueue(const VKDevice& device, const size_t queueIndex) WS_NOEXCEPT;
 
-				VKQueue& operator=(VKQueue&& other) noexcept;
+				VKQueue& operator=(VKQueue&& other) WS_NOEXCEPT;
 
 				~VKQueue() = default;
 			};
@@ -2084,9 +2108,9 @@ namespace WS
 			public:
 				VKSemaphore() = default;
 
-				VKSemaphore(const VKDevice& device);
+				VKSemaphore(const VKDevice& device) WS_NOEXCEPT;
 
-				VKSemaphore& operator=(VKSemaphore&& other) noexcept;
+				VKSemaphore& operator=(VKSemaphore&& other) WS_NOEXCEPT;
 
 				~VKSemaphore();
 			};
@@ -2106,16 +2130,16 @@ namespace WS
 			public:
 				VKFence() = default;
 
-				VKFence(const VKDevice& device);
+				VKFence(const VKDevice& device) WS_NOEXCEPT;
 
 				VKFence& operator=(VKFence&& other) noexcept;
 
-				inline void Wait()  const;
-				inline void Reset() const;
+				inline void Wait()  const WS_NOEXCEPT;
+				inline void Reset() const WS_NOEXCEPT;
 
-				inline void WaitAndReset() const;
+				inline void WaitAndReset() const WS_NOEXCEPT;
 
-				~VKFence();
+				~VKFence() WS_NOEXCEPT;
 			};
 
 			/*
@@ -2148,26 +2172,26 @@ namespace WS
 			public:
 				VKSwapChain() = default;
 
-				VKSwapChain(const VKDevice& device, const VKSurface& surface, const VKQueue& presentQueue);
+				VKSwapChain(const VKDevice& device, const VKSurface& surface, const VKQueue& presentQueue) WS_NOEXCEPT;
 
-				void CreateFrameBuffers();
+				void CreateFrameBuffers() WS_NOEXCEPT;
 
-				void GetNextFrameBuffer();
+				void GetNextFrameBuffer() WS_NOEXCEPT;
 
-				void Present(bool useVsync, const VkSemaphore& waitSemaphore);
+				void Present(bool useVsync, const VkSemaphore& waitSemaphore) WS_NOEXCEPT;
 
-				VKSwapChain& operator=(VKSwapChain&& other) noexcept;
+				VKSwapChain& operator=(VKSwapChain&& other) WS_NOEXCEPT;
 
-				[[nodiscard]] inline VkSemaphore        GetFrameBufferFetchedSemaphore() const noexcept;
-				[[nodiscard]] inline VkFramebuffer      GetCurrentFrameBuffer() const noexcept;
-				[[nodiscard]] inline VkExtent2D         GetImageExtent() const noexcept;
-				[[nodiscard]] inline VkSurfaceFormatKHR GetFormat() const noexcept;
+				[[nodiscard]] inline VkSemaphore        GetFrameBufferFetchedSemaphore() const WS_NOEXCEPT;
+				[[nodiscard]] inline VkFramebuffer      GetCurrentFrameBuffer() const WS_NOEXCEPT;
+				[[nodiscard]] inline VkExtent2D         GetImageExtent() const WS_NOEXCEPT;
+				[[nodiscard]] inline VkSurfaceFormatKHR GetFormat() const WS_NOEXCEPT;
 
 				~VKSwapChain();
 			
 			public:
-				static VkPresentModeKHR   PickPresentMode(const VKDevice& device, const VKSurface& surface);
-				static VkSurfaceFormatKHR PickSurfaceFormat(const VKDevice& device, const VKSurface& surface);
+				static VkPresentModeKHR   PickPresentMode  (const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT;
+				static VkSurfaceFormatKHR PickSurfaceFormat(const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT;
 			};
 
 			/*
@@ -2183,7 +2207,7 @@ namespace WS
 				static std::vector<VkRenderPass> m_renderPasses;
 
 			public:
-				static void CreateRenderPasses(const VKDevice& device, const VKSwapChain& swapChain);
+				static void CreateRenderPasses(const VKDevice& device, const VKSwapChain& swapChain) WS_NOEXCEPT;
 			};
 
 			/*
@@ -2215,17 +2239,18 @@ namespace WS
 			public:
 				VKRenderPipeline() = default;
 
-				VKRenderPipeline(VKRenderPipeline&& other) noexcept;
+				VKRenderPipeline(VKRenderPipeline&& other) WS_NOEXCEPT;
 
 				VKRenderPipeline(const VKDevice& device, const VKSwapChain& swapChain, const RenderPipelineDesc& pipelineDesc,
-								 std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<VKTextureSampler> textureSamplers);
+								 std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures,
+								 std::vector<VKTextureSampler> textureSamplers) WS_NOEXCEPT;
 			
-				VKRenderPipeline& operator=(VKRenderPipeline&& other) noexcept;
+				VKRenderPipeline& operator=(VKRenderPipeline&& other) WS_NOEXCEPT;
 
 				~VKRenderPipeline();
 
 			public:
-				static VkShaderModule CreateShaderModule(const VKDevice& device, const char* filename);
+				static VkShaderModule CreateShaderModule(const VKDevice& device, const char* filename) WS_NOEXCEPT;
 			};
 
 			/*
@@ -2243,9 +2268,9 @@ namespace WS
 			public:
 				VKCommandPool() = default;
 
-				VKCommandPool(const VKDevice& device, const uint32_t queueFamilyIndex);
+				VKCommandPool(const VKDevice& device, const uint32_t queueFamilyIndex) WS_NOEXCEPT;
 
-				VKCommandPool& operator=(VKCommandPool&& other) noexcept;
+				VKCommandPool& operator=(VKCommandPool&& other) WS_NOEXCEPT;
 
 				~VKCommandPool();
 			};
@@ -2269,25 +2294,25 @@ namespace WS
 			public:
 				VKCommandBuffer() = default;
 
-				VKCommandBuffer(const VKDevice& device, const VKCommandPool& commandPool, const VKQueue& queue);
+				VKCommandBuffer(const VKDevice& device, const VKCommandPool& commandPool, const VKQueue& queue) WS_NOEXCEPT;
 
-				VKCommandBuffer& operator=(VKCommandBuffer&& other) noexcept;
+				VKCommandBuffer& operator=(VKCommandBuffer&& other) WS_NOEXCEPT;
 			
-				void BeginRecording() const;
+				void BeginRecording() const WS_NOEXCEPT;
 
-				void BeginRenderPass(const VKSwapChain& swapChain, const VkFramebuffer& frameBuffer, const VkRenderPass& renderPass) const noexcept;
+				void BeginRenderPass(const VKSwapChain& swapChain, const VkFramebuffer& frameBuffer, const VkRenderPass& renderPass) const WS_NOEXCEPT;
 
-				void EndRenderPass();
+				void EndRenderPass() WS_NOEXCEPT;
 
-				void EndRecording() const;
+				void EndRecording() const WS_NOEXCEPT;
 
-				void Submit(const VkSemaphore& waitSemaphore) const;
+				void Submit(const VkSemaphore& waitSemaphore) const WS_NOEXCEPT;
 
-				void BindPipeline(const VKRenderPipeline& pipeline);
+				void BindPipeline(const VKRenderPipeline& pipeline) WS_NOEXCEPT;
 
-				void WaitForCompletion();
+				void WaitForCompletion() WS_NOEXCEPT;
 
-				[[nodiscard]] inline VkSemaphore GetSubmittedSemaphore() const noexcept;
+				[[nodiscard]] inline VkSemaphore GetSubmittedSemaphore() const WS_NOEXCEPT;
 			};
 
 			/*
@@ -2310,34 +2335,32 @@ namespace WS
 				VKCommandPool   m_commandPool;
 				VKCommandBuffer m_commandBuffer;
 
-				bool a = false;
-
 				std::vector<VKTextureSampler> m_textureSamplers;
 				std::vector<VKRenderPipeline> m_renderPipelines;
 
 			public:
-				VKRenderAPI() : RenderAPI(RenderAPIName::VULKAN) {  }
+				VKRenderAPI() WS_NOEXCEPT : RenderAPI(RenderAPIName::VULKAN) {  }
 
-				~VKRenderAPI();
+				~VKRenderAPI() WS_NOEXCEPT;
 
-				virtual void InitRenderAPI(Window* pWindow, const uint16_t maxFps) override;
+				virtual void InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT override;
 
-				virtual void InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs) override;
+				virtual void InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs) WS_NOEXCEPT override;
 
-				virtual void Draw(const Drawable& drawable, const size_t nVertices) override;
+				virtual void Draw(const Drawable& drawable, const size_t nVertices) WS_NOEXCEPT override;
 
-				virtual void BeginDrawing() override;
-				virtual void EndDrawing()   override;
+				virtual void BeginDrawing() WS_NOEXCEPT override;
+				virtual void EndDrawing()   WS_NOEXCEPT override;
 
-				virtual void Present(const bool vSync) override;
+				virtual void Present(const bool vSync) WS_NOEXCEPT override;
 
-				virtual size_t CreateVertexBuffer(const size_t nVertices, const size_t vertexSize) override;
-				virtual size_t CreateIndexBuffer(const size_t nIndices) override;
-				virtual size_t CreateConstantBuffer(const size_t objSize, const size_t slot) override;
-				virtual size_t CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps = false) override;
-				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) override;
+				virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) WS_NOEXCEPT override;
+				virtual size_t CreateIndexBuffer   (const size_t nIndices) WS_NOEXCEPT override;
+				virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) WS_NOEXCEPT override;
+				virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) WS_NOEXCEPT override;
+				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT override;
 
-				virtual void Fill(const Colorf32& color = { 1.f, 1.f, 1.f, 1.f }) override;
+				virtual void Fill(const Colorf32& color = { 1.f, 1.f, 1.f, 1.f }) WS_NOEXCEPT override;
 			};
 
 		}; // VK
@@ -2374,11 +2397,11 @@ namespace WS
 
 				virtual ~D3D11ObjectWrapper();
 
-				inline T*  Get()    noexcept { return this->m_pObject;  }
-				inline T** GetPtr() noexcept { return &this->m_pObject; }
+				inline T*  Get()    WS_NOEXCEPT { return this->m_pObject;  }
+				inline T** GetPtr() WS_NOEXCEPT { return &this->m_pObject; }
 
-				inline T* operator->() noexcept { return this->m_pObject; }
-				inline operator T*  () noexcept { return this->m_pObject; }
+				inline T* operator->() WS_NOEXCEPT { return this->m_pObject; }
+				inline operator T*  () WS_NOEXCEPT { return this->m_pObject; }
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11Device> D3D11DeviceObjectWrapper;
@@ -2399,11 +2422,11 @@ namespace WS
 			public:
 				D3D11SwapChain() = default;
 
-				D3D11SwapChain(D3D11DeviceObjectWrapper &pDevice, Window *pWindow);
+				D3D11SwapChain(D3D11DeviceObjectWrapper &pDevice, Window *pWindow) WS_NOEXCEPT;
 
-				D3D11SwapChain &operator=(D3D11SwapChain &&other) noexcept;
+				D3D11SwapChain &operator=(D3D11SwapChain &&other) WS_NOEXCEPT;
 
-				void Present(const bool vSync);
+				void Present(const bool vSync) WS_NOEXCEPT;
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11RenderTargetView> D3D11RenderTargetbjectWrapper;
@@ -2421,11 +2444,11 @@ namespace WS
 			public:
 				D3D11RenderTarget() = default;
 
-				D3D11RenderTarget(D3D11DeviceObjectWrapper &pDevice, D3D11SwapChainObjectWrapper &pSwapChain);
+				D3D11RenderTarget(D3D11DeviceObjectWrapper &pDevice, D3D11SwapChainObjectWrapper &pSwapChain) WS_NOEXCEPT;
 
-				D3D11RenderTarget &operator=(D3D11RenderTarget &&other) noexcept;
+				D3D11RenderTarget &operator=(D3D11RenderTarget &&other) WS_NOEXCEPT;
 
-				void SetCurrent(D3D11DeviceContextObjectWrapper &pDeviceContext) const noexcept;
+				void SetCurrent(D3D11DeviceContextObjectWrapper &pDeviceContext) const WS_NOEXCEPT;
 			};
 
 			/*
@@ -2439,17 +2462,17 @@ namespace WS
 			class D3D11DepthBuffer
 			{
 			private:
-				Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_pDepthStencilView;
+				Microsoft::WRL::ComPtr<ID3D11DepthStencilView>  m_pDepthStencilView;
 				Microsoft::WRL::ComPtr<ID3D11DepthStencilState> m_pDepthStencilState;
 
 			public:
 				D3D11DepthBuffer() = default;
 
-				D3D11DepthBuffer(Window *pWindow, D3D11DeviceObjectWrapper &pDevice);
+				D3D11DepthBuffer(Window *pWindow, D3D11DeviceObjectWrapper &pDevice) WS_NOEXCEPT;
 
-				void Clear(D3D11DeviceContextObjectWrapper &pDeviceContext);
+				void Clear(D3D11DeviceContextObjectWrapper &pDeviceContext) WS_NOEXCEPT;
 
-				void Bind(D3D11DeviceContextObjectWrapper &pDeviceContext, D3D11RenderTargetbjectWrapper &pRenderTarget);
+				void Bind(D3D11DeviceContextObjectWrapper &pDeviceContext, D3D11RenderTargetbjectWrapper &pRenderTarget) WS_NOEXCEPT;
 			};
 
 			/*
@@ -2473,9 +2496,9 @@ namespace WS
 
 				D3D11VertexShader(D3D11DeviceObjectWrapper &pDevice,
 								D3D11DeviceContextObjectWrapper *pDeviceContext,
-								const char *sourceFilename, const std::vector<ShaderInputElement> &sies);
+								const char *sourceFilename, const std::vector<ShaderInputElement> &sies) WS_NOEXCEPT;
 
-				void Bind() const noexcept;
+				void Bind() const WS_NOEXCEPT;
 			};
 
 			/*
@@ -2498,9 +2521,9 @@ namespace WS
 
 				D3D11PixelShader(D3D11DeviceObjectWrapper &pDevice,
 								D3D11DeviceContextObjectWrapper *pDeviceContext,
-								const char *sourceFilename);
+								const char *sourceFilename) WS_NOEXCEPT;
 
-				void Bind() const noexcept;
+				void Bind() const WS_NOEXCEPT;
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11Buffer> D3D11VertexBufferObjectWrapper;
@@ -2527,14 +2550,14 @@ namespace WS
 				D3D11VertexBuffer() = default;
 
 				D3D11VertexBuffer(D3D11DeviceObjectWrapper &pDevice,
-								D3D11DeviceContextObjectWrapper *pDeviceContext,
-								const size_t nVertices, const size_t vertexSize);
-
+								  D3D11DeviceContextObjectWrapper *pDeviceContext,
+								  const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT;
+				
 				D3D11VertexBuffer &operator=(D3D11VertexBuffer &&other) noexcept;
 
-				void Bind();
+				void Bind() WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			/*
@@ -2546,7 +2569,7 @@ namespace WS
 			 */
 
 			class D3D11IndexBuffer : public D3D11IndexBufferObjectWrapper,
-									public IndexBuffer
+									 public IndexBuffer
 			{
 			private:
 				size_t m_nIndices = 0u;
@@ -2558,13 +2581,13 @@ namespace WS
 
 				D3D11IndexBuffer(D3D11DeviceObjectWrapper &pDevice,
 								D3D11DeviceContextObjectWrapper *pDeviceContext,
-								const size_t nIndices);
+								const size_t nIndices) WS_NOEXCEPT;
 
-				D3D11IndexBuffer& operator=(D3D11IndexBuffer &&other) noexcept;
+				D3D11IndexBuffer& operator=(D3D11IndexBuffer &&other) WS_NOEXCEPT;
 
-				void Bind();
+				void Bind() WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			/*
@@ -2590,13 +2613,13 @@ namespace WS
 
 				D3D11ConstantBuffer(D3D11DeviceObjectWrapper &pDevice,
 									D3D11DeviceContextObjectWrapper *pDeviceContext,
-									const size_t objSize, const size_t slot);
+									const size_t objSize, const size_t slot) WS_NOEXCEPT;
 
-				D3D11ConstantBuffer &operator=(D3D11ConstantBuffer &&other) noexcept;
+				D3D11ConstantBuffer &operator=(D3D11ConstantBuffer &&other) WS_NOEXCEPT;
 
-				void Bind();
+				void Bind() WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11ShaderResourceView> D3D11TextureObjectWrapper;
@@ -2610,7 +2633,7 @@ namespace WS
 			 */
 
 			class D3D11Texture : public Texture,
-								public D3D11TextureObjectWrapper
+								 public D3D11TextureObjectWrapper
 			{
 			private:
 				D3D11DeviceObjectWrapper *m_pDevice = nullptr;
@@ -2626,12 +2649,12 @@ namespace WS
 				D3D11Texture() = default;
 
 				D3D11Texture(D3D11DeviceObjectWrapper &pDevice,
-							D3D11DeviceContextObjectWrapper *pDeviceContext,
-							const size_t width, const size_t height, const size_t slot, const bool useMipmaps);
+							 D3D11DeviceContextObjectWrapper *pDeviceContext,
+							 const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT;
 
-				void Bind() const noexcept;
+				void Bind() const WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11SamplerState> D3D11SamplerStateObjectWrapper;
@@ -2656,9 +2679,9 @@ namespace WS
 
 				D3D11TextureSampler(D3D11DeviceObjectWrapper &pDevice,
 									D3D11DeviceContextObjectWrapper *pDeviceContext,
-									const TextureFilter &filter, const size_t slot);
+									const TextureFilter &filter, const size_t slot) WS_NOEXCEPT;
 
-				void Bind() const noexcept;
+				void Bind() const WS_NOEXCEPT;
 			};
 
 			/*
@@ -2685,11 +2708,11 @@ namespace WS
 			public:
 				D3D11RenderPipeline(D3D11DeviceObjectWrapper &pDevice,
 									D3D11DeviceContextObjectWrapper *m_pDeviceContext,
-									const RenderPipelineDesc &desc);
+									const RenderPipelineDesc &desc) WS_NOEXCEPT;
 
 				void Bind(std::vector<ConstantBuffer *> &constantBuffers,
 						std::vector<Texture *> &textures,
-						std::vector<D3D11TextureSampler *> textureSamplers) noexcept;
+						std::vector<D3D11TextureSampler *> textureSamplers) WS_NOEXCEPT;
 			};
 
 			class D3D11RenderPipeline;
@@ -2717,24 +2740,24 @@ namespace WS
 			public:
 				D3D11RenderAPI() : RenderAPI(RenderAPIName::DIRECTX11) {}
 
-				virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps) override;
+				virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps) WS_NOEXCEPT override;
 
-				virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) override;
+				virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) WS_NOEXCEPT override;
 
-				virtual void Draw(const Drawable &drawable, const size_t nVertices) override;
+				virtual void Draw(const Drawable &drawable, const size_t nVertices) WS_NOEXCEPT override;
 
-				virtual void BeginDrawing() override;
-				virtual void EndDrawing()   override;
+				virtual void BeginDrawing() WS_NOEXCEPT override;
+				virtual void EndDrawing()   WS_NOEXCEPT override;
 
-				virtual void Present(const bool vSync) override;
+				virtual void Present(const bool vSync) WS_NOEXCEPT override;
 
-				virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) override;
-				virtual size_t CreateIndexBuffer   (const size_t nIndices) override;
-				virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) override;
-				virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) override;
-				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) override;
+				virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) WS_NOEXCEPT override;
+				virtual size_t CreateIndexBuffer   (const size_t nIndices) WS_NOEXCEPT override;
+				virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) WS_NOEXCEPT override;
+				virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) WS_NOEXCEPT override;
+				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT override;
 
-				virtual void Fill(const Colorf32 &color = {1.f, 1.f, 1.f, 1.f}) override;
+				virtual void Fill(const Colorf32 &color = {1.f, 1.f, 1.f, 1.f}) WS_NOEXCEPT override;
 			};
 
 		}; // namespace D3D11
@@ -2770,16 +2793,16 @@ namespace WS
 				* This is done to ensure that the resource isn't freed while this object is being created.
 				* (Preventing a "use after free")
 				*/
-				D3D12ObjectWrapper& operator=(D3D12ObjectWrapper<T> &&other) noexcept;
+				D3D12ObjectWrapper& operator=(D3D12ObjectWrapper<T> &&other) WS_NOEXCEPT;
 
 				~D3D12ObjectWrapper();
 
-				[[nodiscard]] inline T*  operator->() noexcept { return this->m_pObject;  }
-				[[nodiscard]] inline T*  Get()        noexcept { return this->m_pObject;  }
-				[[nodiscard]] inline T** GetPtr()     noexcept { return &this->m_pObject; }
+				[[nodiscard]] inline T*  operator->() WS_NOEXCEPT { return this->m_pObject;  }
+				[[nodiscard]] inline T*  Get()        WS_NOEXCEPT { return this->m_pObject;  }
+				[[nodiscard]] inline T** GetPtr()     WS_NOEXCEPT { return &this->m_pObject; }
 
-				[[nodiscard]] inline operator IUnknown* () const noexcept { return (IUnknown *)this->m_pObject; }
-				[[nodiscard]] inline operator T*        () const noexcept { return this->m_pObject;             }
+				[[nodiscard]] inline operator IUnknown* () const WS_NOEXCEPT { return (IUnknown *)this->m_pObject; }
+				[[nodiscard]] inline operator T*        () const WS_NOEXCEPT { return this->m_pObject;             }
 			};
 
 			typedef D3D12ObjectWrapper<IDXGIAdapter1> D3D12AdapterObjectWrapper;
@@ -2797,7 +2820,7 @@ namespace WS
 			public:
 				D3D12Adapter();
 
-				D3D12Adapter& operator=(D3D12Adapter&& other) noexcept;
+				D3D12Adapter& operator=(D3D12Adapter&& other) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Device2> D3D12DeviceObjectWrapper;
@@ -2815,9 +2838,9 @@ namespace WS
 			public:
 				D3D12Device() = default;
 
-				D3D12Device(D3D12AdapterObjectWrapper &pAdapter);
+				D3D12Device(D3D12AdapterObjectWrapper &pAdapter) WS_NOEXCEPT;
 
-				D3D12Device &operator=(D3D12Device &&other) noexcept;
+				D3D12Device &operator=(D3D12Device &&other) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Fence> D3D12FenceObjectWrapper;
@@ -2838,13 +2861,13 @@ namespace WS
 			public:
 				D3D12Fence() = default;
 
-				D3D12Fence(D3D12DeviceObjectWrapper &pDevice, const UINT64 initialValue, const D3D12_FENCE_FLAGS flags);
+				D3D12Fence(D3D12DeviceObjectWrapper &pDevice, const UINT64 initialValue, const D3D12_FENCE_FLAGS flags) WS_NOEXCEPT;
 
-				~D3D12Fence();
+				~D3D12Fence() WS_NOEXCEPT;
 
-				D3D12Fence &operator=(D3D12Fence &&other) noexcept;
+				D3D12Fence &operator=(D3D12Fence &&other) WS_NOEXCEPT;
 
-				[[nodiscard]] inline HANDLE GetEvent() const noexcept { return this->m_fenceEvent; }
+				[[nodiscard]] inline HANDLE GetEvent() const WS_NOEXCEPT { return this->m_fenceEvent; }
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12CommandQueue> D3D12CommandQueueObjectWrapper;
@@ -2862,7 +2885,7 @@ namespace WS
 			public:
 				D3D12CommandQueue() = default;
 
-				D3D12CommandQueue(D3D12DeviceObjectWrapper &pDevice, const D3D12_COMMAND_LIST_TYPE& type);
+				D3D12CommandQueue(D3D12DeviceObjectWrapper &pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<IDXGISwapChain3> D3D12SwapChainObjectWrapper;
@@ -2882,14 +2905,14 @@ namespace WS
 
 				D3D12SwapChain(D3D12DeviceObjectWrapper &pDevice,
 							D3D12CommandQueueObjectWrapper &pCommandQueue,
-							const Window *pWindow, const uint16_t maxFps, const UINT bufferCount);
+							const Window *pWindow, const uint16_t maxFps, const UINT bufferCount) WS_NOEXCEPT;
 
 				D3D12SwapChain &operator=(D3D12SwapChain &&other) noexcept;
 
-				void Present(const bool vSync) const;
+				void Present(const bool vSync) const WS_NOEXCEPT;
 
 			private:
-				static bool IsTearingSupported();
+				static bool IsTearingSupported() WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12DescriptorHeap> D3D12DescriptorHeapObjectWrapper;
@@ -2908,7 +2931,8 @@ namespace WS
 				D3D12DescriptorHeap() = default;
 				
 				D3D12DescriptorHeap(D3D12DeviceObjectWrapper &pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type,
-									const uint32_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_FLAGS &flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE);
+									const uint32_t numDescriptors,
+									const D3D12_DESCRIPTOR_HEAP_FLAGS &flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE) WS_NOEXCEPT;
 
 				D3D12DescriptorHeap &operator=(D3D12DescriptorHeap &&other) noexcept;
 			};
@@ -2932,7 +2956,7 @@ namespace WS
 								D3D12SwapChainObjectWrapper &pSwapChain,
 								D3D12DescriptorHeapObjectWrapper &pDescriptorHeap,
 								const CD3DX12_CPU_DESCRIPTOR_HANDLE &rtvHandle,
-								const uint16_t frameIndex);
+								const uint16_t frameIndex) WS_NOEXCEPT;
 
 				D3D12RenderTarget &operator=(D3D12RenderTarget &&other) noexcept;
 			};
@@ -2952,9 +2976,9 @@ namespace WS
 			public:
 				D3D12CommandAllocator() = default;
 
-				D3D12CommandAllocator(D3D12DeviceObjectWrapper &pDevice, const D3D12_COMMAND_LIST_TYPE& type);
+				D3D12CommandAllocator(D3D12DeviceObjectWrapper &pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT;
 
-				void Reset() const;
+				void Reset() const WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12GraphicsCommandList> D3D12CommandListObjectWrapper;
@@ -2974,17 +2998,17 @@ namespace WS
 
 				D3D12CommandList(D3D12DeviceObjectWrapper& pDevice,
 								D3D12CommandAllocatorObjectWrapper& pCommandAllocator,
-								const D3D12_COMMAND_LIST_TYPE& type);
+								const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT;
 
 				~D3D12CommandList() = default;
 
-				D3D12CommandList &operator=(D3D12CommandList &&other) noexcept;
+				D3D12CommandList &operator=(D3D12CommandList &&other) WS_NOEXCEPT;
 
-				void Close();
+				void Close() WS_NOEXCEPT;
 
-				void Reset(D3D12CommandAllocatorObjectWrapper &pCommandAllocator) const;
+				void Reset(D3D12CommandAllocatorObjectWrapper& pCommandAllocator) const WS_NOEXCEPT;
 				
-				void TransitionResource(ID3D12Resource *pResource, const D3D12_RESOURCE_STATES &before, const D3D12_RESOURCE_STATES &after);
+				void TransitionResource(ID3D12Resource *pResource, const D3D12_RESOURCE_STATES &before, const D3D12_RESOURCE_STATES &after) WS_NOEXCEPT;
 			};
 
 			/*
@@ -3006,11 +3030,11 @@ namespace WS
 			public:
 				D3D12DepthBuffer() = default;
 
-				D3D12DepthBuffer(D3D12Device& pDevice, Window* pWindow);
+				D3D12DepthBuffer(D3D12Device& pDevice, Window* pWindow) WS_NOEXCEPT;
 
-				void Clear(D3D12CommandListObjectWrapper &pCommandList);
+				void Clear(D3D12CommandListObjectWrapper &pCommandList) WS_NOEXCEPT;
 
-				operator CD3DX12_CPU_DESCRIPTOR_HANDLE *() noexcept;
+				operator CD3DX12_CPU_DESCRIPTOR_HANDLE *() WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12RootSignature> D3D12RootSignatureObjectWrapper;
@@ -3029,7 +3053,8 @@ namespace WS
 				D3D12RootSignature() = default;
 
 				D3D12RootSignature(D3D12DeviceObjectWrapper &pDevice, const D3D12_ROOT_SIGNATURE_FLAGS &flags,
-								const std::vector<D3D12_ROOT_PARAMETER1> &rootParameters, const std::vector<D3D12_STATIC_SAMPLER_DESC> &samplers);
+								   const std::vector<D3D12_ROOT_PARAMETER1> &rootParameters,
+								   const std::vector<D3D12_STATIC_SAMPLER_DESC> &samplers) WS_NOEXCEPT;
 
 				D3D12RootSignature &operator=(D3D12RootSignature &&other) noexcept;
 			};
@@ -3055,18 +3080,18 @@ namespace WS
 
 				D3D12CommittedResource(D3D12DeviceObjectWrapper &pDevice, const D3D12_HEAP_TYPE &heapType,
 									const D3D12_HEAP_FLAGS &flags, const D3D12_RESOURCE_DESC *descPtr,
-									const D3D12_RESOURCE_STATES &states, const char *name = "(PLACEHOLDER NAME)");
+									const D3D12_RESOURCE_STATES &states, const char *name = "(PLACEHOLDER NAME)") WS_NOEXCEPT;
 
-				D3D12CommittedResource &operator=(D3D12CommittedResource &&other) noexcept;
+				D3D12CommittedResource &operator=(D3D12CommittedResource &&other) WS_NOEXCEPT;
 
-				inline void TransitionTo(D3D12CommandListObjectWrapper& pCommandList, const D3D12_RESOURCE_STATES& state) noexcept
+				inline void TransitionTo(D3D12CommandListObjectWrapper& pCommandList, const D3D12_RESOURCE_STATES& state) WS_NOEXCEPT
 				{
 					pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(this->m_pObject, this->m_currentState, state));
 
 					this->m_currentState = state;
 				}
 
-				inline void TransitionBack(D3D12CommandListObjectWrapper& pCommandList) noexcept
+				inline void TransitionBack(D3D12CommandListObjectWrapper& pCommandList) WS_NOEXCEPT
 				{
 					this->TransitionTo(pCommandList, this->m_originalState);
 				}
@@ -3096,12 +3121,12 @@ namespace WS
 				D3D12VertexBuffer() = default;
 
 				D3D12VertexBuffer(D3D12DeviceObjectWrapper &pDevice,
-								D3D12CommandList *pCommandList,
-								const size_t nVertices, const size_t vertexSize);
+								  D3D12CommandList *pCommandList,
+								  const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT;
 
-				void Bind();
+				void Bind() WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			/*
@@ -3128,12 +3153,12 @@ namespace WS
 				D3D12IndexBuffer() = default;
 
 				D3D12IndexBuffer(D3D12DeviceObjectWrapper &pDevice,
-								D3D12CommandList *pCommandList,
-								const size_t nIndices);
+								 D3D12CommandList *pCommandList,
+								 const size_t nIndices) WS_NOEXCEPT;
 
-				void Bind();
+				void Bind() WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			/*
@@ -3164,18 +3189,18 @@ namespace WS
 
 				D3D12ConstantBuffer(D3D12DeviceObjectWrapper &pDevice,
 									D3D12CommandList *pCommandList,
-									const size_t objSize, const size_t slot);
+									const size_t objSize, const size_t slot) WS_NOEXCEPT;
 
-				[[nodiscard]] inline D3D12DescriptorHeap& GetDescriptorHeap(const size_t frameIndex) { return this->m_descriptorHeaps[frameIndex]; }
+				[[nodiscard]] inline D3D12DescriptorHeap& GetDescriptorHeap(const size_t frameIndex) WS_NOEXCEPT { return this->m_descriptorHeaps[frameIndex]; }
 
-				[[nodiscard]] inline size_t GetSlot() const noexcept { return this->m_slot; }
+				[[nodiscard]] inline size_t GetSlot() const WS_NOEXCEPT { return this->m_slot; }
 
-				void UpdateIfNeeded(const size_t frameIndex);
+				void UpdateIfNeeded(const size_t frameIndex) WS_NOEXCEPT;
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 
 			private:
-				void UpdateHeap(const size_t heapIndex);
+				void UpdateHeap(const size_t heapIndex) WS_NOEXCEPT;
 			};
 
 			/*
@@ -3203,13 +3228,14 @@ namespace WS
 			public:
 				D3D12Texture() = default;
 
-				D3D12Texture(D3D12DeviceObjectWrapper &pDevice, D3D12CommandList *pCommandList, const size_t width, const size_t height, const size_t slot, const bool useMipmaps);
+				D3D12Texture(D3D12DeviceObjectWrapper &pDevice, D3D12CommandList *pCommandList,
+							 const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT;
 
-				[[nodiscard]] inline D3D12DescriptorHeap& GetDescriptorHeap() { return this->m_descriptorHeap; }
+				[[nodiscard]] inline D3D12DescriptorHeap& GetDescriptorHeap() WS_NOEXCEPT { return this->m_descriptorHeap; }
 
-				[[nodiscard]] inline size_t GetSlot() const noexcept { return this->m_slot; }
+				[[nodiscard]] inline size_t GetSlot() const WS_NOEXCEPT { return this->m_slot; }
 
-				virtual void Update() override;
+				virtual void Update() WS_NOEXCEPT override;
 			};
 
 			/*
@@ -3228,9 +3254,9 @@ namespace WS
 			public:
 				D3D12TextureSampler() = default;
 
-				D3D12TextureSampler(const TextureFilter &filter);
+				D3D12TextureSampler(const TextureFilter &filter) WS_NOEXCEPT;
 
-				[[nodiscard]] inline D3D12_STATIC_SAMPLER_DESC GetSamplerDesc() const noexcept { return this->m_samplerDesc; }
+				[[nodiscard]] inline D3D12_STATIC_SAMPLER_DESC GetSamplerDesc() const WS_NOEXCEPT { return this->m_samplerDesc; }
 			};
 
 			struct D3D12CPUDescriptorHandles {
@@ -3249,7 +3275,7 @@ namespace WS
 				D3D12CPUDescriptorHandles m_cpuHandles;
 				D3D12GPUDescriptorHandles m_gpuHandles;
 
-				inline void OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) noexcept;
+				inline void OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) WS_NOEXCEPT;
 			};
 
 			/*
@@ -3285,12 +3311,12 @@ namespace WS
 
 			private:
 				// Adds a new array of frame buffer descriptor heaps
-				void AddHeapToVector();
+				void AddHeapToVector() WS_NOEXCEPT;
 
 			public:
 				D3D12DescriptorHeapManager() = default;
 
-				D3D12DescriptorHeapManager(D3D12Device& device);
+				D3D12DescriptorHeapManager(D3D12Device& device) WS_NOEXCEPT;
 
 				D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&& other) noexcept;
 
@@ -3300,9 +3326,9 @@ namespace WS
 				 * each of the descriptor handles into each frame buffer descriptor heap.
 				 * Its return value is an array of the frame buffer descriptors' handles.
 				 */
-				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors);
+				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors) WS_NOEXCEPT;
 
-				void Bind(D3D12CommandList& commandList, const size_t frameIndex) const noexcept;
+				void Bind(D3D12CommandList& commandList, const size_t frameIndex) const WS_NOEXCEPT;
 
 				~D3D12DescriptorHeapManager() = default;
 			};
@@ -3339,15 +3365,15 @@ namespace WS
 			public:
 				D3D12RenderPipeline() = default;
 
-				D3D12RenderPipeline(D3D12RenderPipeline &&other);
+				D3D12RenderPipeline(D3D12RenderPipeline &&other) noexcept;
 
 				D3D12RenderPipeline(D3D12Device &pDevice, const RenderPipelineDesc &pipelineDesc,
 									std::vector<ConstantBuffer *> &pConstantBuffers, std::vector<Texture *> pTextures,
-									std::vector<D3D12TextureSampler *> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager);
+									std::vector<D3D12TextureSampler *> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager) WS_NOEXCEPT;
 
 				D3D12RenderPipeline &operator=(D3D12RenderPipeline &&other) noexcept;
 
-				void Bind(D3D12CommandList &pCommandList, const size_t frameIndex) noexcept;
+				void Bind(D3D12CommandList &pCommandList, const size_t frameIndex) WS_NOEXCEPT;
 			};
 
 			/*
@@ -3371,19 +3397,19 @@ namespace WS
 			public:
 				D3D12CommandSubmitter() = default;
 
-				D3D12CommandSubmitter(D3D12DeviceObjectWrapper &pDevice);
+				D3D12CommandSubmitter(D3D12DeviceObjectWrapper &pDevice) WS_NOEXCEPT;
 
-				void Close();
+				void Close() WS_NOEXCEPT;
 
-				void Reset(const size_t frameIndex);
+				void Reset(const size_t frameIndex) WS_NOEXCEPT;
 
-				void Execute(D3D12CommandQueueObjectWrapper &pCommandQueue, const size_t frameIndex);
+				void Execute(D3D12CommandQueueObjectWrapper &pCommandQueue, const size_t frameIndex) WS_NOEXCEPT;
 
-				void WaitForCompletion(const size_t frameIndex);
+				void WaitForCompletion(const size_t frameIndex) WS_NOEXCEPT;
 
-				[[nodiscard]] inline D3D12CommandList& GetCommandList()                  noexcept { return this->m_pCommandList;         }
-				[[nodiscard]] inline D3D12CommandList* GetCommandListPr()                noexcept { return &this->m_pCommandList;        }
-				[[nodiscard]] inline D3D12Fence&       GetFence(const size_t frameIndex) noexcept { return *this->m_pFences[frameIndex]; }
+				[[nodiscard]] inline D3D12CommandList& GetCommandList()                  WS_NOEXCEPT { return this->m_pCommandList;         }
+				[[nodiscard]] inline D3D12CommandList* GetCommandListPr()                WS_NOEXCEPT { return &this->m_pCommandList;        }
+				[[nodiscard]] inline D3D12Fence&       GetFence(const size_t frameIndex) WS_NOEXCEPT { return *this->m_pFences[frameIndex]; }
 			};
 
 			/*
@@ -3421,30 +3447,30 @@ namespace WS
 				std::vector<D3D12TextureSampler *> m_pTextureSamplers;
 
 			private:
-				void CreateRenderTargets();
+				void CreateRenderTargets() WS_NOEXCEPT;
 
 			public:
-				D3D12RenderAPI() : RenderAPI(RenderAPIName::DIRECTX12) {  }
+				D3D12RenderAPI() WS_NOEXCEPT : RenderAPI(RenderAPIName::DIRECTX12) {  }
 
-				virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps = 144u) override;
+				virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps = 144u) WS_NOEXCEPT override;
 
-				virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) override;
+				virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) WS_NOEXCEPT override;
 
-				virtual void Draw(const Drawable &drawable, const size_t nVertices) override;
+				virtual void Draw(const Drawable &drawable, const size_t nVertices) WS_NOEXCEPT override;
 
-				virtual void BeginDrawing() override;
+				virtual void BeginDrawing() WS_NOEXCEPT override;
 
-				virtual void EndDrawing() override;
+				virtual void EndDrawing() WS_NOEXCEPT override;
 
-				virtual void Present(const bool vSync) override;
+				virtual void Present(const bool vSync) WS_NOEXCEPT override;
 
-				virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) override;
-				virtual size_t CreateIndexBuffer   (const size_t nIndices) override;
-				virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) override;
-				virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) override;
-				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) override;
+				virtual size_t CreateVertexBuffer  (const size_t nVertices,      const size_t vertexSize) WS_NOEXCEPT override;
+				virtual size_t CreateIndexBuffer   (const size_t nIndices) WS_NOEXCEPT override;
+				virtual size_t CreateConstantBuffer(const size_t objSize,        const size_t slot) WS_NOEXCEPT override;
+				virtual size_t CreateTexture       (const size_t width,          const size_t height, const size_t slot, const bool useMipmaps = false) WS_NOEXCEPT override;
+				virtual size_t CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT override;
 
-				virtual void Fill(const Colorf32 &color = {1.f, 1.f, 1.f, 1.f}) override;
+				virtual void Fill(const Colorf32 &color = {1.f, 1.f, 1.f, 1.f}) WS_NOEXCEPT override;
 			};
 
 		}; // namespace D3D12
@@ -3547,7 +3573,7 @@ namespace WS
 
 		[[nodiscard]] std::pair<std::array<char, 1024u>, size_t> Receive();
 
-		void Disconnect() noexcept;
+		void Disconnect() WS_NOEXCEPT;
 	};
 
 	/*
@@ -3572,13 +3598,13 @@ namespace WS
 
 		void Bind(const unsigned int port);
 
-		[[nodiscard]] int Accept() noexcept;
+		[[nodiscard]] int Accept() WS_NOEXCEPT;
 
 		void Send(const int clientID, const char *data, int length = -1);
 
 		[[nodiscard]] std::pair<std::array<char, 1024u>, size_t> Receive(const int clientID);
 
-		void Disconnect() noexcept;
+		void Disconnect() WS_NOEXCEPT;
 	};
 
 	/*
@@ -3637,7 +3663,7 @@ namespace WS {
 #ifdef __WEISS__OS_WINDOWS
 
 	template <typename T>
-	Vector2D<T>::Vector2D(const DirectX::XMVECTOR& other)
+	Vector2D<T>::Vector2D(const DirectX::XMVECTOR& other) WS_NOEXCEPT
 	{
 		DirectX::XMFLOAT4 float4;
 		DirectX::XMStoreFloat4(&float4, other);
@@ -3658,7 +3684,7 @@ namespace WS {
 #ifdef __WEISS__OS_WINDOWS
 
 	template <typename T>
-	Vector3D<T>::Vector3D(const DirectX::XMVECTOR& other)
+	Vector3D<T>::Vector3D(const DirectX::XMVECTOR& other) WS_NOEXCEPT
 	{
 		DirectX::XMFLOAT4 float4;
 		DirectX::XMStoreFloat4(&float4, other);
@@ -3679,7 +3705,7 @@ namespace WS {
 #ifdef __WEISS__OS_WINDOWS
 
 	template <typename T>
-	Vector4D<T>::Vector4D(const DirectX::XMVECTOR& other)
+	Vector4D<T>::Vector4D(const DirectX::XMVECTOR& other) WS_NOEXCEPT
 	{
 		DirectX::XMFLOAT4 float4;
 		DirectX::XMStoreFloat4(&float4, other);
@@ -3699,7 +3725,7 @@ namespace WS {
 
 #ifdef __WEISS__OS_WINDOWS
 
-	Rect::Rect(const RECT& rect)
+	Rect::Rect(const RECT& rect) noexcept
 	{
 		this->left   = static_cast<uint16_t>(rect.left);
 		this->top    = static_cast<uint16_t>(rect.top);
@@ -3718,22 +3744,22 @@ namespace WS {
 	 */
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline size_t Matrix<T, R, C>::GetRowCount() const noexcept { return R; }
+	[[nodiscard]] inline size_t Matrix<T, R, C>::GetRowCount() const WS_NOEXCEPT { return R; }
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline size_t Matrix<T, R, C>::GetColCount() const noexcept { return C; }
+	[[nodiscard]] inline size_t Matrix<T, R, C>::GetColCount() const WS_NOEXCEPT { return C; }
 
 	template <typename T, size_t R, size_t C>
 	[[nodiscard]] inline T* Matrix<T, R, C>::operator[](const size_t r) { return this->m[r]; }
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline T& Matrix<T, R, C>::Get(const size_t r, const size_t c) noexcept { return this->m[r][c]; }
+	[[nodiscard]] inline T& Matrix<T, R, C>::Get(const size_t r, const size_t c) WS_NOEXCEPT { return this->m[r][c]; }
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline const T& Matrix<T, R, C>::GetValue(const size_t r, const size_t c) const noexcept { return this->m[r][c]; }
+	[[nodiscard]] inline const T& Matrix<T, R, C>::GetValue(const size_t r, const size_t c) const WS_NOEXCEPT { return this->m[r][c]; }
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline Matrix<T, R, C> Matrix<T, R, C>::GetTransposed() const noexcept
+	[[nodiscard]] inline Matrix<T, R, C> Matrix<T, R, C>::GetTransposed() const WS_NOEXCEPT
 	{
 		Matrix<T, R, C> transposed(*this);
 
@@ -3747,7 +3773,7 @@ namespace WS {
 #ifdef __WEISS__OS_WINDOWS
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline Matrix<T, R, C>::operator DirectX::XMMATRIX() const noexcept
+	[[nodiscard]] inline Matrix<T, R, C>::operator DirectX::XMMATRIX() const WS_NOEXCEPT
 	{
 		DirectX::XMFLOAT4X4 float4x4;
 
@@ -3769,7 +3795,7 @@ namespace WS {
 	}
 
 	template <typename T, size_t R, size_t C>
-	Matrix<T, R, C>::Matrix(const DirectX::XMMATRIX& other)
+	Matrix<T, R, C>::Matrix(const DirectX::XMMATRIX& other) WS_NOEXCEPT
 	{
 		DirectX::XMFLOAT4X4 float4x4;
 		DirectX::XMStoreFloat4x4(&float4x4, other);
@@ -3804,7 +3830,7 @@ namespace WS {
 #endif // __WEISS__OS_WINDOWS
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline constexpr Matrix<T, R, C> Matrix<T, R, C>::MakeIdentity()
+	[[nodiscard]] inline constexpr Matrix<T, R, C> Matrix<T, R, C>::MakeIdentity() WS_NOEXCEPT
 	{
 		Matrix<T, R, C> mat;
 		if constexpr (R == C)
@@ -3820,7 +3846,7 @@ namespace WS {
 	// |\___________________________/| \\
 	// \\\\\\\\\\\\\\\-/////////////// \\
 
-	void Transform::CalculateTransform() noexcept
+	void Transform::CalculateTransform() WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -3890,7 +3916,7 @@ namespace WS {
 	 */
 
 	template <typename T, typename ...Args>
-	static void LOG::__Print(const LOG_TYPE logType, const T& message0, Args... args)
+	static void LOG::__Print(const LOG_TYPE logType, const T& message0, Args... args) WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 	
@@ -3911,7 +3937,7 @@ namespace WS {
 			textAttributes = FOREGROUND_INTENSITY | FOREGROUND_RED;
 			break;
 		default:
-			throw std::runtime_error("[LOG] Your Selected LOG_TYPE Could Not Be Resolved");
+			WS_THROW("[LOG] Your Selected LOG_TYPE Could Not Be Resolved");
 		}
 
 		// Set Text Color
@@ -3941,7 +3967,7 @@ namespace WS {
 			std::cout << "\x1B[1;31m";
 			break;
 		default:
-			throw std::runtime_error("[LOG] Your Selected LOG_TYPE Could Not Be Resolved");
+			WS_THROW("[LOG] Your Selected LOG_TYPE Could Not Be Resolved");
 		}
 
 		std::cout << message << '\n' << "\x1B[0m";
@@ -3950,7 +3976,7 @@ namespace WS {
 	}
 
 	template <typename T, typename ...Args>
-	static inline void LOG::Print(const LOG_TYPE logType, const T& message0, Args... args)
+	static inline void LOG::Print(const LOG_TYPE logType, const T& message0, Args... args) WS_NOEXCEPT
 	{
 		// Lock The Mutex
 		std::lock_guard<std::mutex> lock(LOG::m_sPrintMutex);
@@ -3959,7 +3985,7 @@ namespace WS {
 	}
 
 	template <typename T, typename ...Args>
-	static inline void LOG::Println(const LOG_TYPE logType, const T& message0, Args... args)
+	static inline void LOG::Println(const LOG_TYPE logType, const T& message0, Args... args) WS_NOEXCEPT
 	{
 		// Lock The Mutex
 		std::lock_guard<std::mutex> lock(LOG::m_sPrintMutex);
@@ -3995,7 +4021,7 @@ namespace WS {
 			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
 			*/
 
-			WindowsImage::WindowsImage(WindowsImage&& other)
+			WindowsImage::WindowsImage(WindowsImage&& other) noexcept
 			{
 				this->m_width = other.m_width;
 				this->m_height = other.m_height;
@@ -4004,7 +4030,7 @@ namespace WS {
 				this->m_buff = std::move(other.m_buff);
 			}
 
-			WindowsImage::WindowsImage(const WindowsImage& other)
+			WindowsImage::WindowsImage(const WindowsImage& other) noexcept
 			{
 				this->m_width = other.m_width;
 				this->m_height = other.m_height;
@@ -4015,7 +4041,7 @@ namespace WS {
 				std::memcpy(this->m_buff.get(), other.m_buff.get(), bufferSize);
 			}
 
-			WindowsImage::WindowsImage(const char* filename)
+			WindowsImage::WindowsImage(const char* filename) WS_NOEXCEPT
 			{
 				Microsoft::WRL::ComPtr<IWICBitmapSource>      decodedConvertedFrame;
 				Microsoft::WRL::ComPtr<IWICBitmapDecoder>     bitmapDecoder;
@@ -4023,7 +4049,7 @@ namespace WS {
 				Microsoft::WRL::ComPtr<IWICBitmapFrameDecode> frameDecoder;
 
 				if (DX_FAILED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory))))
-					throw std::runtime_error("[WIC] Could Not Create IWICImagingFactory");
+					WS_THROW("[WIC] Could Not Create IWICImagingFactory");
 
 				// Convert from char* to wchar_t*
 				const size_t length = mbstowcs(nullptr, filename, 0);
@@ -4031,28 +4057,28 @@ namespace WS {
 				mbstowcs(filenameW, filename, length);
 
 				if (DX_FAILED(factory->CreateDecoderFromFilename(filenameW, NULL, GENERIC_READ, WICDecodeMetadataCacheOnLoad, &bitmapDecoder)))
-					throw std::runtime_error("[WIC] Could Not Read / Open Image");
+					WS_THROW("[WIC] Could Not Read / Open Image");
 
 				if (DX_FAILED(bitmapDecoder->GetFrame(0, &frameDecoder)))
-					throw std::runtime_error("[WIC] Could Not Get First Frame Of Image");
+					WS_THROW("[WIC] Could Not Get First Frame Of Image");
 
 				if (DX_FAILED(frameDecoder->GetSize((UINT*)&this->m_width, (UINT*)&this->m_height)))
-					throw std::runtime_error("[WIC] Could Not Get Image Width/Height");
+					WS_THROW("[WIC] Could Not Get Image Width/Height");
 
 				this->m_nPixels = this->m_width * this->m_height;
 
 				if (DX_FAILED(WICConvertBitmapSource(GUID_WICPixelFormat32bppRGBA, frameDecoder.Get(), &decodedConvertedFrame)))
-					throw std::runtime_error("[WIC] Could Not Create Bitmap Converter");
+					WS_THROW("[WIC] Could Not Create Bitmap Converter");
 
 				this->m_buff = std::make_unique<Coloru8[]>(this->m_nPixels * sizeof(Coloru8));
 
 				const WICRect sampleRect{ 0, 0, this->m_width, this->m_height };
 
 				if (DX_FAILED(decodedConvertedFrame->CopyPixels(&sampleRect, this->m_width * sizeof(Coloru8), this->m_nPixels * sizeof(Coloru8), (BYTE*)this->m_buff.get())))
-					throw std::runtime_error("[WIC] Could Not Copy Pixels From Bitmap");
+					WS_THROW("[WIC] Could Not Copy Pixels From Bitmap");
 			}
 
-			WindowsImage& WindowsImage::operator=(const WindowsImage& other) noexcept
+			WindowsImage& WindowsImage::operator=(const WindowsImage& other) WS_NOEXCEPT
 			{
 				this->m_width   = other.m_width;
 				this->m_height  = other.m_height;
@@ -4066,10 +4092,10 @@ namespace WS {
 				return *this;
 			}
 
-			WindowsImage::WindowsImage(const uint16_t width, const uint16_t height, const Coloru8& fillColor)
+			WindowsImage::WindowsImage(const uint16_t width, const uint16_t height, const Coloru8& fillColor) WS_NOEXCEPT
 			{
-				this->m_width = width;
-				this->m_height = height;
+				this->m_width   = width;
+				this->m_height  = height;
 				this->m_nPixels = this->m_width * this->m_height;
 
 				const size_t bufferSize = this->m_nPixels * sizeof(Coloru8);
@@ -4078,10 +4104,10 @@ namespace WS {
 				std::fill_n(this->m_buff.get(), this->m_nPixels, fillColor);
 			}
 
-			void WindowsImage::Write(const char* filename) const
+			void WindowsImage::Write(const char* filename) const WS_NOEXCEPT
 			{
 				if (DX_FAILED(CoInitialize(NULL)))
-					throw std::runtime_error("[COM] Failed To Init COM");
+					WS_THROW("[COM] Failed To Init COM");
 
 				Microsoft::WRL::ComPtr<IWICImagingFactory>    factory;
 				Microsoft::WRL::ComPtr<IWICBitmapEncoder>     bitmapEncoder;
@@ -4089,17 +4115,17 @@ namespace WS {
 				Microsoft::WRL::ComPtr<IWICStream>            outputStream;
 
 				if (DX_FAILED(CoCreateInstance(CLSID_WICImagingFactory, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory))))
-					throw std::runtime_error("[WIC] Could Not Create IWICImagingFactory");
+					WS_THROW("[WIC] Could Not Create IWICImagingFactory");
 
 				if (DX_FAILED(factory->CreateStream(&outputStream)))
-					throw std::runtime_error("[WIC] Failed To Create Output Stream");
+					WS_THROW("[WIC] Failed To Create Output Stream");
 
 				// Convert from char* to wchar_t*
 				const size_t length = mbstowcs(nullptr, filename, 0);
 				wchar_t* filenameW = new wchar_t[length];
 				mbstowcs(filenameW, filename, length);
 				if (DX_FAILED(outputStream->InitializeFromFilename(filenameW, GENERIC_WRITE)))
-					throw std::runtime_error("[WIC] Failed To Initialize Output Stream From Filename");
+					WS_THROW("[WIC] Failed To Initialize Output Stream From Filename");
 
 				char fileExtension[10u]; // assumes the extension has less than 10-1=9 characters
 				std::memset(fileExtension, 0u, 10);
@@ -4115,40 +4141,40 @@ namespace WS {
 				};
 
 				if (extensionToREFUGUIDMap.find(fileExtension) == std::end(extensionToREFUGUIDMap))
-					throw std::runtime_error("[WIC] Your Image Extension Is Not Supported");
+					WS_THROW("[WIC] Your Image Extension Is Not Supported");
 
 				if (DX_FAILED(factory->CreateEncoder(extensionToREFUGUIDMap.at(fileExtension), NULL, &bitmapEncoder)))
-					throw std::runtime_error("[WIC] Failed To Create Bitmap Encoder");
+					WS_THROW("[WIC] Failed To Create Bitmap Encoder");
 
 				if (DX_FAILED(bitmapEncoder->Initialize(outputStream.Get(), WICBitmapEncoderNoCache)))
-					throw std::runtime_error("[WIC] Failed To Initialize Bitmap ");
+					WS_THROW("[WIC] Failed To Initialize Bitmap ");
 
 				if (DX_FAILED(bitmapEncoder->CreateNewFrame(&bitmapFrame, NULL)))
-					throw std::runtime_error("[WIC] Failed To Create A New Frame");
+					WS_THROW("[WIC] Failed To Create A New Frame");
 
 				if (DX_FAILED(bitmapFrame->Initialize(NULL)))
-					throw std::runtime_error("[WIC] Failed To Initialize A Bitmap's Frame");
+					WS_THROW("[WIC] Failed To Initialize A Bitmap's Frame");
 
 				if (DX_FAILED(bitmapFrame->SetSize(this->m_width, this->m_height)))
-					throw std::runtime_error("[WIC] Failed To Set A Bitmap's Frame's Size");
+					WS_THROW("[WIC] Failed To Set A Bitmap's Frame's Size");
 
 				WICPixelFormatGUID pixelFormat = GUID_WICPixelFormat32bppBGRA;
 				if (DX_FAILED(bitmapFrame->SetPixelFormat(&pixelFormat)))
-					throw std::runtime_error("[WIC] Failed To Set Pixel Format On A Bitmap Frame's");
+					WS_THROW("[WIC] Failed To Set Pixel Format On A Bitmap Frame's");
 
 				if (!IsEqualGUID(pixelFormat, GUID_WICPixelFormat32bppBGRA))
-					throw std::runtime_error("[WIC] The Requested Pixel Format Is Not Supported");
+					WS_THROW("[WIC] The Requested Pixel Format Is Not Supported");
 
 				const UINT stride = this->m_width * sizeof(Coloru8);
 				const UINT bufferSize = this->m_nPixels * sizeof(Coloru8);
 				if (DX_FAILED(bitmapFrame->WritePixels(this->m_height, stride, bufferSize, (BYTE*)this->m_buff.get())))
-					throw std::runtime_error("[WIC] Failed To Write Pixels To A Bitmap's Frame");
+					WS_THROW("[WIC] Failed To Write Pixels To A Bitmap's Frame");
 
 				if (DX_FAILED(bitmapFrame->Commit()))
-					throw std::runtime_error("[WIC] Failed To Commit A Bitmap's Frame");
+					WS_THROW("[WIC] Failed To Commit A Bitmap's Frame");
 
 				if (DX_FAILED(bitmapEncoder->Commit()))
-					throw std::runtime_error("[WIC] Failed To Commit Bitmap Encoder");
+					WS_THROW("[WIC] Failed To Commit Bitmap Encoder");
 			}
 		}; // namespace WIN
 
@@ -4162,7 +4188,7 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////// \\
 	 */
 
-	Window::~Window()
+	Window::~Window() WS_NOEXCEPT
 	{
 		if (this->m_pMouse != nullptr)
 			delete this->m_pMouse;
@@ -4201,7 +4227,7 @@ namespace WS {
 			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
 			*/
 
-			WindowsMouse::WindowsMouse()
+			WindowsMouse::WindowsMouse() WS_NOEXCEPT
 			{
 				RAWINPUTDEVICE mouseInputDevice;
 				mouseInputDevice.usUsagePage = 0x01;
@@ -4209,16 +4235,19 @@ namespace WS {
 				mouseInputDevice.dwFlags = 0;
 				mouseInputDevice.hwndTarget = nullptr;
 
-				RegisterRawInputDevices(&mouseInputDevice, 1, sizeof(RAWINPUTDEVICE));
+				if (RegisterRawInputDevices(&mouseInputDevice, 1, sizeof(RAWINPUTDEVICE)) == FALSE)
+					WS_THROW("[WIN] Failed To Register Mouse Raw Input Device");
 			}
 
-			void WindowsMouse::Clip(const Rect& rect) const noexcept
+			void WindowsMouse::Clip(const Rect& rect) const WS_NOEXCEPT
 			{
 				RECT winRect{ rect.left, rect.top, rect.right, rect.bottom };
-				ClipCursor(&winRect);
+
+				if (ClipCursor(&winRect))
+					WS_THROW("[WIN] Failed To Clip Cursor");
 			}
 
-			void WindowsMouse::__OnWindowUpdateBegin()
+			void WindowsMouse::__OnWindowUpdateBegin() WS_NOEXCEPT
 			{
 				this->m_wheelDelta = 0;
 				this->m_deltaPosition = { 0, 0 };
@@ -4226,7 +4255,7 @@ namespace WS {
 				this->m_wasCursorMovedDuringUpdate = false;
 			}
 
-			bool WindowsMouse::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+			bool WindowsMouse::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
 			{
 				switch (msg)
 				{
@@ -4304,7 +4333,7 @@ namespace WS {
 				}
 			}
 
-			void WindowsMouse::__OnWindowUpdateEnd()
+			void WindowsMouse::__OnWindowUpdateEnd() WS_NOEXCEPT
 			{
 				if (this->m_wasMouseMovedDuringUpdate)
 					for (auto& functor : this->m_onMouseMoveFunctors)
@@ -4327,7 +4356,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////////// \\
 			 */
 
-			bool WindowsKeyboard::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+			bool WindowsKeyboard::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
 			{
 				switch (msg)
 				{
@@ -4370,7 +4399,7 @@ namespace WS {
 			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\
 			*/
 
-			WindowsWindow::WindowsWindow(const WindowDescriptor& descriptor)
+			WindowsWindow::WindowsWindow(const WindowDescriptor& descriptor) WS_NOEXCEPT
 			{
 				WNDCLASSA wc;
 				ZeroMemory(&wc, sizeof(WNDCLASSA));
@@ -4383,7 +4412,7 @@ namespace WS {
 				wc.lpszClassName = "WEISS_WNDCLASSA";
 
 				if (!RegisterClassA(&wc))
-					throw std::runtime_error("[WINDOW] Could Not Register Window Class");
+					WS_THROW("[WINDOW] Could Not Register Window Class");
 
 				// CS_OWNDC For Opengl
 				const uint32_t windowStyle = CS_OWNDC | (descriptor.isResizable ? WS_OVERLAPPEDWINDOW : (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX));
@@ -4398,7 +4427,7 @@ namespace WS {
 					NULL, NULL, wc.hInstance, NULL);
 
 				if (this->m_handle == NULL)
-					throw std::runtime_error("[WINDOW] Could Not Create Window");
+					WS_THROW("[WINDOW] Could Not Create Window");
 
 	#ifdef __WEISS__PLATFORM_X64
 
@@ -4422,23 +4451,25 @@ namespace WS {
 					this->SetIcon(descriptor.iconPath);
 			}
 
-			[[nodiscard]] Rect WindowsWindow::GetWindowRectangle() const noexcept
+			[[nodiscard]] Rect WindowsWindow::GetWindowRectangle() const WS_NOEXCEPT
 			{
 				RECT windowRect;
-				GetWindowRect(this->m_handle, &windowRect);
+				if (GetWindowRect(this->m_handle, &windowRect) == FALSE)
+					WS_THROW("[WIN] Failed To Get Window Rect");
 
 				return Rect(windowRect);
 			}
 
-			[[nodiscard]] Rect WindowsWindow::GetClientRectangle() const noexcept
+			[[nodiscard]] Rect WindowsWindow::GetClientRectangle() const WS_NOEXCEPT
 			{
 				RECT clientRect;
-				GetClientRect(this->m_handle, &clientRect);
+				if (GetClientRect(this->m_handle, &clientRect) == FALSE)
+					WS_THROW("[WIN] Failed To Get Client Rect");
 
 				return Rect(clientRect);
 			}
 
-			[[nodiscard]] LRESULT WindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam)
+			[[nodiscard]] LRESULT WindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
 			{
 				switch (msg)
 				{
@@ -4470,12 +4501,13 @@ namespace WS {
 				return DefWindowProc(this->m_handle, msg, wParam, lParam);
 			}
 
-			void WindowsWindow::SetWindowSize(const uint16_t width, const uint16_t height)
+			void WindowsWindow::SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT
 			{
-				SetWindowPos(this->m_handle, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER);
+				if (SetWindowPos(this->m_handle, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER) == FALSE)
+					WS_THROW("[WIN] Failed To Set Window Position");
 			}
 
-			void WindowsWindow::SetClientSize(const uint16_t width, const uint16_t height)
+			void WindowsWindow::SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT
 			{
 				const uint16_t topBottomWindowPadding = this->GetWindowHeight() - this->GetClientHeight();
 				const uint16_t leftRightWindowPadding = this->GetWindowWidth() - this->GetClientWidth();
@@ -4483,22 +4515,23 @@ namespace WS {
 				this->SetWindowSize(width + leftRightWindowPadding, height + topBottomWindowPadding);
 			}
 
-			void WindowsWindow::SetTitle(const char* title) const noexcept
+			void WindowsWindow::SetTitle(const char* title) const WS_NOEXCEPT
 			{
-				SetWindowTextA(this->m_handle, title);
+				if (SetWindowTextA(this->m_handle, title) == FALSE)
+					WS_THROW("[WIN] Failed To Set Window Title");
 			}
 
-			void WindowsWindow::SetIcon(const char* pathname)
+			void WindowsWindow::SetIcon(const char* pathname) WS_NOEXCEPT
 			{
 				const HICON hIcon = (HICON)LoadImageA(NULL, pathname, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
 
 				if (hIcon == NULL)
-					throw std::runtime_error("Could Not Load Icon");
+					WS_THROW("Could Not Load Icon");
 
 				SendMessage(this->m_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 			}
 
-			void WindowsWindow::Update()
+			void WindowsWindow::Update() WS_NOEXCEPT
 			{
 				reinterpret_cast<WindowsMouse*>(this->m_pMouse)->__OnWindowUpdateBegin();
 				reinterpret_cast<WindowsKeyboard*>(this->m_pKeyboard)->__OnWindowUpdateBegin();
@@ -4514,12 +4547,12 @@ namespace WS {
 				reinterpret_cast<WindowsKeyboard*>(this->m_pKeyboard)->__OnWindowUpdateEnd();
 			}
 
-			void WindowsWindow::Destroy() noexcept
+			void WindowsWindow::Destroy() WS_NOEXCEPT
 			{
 				this->m_isRunning = !DestroyWindow(this->m_handle);
 			}
 
-			WindowsWindow::~WindowsWindow() { this->Destroy(); }
+			WindowsWindow::~WindowsWindow() WS_NOEXCEPT { this->Destroy(); }
 
 			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
@@ -4553,7 +4586,7 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\ 
 	 */
 
-	PerspectiveCamera::PerspectiveCamera(Window* pWindow, const PerspectiveCameraDescriptor& descriptor)
+	PerspectiveCamera::PerspectiveCamera(Window* pWindow, const PerspectiveCameraDescriptor& descriptor) WS_NOEXCEPT
 		: Camera(descriptor.position, descriptor.rotation), m_fov(descriptor.fov), m_zNear(descriptor.zNear), m_zFar(descriptor.zFar)
 	{
 		auto recalculateAspectRatio = [this](const Vec2u16& clientDims)
@@ -4566,7 +4599,7 @@ namespace WS {
 		pWindow->OnResize(recalculateAspectRatio);
 	}
 
-	void PerspectiveCamera::CalculateTransform()
+	void PerspectiveCamera::CalculateTransform() WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYawFromVector(this->m_rotation);
@@ -4581,7 +4614,7 @@ namespace WS {
 #endif // __WEISS__OS_WINDOWS
 	}
 
-	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity)
+	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
 	{
 		mouse.OnMouseMove([sensitivity, this, &mouse](const Vec2u16 position, const Vec2i16 delta)
 			{
@@ -4591,7 +4624,7 @@ namespace WS {
 			});
 	}
 
-	void PerspectiveCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down)
+	void PerspectiveCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -4621,7 +4654,7 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\ 
 	 */
 
-	OrthographicCamera::OrthographicCamera(Window* pWindow, const OrthographicCameraDescriptor& descriptor)
+	OrthographicCamera::OrthographicCamera(Window* pWindow, const OrthographicCameraDescriptor& descriptor) WS_NOEXCEPT
 		: Camera(descriptor.position, Vec3f{ 0.0f, descriptor.ratation, 0.0f })
 	{
 		auto recalculateInvAspectRatio = [this](const Vec2u16& clientDims)
@@ -4634,7 +4667,7 @@ namespace WS {
 		pWindow->OnResize(recalculateInvAspectRatio);
 	}
 
-	void OrthographicCamera::CalculateTransform()
+	void OrthographicCamera::CalculateTransform() WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -4645,12 +4678,12 @@ namespace WS {
 #endif // __WEISS__OS_WINDOWS
 	}
 
-	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity)
+	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
 	{
 
 	}
 
-	void OrthographicCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down)
+	void OrthographicCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -4696,7 +4729,7 @@ namespace WS {
 			 */
 
 			template <typename T>
-			VKObjectWrapper<T>& VKObjectWrapper<T>::operator=(VKObjectWrapper<T>&& other) noexcept
+			VKObjectWrapper<T>& VKObjectWrapper<T>::operator=(VKObjectWrapper<T>&& other) WS_NOEXCEPT
 			{
 				this->m_object = other.m_object;
 				other.m_object = VK_NULL_HANDLE;
@@ -4705,19 +4738,19 @@ namespace WS {
 			}
 
 			template <typename T>
-			inline VKObjectWrapper<T>::operator T&() noexcept { return this->m_object; }
+			inline VKObjectWrapper<T>::operator T&() WS_NOEXCEPT { return this->m_object; }
 
 			template <typename T>
-			inline VKObjectWrapper<T>::operator T() const noexcept { return this->m_object; }
+			inline VKObjectWrapper<T>::operator T() const WS_NOEXCEPT { return this->m_object; }
 
 			template <typename T>
-			inline T& VKObjectWrapper<T>::GetRef() noexcept { return this->m_object; }
+			inline T& VKObjectWrapper<T>::GetRef() WS_NOEXCEPT { return this->m_object; }
 
 			template <typename T>
-			inline T* VKObjectWrapper<T>::GetPtr() noexcept { return &this->m_object; }
+			inline T* VKObjectWrapper<T>::GetPtr() WS_NOEXCEPT { return &this->m_object; }
 
 			template <typename T>
-			inline const T* VKObjectWrapper<T>::GetPtr() const noexcept { return &this->m_object; }
+			inline const T* VKObjectWrapper<T>::GetPtr() const WS_NOEXCEPT { return &this->m_object; }
 
 			template <typename T>
 			VKObjectWrapper<T>::~VKObjectWrapper()
@@ -4764,11 +4797,11 @@ namespace WS {
 				{ // Fetch Available Extensions
 					uint32_t extensionCount = 0;
 					if (VK_FAILED(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr)))
-						throw std::runtime_error("[VULKAN] Failed To Enumerate Instance Extension Propreties");
+						WS_THROW("[VULKAN] Failed To Enumerate Instance Extension Propreties");
 
 					availableExtensions.resize(extensionCount);
 					if (VK_FAILED(vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, availableExtensions.data())))
-						throw std::runtime_error("[VULKAN] Failed To Enumerate Instance Extension Propreties");
+						WS_THROW("[VULKAN] Failed To Enumerate Instance Extension Propreties");
 				}
 
 				std::vector<const char*> requiredExtensions;
@@ -4804,7 +4837,7 @@ namespace WS {
 					if (!bFound)
 					{
 						const std::string errorString = "[VULKAN] Extension \"" + std::string(requiredExtension) + std::string("\" Is Not Supported");
-						throw std::runtime_error(errorString.c_str());
+						WS_THROW(errorString.c_str());
 					}
 				}
 
@@ -4842,10 +4875,10 @@ namespace WS {
 
 
 				if (VK_FAILED(vkCreateInstance(&createInfo, nullptr, this->GetPtr())))
-					throw std::runtime_error("[VULKAN] Failed To Create Instance");
+					WS_THROW("[VULKAN] Failed To Create Instance");
 			}
 
-			VKInstance& VKInstance::operator=(VKInstance&& other) noexcept
+			VKInstance& VKInstance::operator=(VKInstance&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -4866,7 +4899,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////// \\
 			 */
 
-			VKSurface::VKSurface(const VKInstance& instance, Window* pWindow)
+			VKSurface::VKSurface(const VKInstance& instance, Window* pWindow) WS_NOEXCEPT
 				: m_pInstance(&instance)
 			{
 #ifdef __WEISS__OS_WINDOWS
@@ -4877,7 +4910,7 @@ namespace WS {
 				createInfo.hinstance = GetModuleHandle(NULL);
 
 				if (VK_FAILED(vkCreateWin32SurfaceKHR(*this->m_pInstance->GetPtr(), &createInfo, nullptr, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Window Surface");
+					WS_THROW("[VULKAN] Failed To Create Window Surface");
 
 #endif // __WEISS__OS_WINDOWS
 
@@ -4887,7 +4920,7 @@ namespace WS {
 				};
 			}
 
-			VKSurface& VKSurface::operator=(VKSurface&& other) noexcept
+			VKSurface& VKSurface::operator=(VKSurface&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object,    other.m_object);
 				std::swap(this->m_pInstance, other.m_pInstance);
@@ -4897,7 +4930,7 @@ namespace WS {
 				return *this;
 			}
 
-			[[nodiscard]] inline Vec2u16 VKSurface::GetDimensions() const noexcept
+			[[nodiscard]] inline Vec2u16 VKSurface::GetDimensions() const WS_NOEXCEPT
 			{
 				return this->m_dimensions;
 			}
@@ -4916,7 +4949,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////// \\
 			 */
 
-			VKPhysicalDeviceData::VKPhysicalDeviceData(const VkPhysicalDevice& physicalDevice, const VKSurface& surface)
+			VKPhysicalDeviceData::VKPhysicalDeviceData(const VkPhysicalDevice& physicalDevice, const VKSurface& surface) WS_NOEXCEPT
 				: physicalDevice(physicalDevice)
 			{
 				vkGetPhysicalDeviceFeatures(physicalDevice,   &this->features);
@@ -4971,22 +5004,22 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
-			VKDevice::VKDevice(const VKInstance& instance, const VKSurface& surface)
+			VKDevice::VKDevice(const VKInstance& instance, const VKSurface& surface) WS_NOEXCEPT
 				: m_pInstance(&instance)
 			{
 				std::vector<VkPhysicalDevice> physicalDevices;
 				{ // Get Physical Devices
 					uint32_t deviceCount = 0;
 					if (VK_FAILED(vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr)))
-						throw std::runtime_error("[VULKAN] Failed To Enumerate Physical Devices");
+						WS_THROW("[VULKAN] Failed To Enumerate Physical Devices");
 
 					physicalDevices.resize(deviceCount);
 
 					if (VK_FAILED(vkEnumeratePhysicalDevices(instance, &deviceCount, physicalDevices.data())))
-						throw std::runtime_error("[VULKAN] Failed To Enumerate Physical Devices");
+						WS_THROW("[VULKAN] Failed To Enumerate Physical Devices");
 
 					if (physicalDevices.size() == 0)
-						throw std::runtime_error("[VULKAN] Failed To Find Any Physical Devices");
+						WS_THROW("[VULKAN] Failed To Find Any Physical Devices");
 				}
 
 				{ // Pick Physical Device
@@ -5022,7 +5055,7 @@ namespace WS {
 							if (!bFound)
 							{
 								const std::string errorString = "[VULKAN] Extension \"" + std::string(requiredExtension) + std::string("\" Is Not Supported");
-								throw std::runtime_error(errorString.c_str());
+								WS_THROW(errorString.c_str());
 							}
 						}
 					}
@@ -5054,16 +5087,16 @@ namespace WS {
 					createInfo.ppEnabledExtensionNames = requiredExtensions.data();
 
 					if (VK_FAILED(vkCreateDevice(this->m_physicalDeviceData.physicalDevice, &createInfo, nullptr, &this->m_object)))
-						throw std::runtime_error("|VULKAN] Failed To Create Logical Device");
+						WS_THROW("|VULKAN] Failed To Create Logical Device");
 				}
 			}
 
-			[[nodiscard]] inline VKPhysicalDeviceData VKDevice::GetPhysicalDeviceData() const noexcept
+			[[nodiscard]] inline VKPhysicalDeviceData VKDevice::GetPhysicalDeviceData() const WS_NOEXCEPT
 			{
 				return this->m_physicalDeviceData;
 			}
 
-			VKDevice& VKDevice::operator=(VKDevice&& other) noexcept
+			VKDevice& VKDevice::operator=(VKDevice&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 				
@@ -5087,12 +5120,12 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\--/////////////////// \\
 			 */
 
-			VKQueue::VKQueue(const VKDevice& device, const size_t queueIndex)
+			VKQueue::VKQueue(const VKDevice& device, const size_t queueIndex) WS_NOEXCEPT
 			{
 				vkGetDeviceQueue(device, static_cast<uint32_t>(queueIndex), 0, &this->m_object);
 			}
 
-			VKQueue& VKQueue::operator=(VKQueue&& other) noexcept
+			VKQueue& VKQueue::operator=(VKQueue&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5107,17 +5140,17 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
-			VKSemaphore::VKSemaphore(const VKDevice& device)
+			VKSemaphore::VKSemaphore(const VKDevice& device) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
 				VkSemaphoreCreateInfo semaphoreInfo{};
 				semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
 				if (VK_FAILED(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Semaphore");
+					WS_THROW("[VULKAN] Failed To Create Semaphore");
 			}
 
-			VKSemaphore& VKSemaphore::operator=(VKSemaphore&& other) noexcept
+			VKSemaphore& VKSemaphore::operator=(VKSemaphore&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5139,7 +5172,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\--/////////////////// \\
 			 */
 
-			VKFence::VKFence(const VKDevice& device)
+			VKFence::VKFence(const VKDevice& device) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
 				VkFenceCreateInfo fenceInfo{};
@@ -5147,7 +5180,7 @@ namespace WS {
 				fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
 				if (VK_FAILED(vkCreateFence(device, &fenceInfo, nullptr, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Fence");
+					WS_THROW("[VULKAN] Failed To Create Fence");
 
 				this->Reset();
 			}
@@ -5161,25 +5194,25 @@ namespace WS {
 				return *this;
 			}
 
-			inline void VKFence::Wait() const
+			inline void VKFence::Wait() const WS_NOEXCEPT
 			{
 				if (VK_FAILED(vkWaitForFences(*this->m_pDevice, 1u, &this->m_object, VK_TRUE, UINT64_MAX)))
-					throw std::runtime_error("[VULKAN] Failed To Wait For Fence");
+					WS_THROW("[VULKAN] Failed To Wait For Fence");
 			}
 
-			inline void VKFence::Reset() const
+			inline void VKFence::Reset() const WS_NOEXCEPT
 			{
 				if (VK_FAILED(vkResetFences(*this->m_pDevice, 1u, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Reset Fence");
+					WS_THROW("[VULKAN] Failed To Reset Fence");
 			}
 
-			inline void VKFence::WaitAndReset() const
+			inline void VKFence::WaitAndReset() const WS_NOEXCEPT
 			{
 				this->Wait();
 				this->Reset();
 			}
 
-			VKFence::~VKFence()
+			VKFence::~VKFence() WS_NOEXCEPT
 			{
 				vkDestroyFence(*this->m_pDevice, this->m_object, nullptr);
 			}
@@ -5192,7 +5225,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
-			VKSwapChain::VKSwapChain(const VKDevice& device, const VKSurface& surface, const VKQueue& presentQueue)
+			VKSwapChain::VKSwapChain(const VKDevice& device, const VKSurface& surface, const VKQueue& presentQueue) WS_NOEXCEPT
 				: m_pDevice(&device), m_pPresentQueue(&presentQueue)
 			{
 				{ // Create Swap Chain
@@ -5236,7 +5269,7 @@ namespace WS {
 					}
 
 					if (VK_FAILED(vkCreateSwapchainKHR(device, &createInfo, nullptr, &this->m_object)))
-						throw std::runtime_error("[VULKAN] Failed To Create Swap Chain");
+						WS_THROW("[VULKAN] Failed To Create Swap Chain");
 				}
 
 				{ // Create Images & Views
@@ -5263,7 +5296,7 @@ namespace WS {
 						createInfo.subresourceRange.layerCount = 1;
 
 						if (VK_FAILED(vkCreateImageView(device, &createInfo, nullptr, &this->m_imageViews[i])))
-							throw std::runtime_error("[VULKAN] Failed To Create An Image View");
+							WS_THROW("[VULKAN] Failed To Create An Image View");
 					}
 				}
 
@@ -5273,7 +5306,7 @@ namespace WS {
 				}
 			}
 
-			void VKSwapChain::CreateFrameBuffers()
+			void VKSwapChain::CreateFrameBuffers() WS_NOEXCEPT
 			{
 				this->m_frameBuffers.resize(this->m_nImages);
 
@@ -5294,19 +5327,19 @@ namespace WS {
 					framebufferInfo.renderPass = VKRenderPass::m_renderPasses[0];
 
 					if (VK_FAILED(vkCreateFramebuffer(*this->m_pDevice, &framebufferInfo, nullptr, &this->m_frameBuffers[i])))
-						throw std::runtime_error("[VULKAN] Failed To Create A Frame Buffer");
+						WS_THROW("[VULKAN] Failed To Create A Frame Buffer");
 				}
 			}
 
-			void VKSwapChain::GetNextFrameBuffer()
+			void VKSwapChain::GetNextFrameBuffer() WS_NOEXCEPT
 			{
 				if (VK_FAILED(vkAcquireNextImageKHR(*this->m_pDevice, this->m_object, UINT64_MAX, this->m_frameBufferFetchedSemaphore, this->m_fence, &this->m_currentImageIndex)))
-					throw std::runtime_error("[VULKAN] Failed To Acquire Next Swap Chain Frame Buffer");
+					WS_THROW("[VULKAN] Failed To Acquire Next Swap Chain Frame Buffer");
 
 				this->m_fence.WaitAndReset();
 			}
 
-			void VKSwapChain::Present(bool useVsync, const VkSemaphore& waitSemaphore)
+			void VKSwapChain::Present(bool useVsync, const VkSemaphore& waitSemaphore) WS_NOEXCEPT
 			{
 				VkPresentInfoKHR presentInfo{};
 				presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -5318,10 +5351,10 @@ namespace WS {
 				presentInfo.pResults = nullptr;
 
 				if (VK_FAILED(vkQueuePresentKHR(*this->m_pPresentQueue, &presentInfo)))
-					throw std::runtime_error("[VULKAN] Failed To Present Swap Chain Frame Buffer");
+					WS_THROW("[VULKAN] Failed To Present Swap Chain Frame Buffer");
 			}
 
-			VKSwapChain& VKSwapChain::operator=(VKSwapChain&& other) noexcept
+			VKSwapChain& VKSwapChain::operator=(VKSwapChain&& other) WS_NOEXCEPT
 			{
 				this->m_pDevice       = other.m_pDevice;
 				this->m_pPresentQueue = std::move(other.m_pPresentQueue);
@@ -5340,10 +5373,10 @@ namespace WS {
 				return *this;
 			}
 
-			[[nodiscard]] inline VkSemaphore        VKSwapChain::GetFrameBufferFetchedSemaphore() const noexcept { return this->m_frameBufferFetchedSemaphore;             }
-			[[nodiscard]] inline VkFramebuffer      VKSwapChain::GetCurrentFrameBuffer()          const noexcept { return this->m_frameBuffers[this->m_currentImageIndex]; }
-			[[nodiscard]] inline VkExtent2D         VKSwapChain::GetImageExtent()                 const noexcept { return this->m_imageExtent2D;                           }
-			[[nodiscard]] inline VkSurfaceFormatKHR VKSwapChain::GetFormat()                      const noexcept { return this->m_surfaceFormat;                           }
+			[[nodiscard]] inline VkSemaphore        VKSwapChain::GetFrameBufferFetchedSemaphore() const WS_NOEXCEPT { return this->m_frameBufferFetchedSemaphore;             }
+			[[nodiscard]] inline VkFramebuffer      VKSwapChain::GetCurrentFrameBuffer()          const WS_NOEXCEPT { return this->m_frameBuffers[this->m_currentImageIndex]; }
+			[[nodiscard]] inline VkExtent2D         VKSwapChain::GetImageExtent()                 const WS_NOEXCEPT { return this->m_imageExtent2D;                           }
+			[[nodiscard]] inline VkSurfaceFormatKHR VKSwapChain::GetFormat()                      const WS_NOEXCEPT { return this->m_surfaceFormat;                           }
 
 			VKSwapChain::~VKSwapChain()
 			{
@@ -5351,7 +5384,7 @@ namespace WS {
 					vkDestroySwapchainKHR(*this->m_pDevice, this->m_object, nullptr);
 			}
 
-			VkPresentModeKHR VKSwapChain::PickPresentMode(const VKDevice& device, const VKSurface& surface)
+			VkPresentModeKHR VKSwapChain::PickPresentMode(const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT
 			{
 				const VkPhysicalDevice physicalDevice = device.GetPhysicalDeviceData().physicalDevice;
 
@@ -5359,13 +5392,13 @@ namespace WS {
 				vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &nSupportedPresentingModes, nullptr);
 
 				if (nSupportedPresentingModes == 0u)
-					throw std::runtime_error("[VULKAN] No Compatible Presenting Mode Could Be Found");
+					WS_THROW("[VULKAN] No Compatible Presenting Mode Could Be Found");
 
 				std::vector<VkPresentModeKHR> supportedPresentingModes(nSupportedPresentingModes);
 				vkGetPhysicalDeviceSurfacePresentModesKHR(physicalDevice, surface, &nSupportedPresentingModes, supportedPresentingModes.data());
 
 				if (supportedPresentingModes.size() == 0u)
-					throw std::runtime_error("[VULKAN] No Compatible Presenting Mode Could Be Found");
+					WS_THROW("[VULKAN] No Compatible Presenting Mode Could Be Found");
 
 				for (const VkPresentModeKHR mode : supportedPresentingModes)
 					if (mode == VkPresentModeKHR::VK_PRESENT_MODE_MAILBOX_KHR)
@@ -5374,7 +5407,7 @@ namespace WS {
 				return supportedPresentingModes[0];
 			}
 
-			VkSurfaceFormatKHR VKSwapChain::PickSurfaceFormat(const VKDevice& device, const VKSurface& surface)
+			VkSurfaceFormatKHR VKSwapChain::PickSurfaceFormat(const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT
 			{
 				const VkPhysicalDevice physicalDevice = device.GetPhysicalDeviceData().physicalDevice;
 
@@ -5387,7 +5420,7 @@ namespace WS {
 				vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &nSupportedFormats, supportedFormats.data());
 
 				if (supportedFormats.size() == 0u)
-					throw std::runtime_error("[VULKAN] No Supported Surface Format Where Found");
+					WS_THROW("[VULKAN] No Supported Surface Format Where Found");
 
 				for (const VkSurfaceFormatKHR& surfaceFormat : supportedFormats)
 					if (surfaceFormat.format == VK_FORMAT_B8G8R8A8_SRGB && surfaceFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR)
@@ -5404,7 +5437,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
 			 */
 
-			void VKRenderPass::CreateRenderPasses(const VKDevice& device, const VKSwapChain& swapChain)
+			void VKRenderPass::CreateRenderPasses(const VKDevice& device, const VKSwapChain& swapChain) WS_NOEXCEPT
 			{
 				{ // Render Pass #0
 					VKRenderPass::m_renderPasses.push_back(VK_NULL_HANDLE);
@@ -5446,7 +5479,7 @@ namespace WS {
 					renderPassInfo.pDependencies = &dependency;
 
 					if (VK_FAILED(vkCreateRenderPass(device, &renderPassInfo, nullptr, &VKRenderPass::m_renderPasses[0])))
-						throw std::runtime_error("[VULKAN] Failed To Create Render Pass");
+						WS_THROW("[VULKAN] Failed To Create Render Pass");
 				}
 			}
 
@@ -5458,7 +5491,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
 			 */
 
-			VKRenderPipeline::VKRenderPipeline(VKRenderPipeline&& other) noexcept
+			VKRenderPipeline::VKRenderPipeline(VKRenderPipeline&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5467,7 +5500,7 @@ namespace WS {
 			}
 
 			VKRenderPipeline::VKRenderPipeline(const VKDevice& device, const VKSwapChain& swapChain, const RenderPipelineDesc& pipelineDesc,
-											   std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<VKTextureSampler> textureSamplers)
+											   std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<VKTextureSampler> textureSamplers) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
 				const VkShaderModule vertexShaderModule = VKRenderPipeline::CreateShaderModule(device, pipelineDesc.vsFilename);
@@ -5573,7 +5606,7 @@ namespace WS {
 				pipelineLayoutInfo.pPushConstantRanges = nullptr;
 
 				if (FAILED(vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr, this->m_layout.GetPtr())))
-					throw std::runtime_error("failed to create pipeline layout!");
+					WS_THROW("failed to create pipeline layout!");
 
 				VkGraphicsPipelineCreateInfo pipelineInfo{};
 				pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -5594,13 +5627,13 @@ namespace WS {
 				pipelineInfo.basePipelineIndex  = -1; // Optional
 
 				if (VK_FAILED(vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Pipeline");
+					WS_THROW("[VULKAN] Failed To Create Pipeline");
 
 				vkDestroyShaderModule(device, vertexShaderModule, nullptr);
 				vkDestroyShaderModule(device, pixelShaderModule,  nullptr);
 			}
 
-			VKRenderPipeline& VKRenderPipeline::operator=(VKRenderPipeline&& other) noexcept
+			VKRenderPipeline& VKRenderPipeline::operator=(VKRenderPipeline&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5619,12 +5652,12 @@ namespace WS {
 					vkDestroyPipelineLayout(*this->m_pDevice, this->m_layout, nullptr);
 			}
 
-			VkShaderModule VKRenderPipeline::CreateShaderModule(const VKDevice& device, const char* filename)
+			VkShaderModule VKRenderPipeline::CreateShaderModule(const VKDevice& device, const char* filename) WS_NOEXCEPT
 			{
 				std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
 				if (!file.is_open())
-					throw std::runtime_error("[VULKAN] Failed To Open Binary Shader File");
+					WS_THROW("[VULKAN] Failed To Open Binary Shader File");
 
 				std::vector<char> contents(file.tellg());
 				file.seekg(0);
@@ -5638,7 +5671,7 @@ namespace WS {
 
 				VkShaderModule shaderModule;
 				if (VK_FAILED(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)))
-					throw std::runtime_error("[VULKAN] Failed To Create Shader Module");
+					WS_THROW("[VULKAN] Failed To Create Shader Module");
 
 				return shaderModule;
 			}
@@ -5651,7 +5684,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\--////////////////////// \\
 			 */
 
-			VKCommandPool::VKCommandPool(const VKDevice& device, const uint32_t queueFamilyIndex)
+			VKCommandPool::VKCommandPool(const VKDevice& device, const uint32_t queueFamilyIndex) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
 				VkCommandPoolCreateInfo poolInfo{};
@@ -5660,10 +5693,10 @@ namespace WS {
 				poolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
 				if (VK_FAILED(vkCreateCommandPool(device, &poolInfo, nullptr, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Command Pool");
+					WS_THROW("[VULKAN] Failed To Create Command Pool");
 			}
 
-			VKCommandPool& VKCommandPool::operator=(VKCommandPool&& other) noexcept
+			VKCommandPool& VKCommandPool::operator=(VKCommandPool&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5686,7 +5719,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\--////////////////////// \\
 			 */
 
-			VKCommandBuffer::VKCommandBuffer(const VKDevice& device, const VKCommandPool& commandPool, const VKQueue& queue)
+			VKCommandBuffer::VKCommandBuffer(const VKDevice& device, const VKCommandPool& commandPool, const VKQueue& queue) WS_NOEXCEPT
 				: m_pDevice(&device), m_pQueue(&queue)
 			{
 				VkCommandBufferAllocateInfo allocInfo{};
@@ -5696,13 +5729,13 @@ namespace WS {
 				allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 
 				if (VK_FAILED(vkAllocateCommandBuffers(device, &allocInfo, &this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To Create Command Buffer");
+					WS_THROW("[VULKAN] Failed To Create Command Buffer");
 
 				this->m_submitedSemaphore = VKSemaphore(device);
 				this->m_submitedfence     = VKFence(device);
 			}
 
-			VKCommandBuffer& VKCommandBuffer::operator=(VKCommandBuffer&& other) noexcept
+			VKCommandBuffer& VKCommandBuffer::operator=(VKCommandBuffer&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -5715,16 +5748,16 @@ namespace WS {
 				return *this;
 			}
 
-			void VKCommandBuffer::BeginRecording() const
+			void VKCommandBuffer::BeginRecording() const WS_NOEXCEPT
 			{
 				VkCommandBufferBeginInfo beginInfo{};
 				beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 				if (VK_FAILED(vkBeginCommandBuffer(this->m_object, &beginInfo)))
-					throw std::runtime_error("[VULKAN] Failed To Begin Command Buffer Recording");
+					WS_THROW("[VULKAN] Failed To Begin Command Buffer Recording");
 			}
 
-			void VKCommandBuffer::BeginRenderPass(const VKSwapChain& swapChain, const VkFramebuffer& frameBuffer, const VkRenderPass& renderPass) const noexcept
+			void VKCommandBuffer::BeginRenderPass(const VKSwapChain& swapChain, const VkFramebuffer& frameBuffer, const VkRenderPass& renderPass) const WS_NOEXCEPT
 			{
 				VkClearValue clearColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -5740,18 +5773,18 @@ namespace WS {
 				vkCmdBeginRenderPass(this->m_object, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 			}
 
-			void VKCommandBuffer::EndRenderPass()
+			void VKCommandBuffer::EndRenderPass() WS_NOEXCEPT
 			{
 				vkCmdEndRenderPass(this->m_object);
 			}
 
-			void VKCommandBuffer::EndRecording() const
+			void VKCommandBuffer::EndRecording() const WS_NOEXCEPT
 			{
 				if (VK_FAILED(vkEndCommandBuffer(this->m_object)))
-					throw std::runtime_error("[VULKAN] Failed To End Command Buffer Recording");
+					WS_THROW("[VULKAN] Failed To End Command Buffer Recording");
 			}
 
-			void VKCommandBuffer::Submit(const VkSemaphore& waitSemaphore) const
+			void VKCommandBuffer::Submit(const VkSemaphore& waitSemaphore) const WS_NOEXCEPT
 			{
 				VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -5768,21 +5801,21 @@ namespace WS {
 				this->m_submitedfence.Reset();
 
 				if (VK_FAILED(vkQueueSubmit(*this->m_pQueue, 1, &submitInfo, this->m_submitedfence)))
-					throw std::runtime_error("[VULKAN] Failed To Submit CommandBuffer");
+					WS_THROW("[VULKAN] Failed To Submit CommandBuffer");
 			}
 
-			void VKCommandBuffer::BindPipeline(const VKRenderPipeline& pipeline)
+			void VKCommandBuffer::BindPipeline(const VKRenderPipeline& pipeline) WS_NOEXCEPT
 			{
 				vkCmdBindPipeline(this->m_object, VK_PIPELINE_BIND_POINT_GRAPHICS, *pipeline.GetPtr());
 			}
 
-			void VKCommandBuffer::WaitForCompletion()
+			void VKCommandBuffer::WaitForCompletion() WS_NOEXCEPT
 			{
 				this->m_submitedfence.Wait();
 				this->m_submitedfence.Reset();
 			}
 
-			[[nodiscard]] inline VkSemaphore VKCommandBuffer::GetSubmittedSemaphore() const noexcept { return this->m_submitedSemaphore; }
+			[[nodiscard]] inline VkSemaphore VKCommandBuffer::GetSubmittedSemaphore() const WS_NOEXCEPT { return this->m_submitedSemaphore; }
 
 			/*
 			 * // ///////////////////--\\\\\\\\\\\\\\\\\\\\ \\
@@ -5797,7 +5830,7 @@ namespace WS {
 				
 			}
 
-			void VKRenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps)
+			void VKRenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
 			{
 				this->m_instance      = VKInstance("App Made With Weiss Engine");
 				this->m_surface       = VKSurface(this->m_instance, pWindow);
@@ -5813,26 +5846,21 @@ namespace WS {
 				this->m_swapChain.CreateFrameBuffers();
 			}
 
-			void VKRenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs)
+			void VKRenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs) WS_NOEXCEPT
 			{
 				for (const RenderPipelineDesc& pipelineDesc : pipelineDescs)
 					this->m_renderPipelines.emplace_back(this->m_device, this->m_swapChain, pipelineDesc, this->m_pConstantBuffers, this->m_pTextures, this->m_textureSamplers);
 			}
 
-			void VKRenderAPI::Draw(const Drawable& drawable, const size_t nVertices)
+			void VKRenderAPI::Draw(const Drawable& drawable, const size_t nVertices) WS_NOEXCEPT
 			{
 				this->m_commandBuffer.BindPipeline(this->m_renderPipelines[0]);
 				vkCmdDraw(this->m_commandBuffer, 3u, 1u, 0u, 0u);
 			}
 
-			void VKRenderAPI::BeginDrawing()
+			void VKRenderAPI::BeginDrawing() WS_NOEXCEPT
 			{
-				if (a) {
-					this->m_commandBuffer.WaitForCompletion();
-				}
-				else {
-					a = true;
-				}
+				this->m_commandBuffer.WaitForCompletion();
 
 				this->m_swapChain.GetNextFrameBuffer();
 
@@ -5840,7 +5868,7 @@ namespace WS {
 				this->m_commandBuffer.BeginRenderPass(this->m_swapChain, this->m_swapChain.GetCurrentFrameBuffer(), VKRenderPass::m_renderPasses[0]);
 			}
 
-			void VKRenderAPI::EndDrawing()
+			void VKRenderAPI::EndDrawing() WS_NOEXCEPT
 			{
 				this->m_commandBuffer.EndRenderPass();
 				this->m_commandBuffer.EndRecording();
@@ -5848,37 +5876,37 @@ namespace WS {
 				this->m_commandBuffer.Submit(this->m_swapChain.GetFrameBufferFetchedSemaphore());
 			}
 
-			void VKRenderAPI::Present(const bool vSync)
+			void VKRenderAPI::Present(const bool vSync) WS_NOEXCEPT
 			{
 				this->m_swapChain.Present(vSync, this->m_commandBuffer.GetSubmittedSemaphore());
 			}
 
-			size_t VKRenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize)
+			size_t VKRenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 			{
 				return 0u;
 			}
 
-			size_t VKRenderAPI::CreateIndexBuffer(const size_t nIndices)
+			size_t VKRenderAPI::CreateIndexBuffer(const size_t nIndices) WS_NOEXCEPT
 			{
 				return 0u;
 			}
 
-			size_t VKRenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot)
+			size_t VKRenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot) WS_NOEXCEPT
 			{
 				return 0u;
 			}
 
-			size_t VKRenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps)
+			size_t VKRenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 			{
 				return 0u;
 			}
 
-			size_t VKRenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot)
+			size_t VKRenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT
 			{
 				return 0u;
 			}
 
-			void VKRenderAPI::Fill(const Colorf32& color)
+			void VKRenderAPI::Fill(const Colorf32& color) WS_NOEXCEPT
 			{
 
 			}
@@ -5930,20 +5958,20 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\--//////////////////// \\ 
 			 */
 
-			D3D11SwapChain::D3D11SwapChain(D3D11DeviceObjectWrapper& pDevice, Window* pWindow)
+			D3D11SwapChain::D3D11SwapChain(D3D11DeviceObjectWrapper& pDevice, Window* pWindow) WS_NOEXCEPT
 			{
 				Microsoft::WRL::ComPtr<IDXGIDevice>  dxgiDevice;
 				Microsoft::WRL::ComPtr<IDXGIAdapter> dxgiAdapter;
 				Microsoft::WRL::ComPtr<IDXGIFactory> dxgiFactory;
 
 				if (DX_FAILED(pDevice->QueryInterface(IID_PPV_ARGS(&dxgiDevice))))
-					throw std::runtime_error("Could Not Get IDXGIDevice From D3D11Device");
+					WS_THROW("Could Not Get IDXGIDevice From D3D11Device");
 
 				if (DX_FAILED(dxgiDevice->GetAdapter(dxgiAdapter.GetAddressOf())))
-					throw std::runtime_error("Could Not Get DXGIAdapter From DXGIDevice");
+					WS_THROW("Could Not Get DXGIAdapter From DXGIDevice");
 
 				if (DX_FAILED(dxgiAdapter->GetParent(__uuidof(IDXGIFactory), &dxgiFactory)))
-					throw std::runtime_error("Could Not Get DXGIAdapter's Parent");
+					WS_THROW("Could Not Get DXGIAdapter's Parent");
 
 				DXGI_SWAP_CHAIN_DESC scd{};
 				scd.BufferDesc.Width  = 0;
@@ -5963,10 +5991,10 @@ namespace WS {
 				scd.Flags = 0;
 
 				if (DX_FAILED(dxgiFactory->CreateSwapChain(pDevice, &scd, &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 11] Failed To Create Swap Chain");
+					WS_THROW("[DIRECTX 11] Failed To Create Swap Chain");
 			}
 
-			D3D11SwapChain& D3D11SwapChain::operator=(D3D11SwapChain&& other) noexcept
+			D3D11SwapChain& D3D11SwapChain::operator=(D3D11SwapChain&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -5974,10 +6002,10 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D11SwapChain::Present(const bool vSync)
+			void D3D11SwapChain::Present(const bool vSync) WS_NOEXCEPT
 			{
 				if (DX_FAILED(this->m_pObject->Present(vSync ? 1u : 0u, 0u)))
-					throw std::runtime_error("Failed To Swap Buffers");
+					WS_THROW("Failed To Swap Buffers");
 			}
 
 			/*
@@ -5988,18 +6016,18 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\ 
 			 */
 
-			D3D11RenderTarget::D3D11RenderTarget(D3D11DeviceObjectWrapper& pDevice, D3D11SwapChainObjectWrapper& pSwapChain)
+			D3D11RenderTarget::D3D11RenderTarget(D3D11DeviceObjectWrapper& pDevice, D3D11SwapChainObjectWrapper& pSwapChain) WS_NOEXCEPT
 			{
 				Microsoft::WRL::ComPtr<ID3D11Resource> pBackBuffer;
 
 				if (DX_FAILED(pSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), &pBackBuffer)))
-					throw std::runtime_error("[DIRECTX 11] Could Not Get BackBuffer");
+					WS_THROW("[DIRECTX 11] Could Not Get BackBuffer");
 
 				if (DX_FAILED(pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 11] Could Not Create RenderTargetView");
+					WS_THROW("[DIRECTX 11] Could Not Create RenderTargetView");
 			}
 
-			D3D11RenderTarget& D3D11RenderTarget::operator=(D3D11RenderTarget&& other) noexcept
+			D3D11RenderTarget& D3D11RenderTarget::operator=(D3D11RenderTarget&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6007,7 +6035,7 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D11RenderTarget::SetCurrent(D3D11DeviceContextObjectWrapper& pDeviceContext) const noexcept
+			void D3D11RenderTarget::SetCurrent(D3D11DeviceContextObjectWrapper& pDeviceContext) const WS_NOEXCEPT
 			{
 				pDeviceContext->OMSetRenderTargets(1u, &this->m_pObject, NULL);
 			}
@@ -6020,7 +6048,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\ 
 			 */
 
-			D3D11DepthBuffer::D3D11DepthBuffer(Window* pWindow, D3D11DeviceObjectWrapper& pDevice)
+			D3D11DepthBuffer::D3D11DepthBuffer(Window* pWindow, D3D11DeviceObjectWrapper& pDevice) WS_NOEXCEPT
 			{
 				D3D11_DEPTH_STENCIL_DESC dsDesc = {};
 				dsDesc.DepthEnable      = TRUE;
@@ -6038,7 +6066,7 @@ namespace WS {
 				dsDesc.BackFace.StencilFunc         = D3D11_COMPARISON_ALWAYS;
 
 				if (DX_FAILED(pDevice->CreateDepthStencilState(&dsDesc, &this->m_pDepthStencilState)))
-					throw std::runtime_error("Could Not Create DepthStencilState");
+					WS_THROW("Could Not Create DepthStencilState");
 
 				Microsoft::WRL::ComPtr<ID3D11Texture2D> pDepthStencil;
 				D3D11_TEXTURE2D_DESC descDepth = {};
@@ -6053,7 +6081,7 @@ namespace WS {
 				descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 
 				if (DX_FAILED(pDevice->CreateTexture2D(&descDepth, nullptr, &pDepthStencil)))
-					throw std::runtime_error("Could Not Create Texture2D");
+					WS_THROW("Could Not Create Texture2D");
 
 				D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
 				descDSV.Format             = DXGI_FORMAT_D32_FLOAT;
@@ -6061,15 +6089,15 @@ namespace WS {
 				descDSV.Texture2D.MipSlice = 0u;
 
 				if (DX_FAILED(pDevice->CreateDepthStencilView(pDepthStencil.Get(), &descDSV, &this->m_pDepthStencilView)))
-					throw std::runtime_error("Could Not Create DepthStencilView");
+					WS_THROW("Could Not Create DepthStencilView");
 			}
 
-			void D3D11DepthBuffer::Clear(D3D11DeviceContextObjectWrapper& pDeviceContext)
+			void D3D11DepthBuffer::Clear(D3D11DeviceContextObjectWrapper& pDeviceContext) WS_NOEXCEPT
 			{
 				pDeviceContext->ClearDepthStencilView(this->m_pDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
 			}
 
-			void D3D11DepthBuffer::Bind(D3D11DeviceContextObjectWrapper& pDeviceContext, D3D11RenderTargetbjectWrapper& pRenderTarget)
+			void D3D11DepthBuffer::Bind(D3D11DeviceContextObjectWrapper& pDeviceContext, D3D11RenderTargetbjectWrapper& pRenderTarget) WS_NOEXCEPT
 			{
 				pDeviceContext->OMSetRenderTargets(1u, pRenderTarget.GetPtr(), this->m_pDepthStencilView.Get());
 				pDeviceContext->OMSetDepthStencilState(this->m_pDepthStencilState.Get(), 1u);
@@ -6084,8 +6112,8 @@ namespace WS {
 			 */
 
 			D3D11VertexShader::D3D11VertexShader(D3D11DeviceObjectWrapper& pDevice,
-										 D3D11DeviceContextObjectWrapper* pDeviceContext,
-										 const char* sourceFilename, const std::vector<ShaderInputElement>& sies)
+										         D3D11DeviceContextObjectWrapper* pDeviceContext,
+										         const char* sourceFilename, const std::vector<ShaderInputElement>& sies) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
 				Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
@@ -6095,10 +6123,10 @@ namespace WS {
 				std::string   sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
 
 				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "vs_5_0", 0, 0, &pBlob, NULL) != S_OK)
-					throw std::runtime_error("Could Not Compile Vertex Shader");
+					WS_THROW("Could Not Compile Vertex Shader");
 
 				if (pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
-					throw std::runtime_error("Could Not Create Vertex Shader");
+					WS_THROW("Could Not Create Vertex Shader");
 
 				// Create Input Layout
 				std::vector<D3D11_INPUT_ELEMENT_DESC> inputElementDescriptors(sies.size());
@@ -6125,7 +6153,7 @@ namespace WS {
 						inputElementDescriptors[i].Format = DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT;
 						break;
 					default:
-						throw std::runtime_error("Input Element Type Not Supported");
+						WS_THROW("Input Element Type Not Supported");
 					}
 
 					inputElementDescriptors[i].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
@@ -6133,10 +6161,10 @@ namespace WS {
 				}
 
 				if (pDevice->CreateInputLayout(inputElementDescriptors.data(), (UINT)inputElementDescriptors.size(), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &this->m_pInputLayout) != S_OK)
-					throw std::runtime_error("Could Not Create Input Layout");
+					WS_THROW("Could Not Create Input Layout");
 			}
 
-			void D3D11VertexShader::Bind() const noexcept
+			void D3D11VertexShader::Bind() const WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->IASetInputLayout(this->m_pInputLayout.Get());
 				(*this->m_pDeviceContext)->VSSetShader(this->m_pShader.Get(), nullptr, 0u);
@@ -6152,7 +6180,7 @@ namespace WS {
 
 			D3D11PixelShader::D3D11PixelShader(D3D11DeviceObjectWrapper& pDevice,
 									   D3D11DeviceContextObjectWrapper* pDeviceContext,
-									   const char* sourceFilename)
+									   const char* sourceFilename) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
 				Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
@@ -6161,13 +6189,13 @@ namespace WS {
 				std::string sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
 
 				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "ps_5_0", 0, 0, &pBlob, NULL) != S_OK)
-					throw std::runtime_error("Could Not Compile Pixel Shader");
+					WS_THROW("Could Not Compile Pixel Shader");
 
 				if (pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
-					throw std::runtime_error("Could Not Create Pixel Shader");
+					WS_THROW("Could Not Create Pixel Shader");
 				}
 
-			void D3D11PixelShader::Bind() const noexcept
+			void D3D11PixelShader::Bind() const WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->PSSetShader(this->m_pShader.Get(), nullptr, 0u);
 			}
@@ -6181,8 +6209,8 @@ namespace WS {
 			 */
 
 			D3D11VertexBuffer::D3D11VertexBuffer(D3D11DeviceObjectWrapper& pDevice,
-										 D3D11DeviceContextObjectWrapper* pDeviceContext,
-										 const size_t nVertices, const size_t vertexSize)
+												 D3D11DeviceContextObjectWrapper* pDeviceContext,
+												 const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 				: m_vertexSize(vertexSize), m_pDeviceContext(pDeviceContext)
 			{
 				D3D11_BUFFER_DESC bd = {};
@@ -6197,7 +6225,7 @@ namespace WS {
 				std::memset(this->m_vertexData.data(), 0, bd.ByteWidth);
 
 				if (DX_FAILED(pDevice->CreateBuffer(&bd, nullptr, &this->m_pObject)))
-					throw std::runtime_error("Unable To Create Vertex Buffer");
+					WS_THROW("Unable To Create Vertex Buffer");
 			}
 
 			D3D11VertexBuffer& D3D11VertexBuffer::operator=(D3D11VertexBuffer&& other) noexcept
@@ -6210,7 +6238,7 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D11VertexBuffer::Bind()
+			void D3D11VertexBuffer::Bind() WS_NOEXCEPT
 			{
 				const UINT stride = static_cast<UINT>(this->m_vertexSize);
 				const UINT offset = 0u;
@@ -6218,11 +6246,11 @@ namespace WS {
 				(*this->m_pDeviceContext)->IASetVertexBuffers(0u, 1u, &this->m_pObject, &stride, &offset);
 			}
 
-			void D3D11VertexBuffer::Update()
+			void D3D11VertexBuffer::Update() WS_NOEXCEPT
 			{
 				D3D11_MAPPED_SUBRESOURCE resource;
 				if (DX_FAILED((*this->m_pDeviceContext)->Map(this->m_pObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource)))
-					throw std::runtime_error("Could Not Map Vertex Buffer Memory");
+					WS_THROW("Could Not Map Vertex Buffer Memory");
 
 				std::memcpy(resource.pData, this->m_vertexData.data(), this->m_vertexData.size());
 				(*this->m_pDeviceContext)->Unmap(this->m_pObject, 0);
@@ -6237,8 +6265,8 @@ namespace WS {
 			 */
 
 			D3D11IndexBuffer::D3D11IndexBuffer(D3D11DeviceObjectWrapper& pDevice,
-									   D3D11DeviceContextObjectWrapper* pDeviceContext,
-									   const size_t nIndices)
+											   D3D11DeviceContextObjectWrapper* pDeviceContext,
+											   const size_t nIndices) WS_NOEXCEPT
 				: m_nIndices(nIndices), m_pDeviceContext(pDeviceContext)
 			{
 				D3D11_BUFFER_DESC bd = {};
@@ -6253,10 +6281,10 @@ namespace WS {
 				std::memset(this->m_indexData.data(), 0, bd.ByteWidth);
 
 				if (DX_FAILED(pDevice->CreateBuffer(&bd, nullptr, &this->m_pObject)))
-					throw std::runtime_error("Unable To Create Index Buffer");
+					WS_THROW("Unable To Create Index Buffer");
 			}
 
-			D3D11IndexBuffer& D3D11IndexBuffer::operator=(D3D11IndexBuffer&& other) noexcept
+			D3D11IndexBuffer& D3D11IndexBuffer::operator=(D3D11IndexBuffer&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6267,16 +6295,16 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D11IndexBuffer::Bind()
+			void D3D11IndexBuffer::Bind() WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->IASetIndexBuffer(this->m_pObject, DXGI_FORMAT_R32_UINT, 0u);
 			}
 
-			void D3D11IndexBuffer::Update()
+			void D3D11IndexBuffer::Update() WS_NOEXCEPT
 			{
 				D3D11_MAPPED_SUBRESOURCE resource;
 				if (DX_FAILED((*this->m_pDeviceContext)->Map(this->m_pObject, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource)))
-					throw std::runtime_error("Could Not Map Index Buffer Memory");
+					WS_THROW("Could Not Map Index Buffer Memory");
 
 				std::memcpy(resource.pData, this->m_indexData.data(), this->m_indexData.size());
 				(*this->m_pDeviceContext)->Unmap(this->m_pObject, 0);
@@ -6291,8 +6319,8 @@ namespace WS {
 			 */
 
 			D3D11ConstantBuffer::D3D11ConstantBuffer(D3D11DeviceObjectWrapper& pDevice,
-											 D3D11DeviceContextObjectWrapper* pDeviceContext,
-											 const size_t objSize, const size_t slot)
+													 D3D11DeviceContextObjectWrapper* pDeviceContext,
+													 const size_t objSize, const size_t slot) WS_NOEXCEPT
 				: m_objSize(objSize), m_slot(slot), m_pDeviceContext(pDeviceContext)
 			{
 				D3D11_BUFFER_DESC bd = {};
@@ -6306,10 +6334,10 @@ namespace WS {
 				std::memset(this->m_constantBufferData.data(), 0, bd.ByteWidth);
 
 				if (DX_FAILED(pDevice->CreateBuffer(&bd, nullptr, &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 11] Unable To Create Constant Buffer");
+					WS_THROW("[DIRECTX 11] Unable To Create Constant Buffer");
 			}
 
-			D3D11ConstantBuffer& D3D11ConstantBuffer::operator=(D3D11ConstantBuffer&& other) noexcept
+			D3D11ConstantBuffer& D3D11ConstantBuffer::operator=(D3D11ConstantBuffer&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6321,16 +6349,16 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D11ConstantBuffer::Bind()
+			void D3D11ConstantBuffer::Bind() WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->VSSetConstantBuffers((UINT)this->m_slot, 1u, &this->m_pObject);
 			}
 
-			void D3D11ConstantBuffer::Update()
+			void D3D11ConstantBuffer::Update() WS_NOEXCEPT
 			{
 				D3D11_MAPPED_SUBRESOURCE resource;
 				if (DX_FAILED((*this->m_pDeviceContext)->Map(this->m_pObject, 0u, D3D11_MAP_WRITE_DISCARD, 0u, &resource)))
-					throw std::runtime_error("[DIRECTX 11] Failed To Map Constant Buffer Memory");
+					WS_THROW("[DIRECTX 11] Failed To Map Constant Buffer Memory");
 
 				std::memcpy(resource.pData, this->m_constantBufferData.data(), this->m_objSize);
 				(*this->m_pDeviceContext)->Unmap(this->m_pObject, 0u);
@@ -6345,8 +6373,8 @@ namespace WS {
 			 */
 
 			D3D11Texture::D3D11Texture(D3D11DeviceObjectWrapper& pDevice,
-                               D3D11DeviceContextObjectWrapper* pDeviceContext,
-                               const size_t width, const size_t height, const size_t slot, const bool useMipmaps)
+									   D3D11DeviceContextObjectWrapper* pDeviceContext,
+									   const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext), m_pDevice(&pDevice), m_slot(slot)
 			{
 				D3D11_TEXTURE2D_DESC texture2DDescriptor = {};
@@ -6362,7 +6390,7 @@ namespace WS {
 				texture2DDescriptor.MiscFlags = useMipmaps ? D3D11_RESOURCE_MISC_GENERATE_MIPS : 0;
 
 				if (DX_FAILED(pDevice->CreateTexture2D(&texture2DDescriptor, nullptr, &this->m_texture2D)))
-					throw std::runtime_error("[DIRECTX 11] Failed To Create Texture");
+					WS_THROW("[DIRECTX 11] Failed To Create Texture");
 
 				D3D11_SHADER_RESOURCE_VIEW_DESC SRVDescriptor = {};
 				SRVDescriptor.Format                    = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -6371,16 +6399,16 @@ namespace WS {
 				SRVDescriptor.Texture2D.MipLevels       = useMipmaps ? -1 : 1;
 
 				if (DX_FAILED(pDevice->CreateShaderResourceView(this->m_texture2D.Get(), &SRVDescriptor, &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 11] Failed To Create Shader Resource View");
+					WS_THROW("[DIRECTX 11] Failed To Create Shader Resource View");
 			}
 
-			void D3D11Texture::Bind() const noexcept
+			void D3D11Texture::Bind() const WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->VSSetShaderResources(static_cast<UINT>(this->m_slot), 1u, &this->m_pObject);
 				(*this->m_pDeviceContext)->PSSetShaderResources(static_cast<UINT>(this->m_slot), 1u, &this->m_pObject);
 			}
 
-			void D3D11Texture::Update()
+			void D3D11Texture::Update() WS_NOEXCEPT
 			{
 				D3D11_SUBRESOURCE_DATA* subResourceData = new D3D11_SUBRESOURCE_DATA();
 				subResourceData->pSysMem          = static_cast<void*>(this->m_image.GetBuffer());
@@ -6402,8 +6430,8 @@ namespace WS {
 			 */
 
 			D3D11TextureSampler::D3D11TextureSampler(D3D11DeviceObjectWrapper& pDevice,
-                                             D3D11DeviceContextObjectWrapper* pDeviceContext,
-                                             const TextureFilter& filter, const size_t slot)
+													 D3D11DeviceContextObjectWrapper* pDeviceContext,
+													 const TextureFilter& filter, const size_t slot) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext), m_slot(slot)
 			{
 				D3D11_SAMPLER_DESC samplerDescriptor;
@@ -6420,7 +6448,7 @@ namespace WS {
 					samplerDescriptor.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 					break;
 				default:
-					throw std::runtime_error("[DIRECTX 11] Your Filtering Method Is Not Supported");
+					WS_THROW("[DIRECTX 11] Your Filtering Method Is Not Supported");
 				}
 
 				samplerDescriptor.AddressU = D3D11_TEXTURE_ADDRESS_MODE::D3D11_TEXTURE_ADDRESS_WRAP;
@@ -6433,10 +6461,10 @@ namespace WS {
 				samplerDescriptor.MaxLOD = D3D11_FLOAT32_MAX;
 
 				if (DX_FAILED(pDevice->CreateSamplerState(&samplerDescriptor, &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 11] Failed To Create Sampler State");
+					WS_THROW("[DIRECTX 11] Failed To Create Sampler State");
 			}
 
-			void D3D11TextureSampler::Bind() const noexcept
+			void D3D11TextureSampler::Bind() const WS_NOEXCEPT
 			{
 				(*this->m_pDeviceContext)->VSSetSamplers(static_cast<UINT>(this->m_slot), 1u, &this->m_pObject);
 				(*this->m_pDeviceContext)->PSSetSamplers(static_cast<UINT>(this->m_slot), 1u, &this->m_pObject);
@@ -6451,8 +6479,8 @@ namespace WS {
 			 */
 
 			D3D11RenderPipeline::D3D11RenderPipeline(D3D11DeviceObjectWrapper& pDevice,
-											 D3D11DeviceContextObjectWrapper* pDeviceContext,
-											 const RenderPipelineDesc& desc)
+													 D3D11DeviceContextObjectWrapper* pDeviceContext,
+													 const RenderPipelineDesc& desc) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext),      m_constantBufferIndices(desc.constantBufferIndices),
 				m_textureIndices(desc.textureIndices), m_textureSamplerIndices(desc.textureSamplerIndices)
 			{
@@ -6465,7 +6493,7 @@ namespace WS {
 					this->m_topology = D3D11_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 					break;
 				default:
-					throw std::runtime_error("[DIRECTX 11] Requested Primitive Topology Is Not Supported");
+					WS_THROW("[DIRECTX 11] Requested Primitive Topology Is Not Supported");
 					break;
 				}
 
@@ -6474,8 +6502,8 @@ namespace WS {
 			}
 
 			void D3D11RenderPipeline::Bind(std::vector<ConstantBuffer*>& constantBuffers,
-										std::vector<Texture*>& textures,
-										std::vector<D3D11TextureSampler*> textureSamplers) noexcept
+										   std::vector<Texture*>& textures,
+										   std::vector<D3D11TextureSampler*> textureSamplers) WS_NOEXCEPT
 			{
 				this->m_pVertexShader.Bind();
 				this->m_pPixelShader.Bind();
@@ -6500,10 +6528,10 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
 			 */
 
-			void D3D11RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps)
+			void D3D11RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
 			{
 				if (D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, this->m_pDevice.GetPtr(), nullptr, this->m_pDeviceContext.GetPtr()) != S_OK)
-					throw std::runtime_error("Could Not Create Device");
+					WS_THROW("Could Not Create Device");
 
 				this->m_pSwapChain    = D3D11SwapChain(this->m_pDevice, pWindow);
 				this->m_pRenderTarget = D3D11RenderTarget(this->m_pDevice, this->m_pSwapChain);
@@ -6525,14 +6553,14 @@ namespace WS {
 				this->m_pDepthBuffer.Bind(this->m_pDeviceContext, this->m_pRenderTarget);
 			}
 
-			void D3D11RenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs)
+			void D3D11RenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs) WS_NOEXCEPT
 			{
 				this->m_pRenderPipelines.reserve(pipelineDescs.size());
 				for (const RenderPipelineDesc& pipelineDesc : pipelineDescs)
 					this->m_pRenderPipelines.emplace_back(this->m_pDevice, &this->m_pDeviceContext, pipelineDesc);
 			}
 
-			void D3D11RenderAPI::Draw(const Drawable& drawable, const size_t nVertices)
+			void D3D11RenderAPI::Draw(const Drawable& drawable, const size_t nVertices) WS_NOEXCEPT
 			{
 				this->m_pRenderPipelines[drawable.pipelineIndex].Bind(this->m_pConstantBuffers, this->m_pTextures, this->m_pTextureSamplers);
 				dynamic_cast<D3D11VertexBuffer*>(this->m_pVertexBuffers[drawable.vertexBufferIndex])->Bind();
@@ -6546,57 +6574,57 @@ namespace WS {
 				}
 			}
 
-			void D3D11RenderAPI::BeginDrawing()
+			void D3D11RenderAPI::BeginDrawing() WS_NOEXCEPT
 			{
 				this->Fill();
 			}
 
-			void D3D11RenderAPI::EndDrawing()
+			void D3D11RenderAPI::EndDrawing() WS_NOEXCEPT
 			{
 				this->m_pDepthBuffer.Clear(this->m_pDeviceContext);
 			}
 
-			void D3D11RenderAPI::Present(const bool vSync)
+			void D3D11RenderAPI::Present(const bool vSync) WS_NOEXCEPT
 			{
 				this->m_pSwapChain.Present(vSync);
 			}
 
-			size_t D3D11RenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize)
+			size_t D3D11RenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 			{
 				this->m_pVertexBuffers.push_back(new D3D11VertexBuffer(this->m_pDevice, &this->m_pDeviceContext, nVertices, vertexSize));
 
 				return this->m_pVertexBuffers.size() - 1u;
 			}
 
-			size_t D3D11RenderAPI::CreateIndexBuffer(const size_t nIndices)
+			size_t D3D11RenderAPI::CreateIndexBuffer(const size_t nIndices) WS_NOEXCEPT
 			{
 				this->m_pIndexBuffers.push_back(new D3D11IndexBuffer(this->m_pDevice, &this->m_pDeviceContext, nIndices));
 
 				return this->m_pIndexBuffers.size() - 1u;
 			}
 
-			size_t D3D11RenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot)
+			size_t D3D11RenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot) WS_NOEXCEPT
 			{
 				this->m_pConstantBuffers.push_back(new D3D11ConstantBuffer(this->m_pDevice, &this->m_pDeviceContext, objSize, slot));
 
 				return this->m_pConstantBuffers.size() - 1u;
 			}
 
-			size_t D3D11RenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps)
+			size_t D3D11RenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 			{
 				this->m_pTextures.push_back(new D3D11Texture(this->m_pDevice, &this->m_pDeviceContext, width, height, slot, useMipmaps));
 
 				return this->m_pTextures.size() - 1u;
 			}
 
-			size_t D3D11RenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot)
+			size_t D3D11RenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT
 			{
 				this->m_pTextureSamplers.push_back(new D3D11TextureSampler(this->m_pDevice, &this->m_pDeviceContext, filter, slot));
 
 				return this->m_pTextureSamplers.size() - 1u;
 			}
 
-			void D3D11RenderAPI::Fill(const Colorf32& color)
+			void D3D11RenderAPI::Fill(const Colorf32& color) WS_NOEXCEPT
 			{
 				this->m_pDeviceContext->ClearRenderTargetView(this->m_pRenderTarget, (float*)&color);
 			}
@@ -6622,7 +6650,7 @@ namespace WS {
 			 */
 
 			template <typename T>
-			D3D12ObjectWrapper<T>& D3D12ObjectWrapper<T>::operator=(D3D12ObjectWrapper<T>&& other) noexcept
+			D3D12ObjectWrapper<T>& D3D12ObjectWrapper<T>::operator=(D3D12ObjectWrapper<T>&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6652,7 +6680,7 @@ namespace WS {
 			{
 				IDXGIFactory4* dxgiFactory;
 				if (DX_FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&dxgiFactory))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create DXGIFactory1");
+					WS_THROW("[DIRECTX 12] Failed To Create DXGIFactory1");
 
 				int adapterIndex = 0;
 
@@ -6670,10 +6698,10 @@ namespace WS {
 					adapterIndex++;
 				}
 
-				throw std::runtime_error("[DIRECTX 12] Failed To Create Adapter");
+				WS_THROW("[DIRECTX 12] Failed To Create Adapter");
 			}
 
-			D3D12Adapter& D3D12Adapter::operator=(D3D12Adapter&& other) noexcept
+			D3D12Adapter& D3D12Adapter::operator=(D3D12Adapter&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6689,10 +6717,10 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\-//////////////// \\ 
 			 */
 
-			D3D12Device::D3D12Device(D3D12AdapterObjectWrapper& pAdapter)
+			D3D12Device::D3D12Device(D3D12AdapterObjectWrapper& pAdapter) WS_NOEXCEPT
 			{
 				if (DX_FAILED(D3D12CreateDevice(pAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS(&this->m_pObject))))
-					throw std::runtime_error("[D3D12] Failed To Create Device");
+					WS_THROW("[D3D12] Failed To Create Device");
 
 #ifdef __WEISS__DEBUG_MODE
 
@@ -6723,13 +6751,13 @@ namespace WS {
 					NewFilter.DenyList.pIDList       = DenyIds;
 
 					if (pInfoQueue->PushStorageFilter(&NewFilter) != S_OK)
-						throw std::runtime_error("[D3D12] Could Not Push Storage FIlter");
+						WS_THROW("[D3D12] Could Not Push Storage FIlter");
 				}
 
 #endif // __WEISS__DEBUG_MODE
 			}
 
-			D3D12Device& D3D12Device::operator=(D3D12Device&& other) noexcept
+			D3D12Device& D3D12Device::operator=(D3D12Device&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6745,22 +6773,22 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\--/////////////// \\ 
 			 */
 
-			D3D12Fence::D3D12Fence(D3D12DeviceObjectWrapper& pDevice, const UINT64 initialValue, const D3D12_FENCE_FLAGS flags)
+			D3D12Fence::D3D12Fence(D3D12DeviceObjectWrapper& pDevice, const UINT64 initialValue, const D3D12_FENCE_FLAGS flags) WS_NOEXCEPT
 			{
 				if (pDevice->CreateFence(initialValue, flags, IID_PPV_ARGS(&this->m_pObject)) != S_OK)
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Fence");
+					WS_THROW("[DIRECTX 12] Failed To Create Fence");
 
 				this->m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 				if (this->m_fenceEvent == nullptr)
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Fence Event");
+					WS_THROW("[DIRECTX 12] Failed To Create Fence Event");
 			}
 
-			D3D12Fence::~D3D12Fence()
+			D3D12Fence::~D3D12Fence() WS_NOEXCEPT
 			{
 				CloseHandle(this->m_fenceEvent);
 			}
 
-			D3D12Fence& D3D12Fence::operator=(D3D12Fence&& other) noexcept
+			D3D12Fence& D3D12Fence::operator=(D3D12Fence&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6776,7 +6804,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\ 
 			 */
 
-			D3D12CommandQueue::D3D12CommandQueue(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type)
+			D3D12CommandQueue::D3D12CommandQueue(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT
 			{
 				D3D12_COMMAND_QUEUE_DESC desc = {};
 				desc.Type     = type;
@@ -6785,7 +6813,7 @@ namespace WS {
 				desc.NodeMask = 0;
 
 				if (DX_FAILED(pDevice->CreateCommandQueue(&desc, IID_PPV_ARGS(&this->m_pObject))))
-					throw std::runtime_error("[D3D12] Could Not Create Command Queue");
+					WS_THROW("[D3D12] Could Not Create Command Queue");
 			}
 
 			/*
@@ -6797,8 +6825,8 @@ namespace WS {
 			 */
 
 			D3D12SwapChain::D3D12SwapChain(D3D12DeviceObjectWrapper&       pDevice,
-								   D3D12CommandQueueObjectWrapper& pCommandQueue,
-								   const Window* pWindow, const uint16_t maxFps, const UINT bufferCount)
+										   D3D12CommandQueueObjectWrapper& pCommandQueue,
+										   const Window* pWindow, const uint16_t maxFps, const UINT bufferCount) WS_NOEXCEPT
 			{
 				Microsoft::WRL::ComPtr<IDXGIFactory4> dxgiFactory4;
 
@@ -6811,7 +6839,7 @@ namespace WS {
 		#endif // __WEISS__DEBUG_MODE
 
 				if (DX_FAILED(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4))))
-					throw std::runtime_error("[D3D12] Could Not Create DXGIFactory2");
+					WS_THROW("[D3D12] Could Not Create DXGIFactory2");
 			
 				DXGI_MODE_DESC backBufferDesc = {};
 				backBufferDesc.Width  = pWindow->GetClientWidth();
@@ -6832,7 +6860,7 @@ namespace WS {
 				swapChainDesc.Flags        = D3D12SwapChain::IsTearingSupported() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 				if (DX_FAILED(dxgiFactory4->CreateSwapChain(pCommandQueue, &swapChainDesc, (IDXGISwapChain**) &this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Swap Chain");
+					WS_THROW("[DIRECTX 12] Failed To Create Swap Chain");
 			}
 
 			D3D12SwapChain& D3D12SwapChain::operator=(D3D12SwapChain&& other) noexcept
@@ -6843,13 +6871,13 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D12SwapChain::Present(const bool vSync) const
+			void D3D12SwapChain::Present(const bool vSync) const WS_NOEXCEPT
 			{
 				if (DX_FAILED(this->m_pObject->Present(vSync ? 1u : 0u, 0u)))
-					throw std::runtime_error("[DIRECTX 12] Presentation Failed");
+					WS_THROW("[DIRECTX 12] Presentation Failed");
 			}
 
-			bool D3D12SwapChain::IsTearingSupported()
+			bool D3D12SwapChain::IsTearingSupported() WS_NOEXCEPT
 			{
 				BOOL isTearingSupported = FALSE;
 
@@ -6857,10 +6885,10 @@ namespace WS {
 				Microsoft::WRL::ComPtr<IDXGIFactory5> factory5;
 
 				if (DX_FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory4))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Check Tearing (While Running CreateDXGIFactory1)");
+					WS_THROW("[DIRECTX 12] Failed To Check Tearing (While Running CreateDXGIFactory1)");
 
 				if (DX_FAILED(factory4.As(&factory5)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Check Tearing (While Running CreateDXGIFactory1)");
+					WS_THROW("[DIRECTX 12] Failed To Check Tearing (While Running CreateDXGIFactory1)");
 
 				if (DX_FAILED(factory5->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING, &isTearingSupported, sizeof(isTearingSupported))))
 					return false;
@@ -6876,7 +6904,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
 			 */
 
-			D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DeviceObjectWrapper& pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type, const uint32_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_FLAGS& flags)
+			D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DeviceObjectWrapper& pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type, const uint32_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_FLAGS& flags) WS_NOEXCEPT
 			{
 				D3D12_DESCRIPTOR_HEAP_DESC desc = {};
 				desc.NumDescriptors = numDescriptors;
@@ -6884,7 +6912,7 @@ namespace WS {
 				desc.Flags = flags;
 
 				if (DX_FAILED(pDevice->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&this->m_pObject))))
-					throw std::runtime_error("[D3D12] Could Not Create Descriptor Heap");
+					WS_THROW("[D3D12] Could Not Create Descriptor Heap");
 			}
 
 			D3D12DescriptorHeap& D3D12DescriptorHeap::operator=(D3D12DescriptorHeap&& other) noexcept
@@ -6904,13 +6932,13 @@ namespace WS {
 			 */
 
 			D3D12RenderTarget::D3D12RenderTarget(D3D12DeviceObjectWrapper& pDevice,
-										 D3D12SwapChainObjectWrapper& pSwapChain,
-										 D3D12DescriptorHeapObjectWrapper& pDescriptorHeap,
-										 const CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle,
-										 const uint16_t frameIndex)
+												 D3D12SwapChainObjectWrapper& pSwapChain,
+												 D3D12DescriptorHeapObjectWrapper& pDescriptorHeap,
+												 const CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle,
+												 const uint16_t frameIndex) WS_NOEXCEPT
 			{
 				if (pSwapChain->GetBuffer(frameIndex, IID_PPV_ARGS(&this->m_pObject)) != S_OK)
-					throw std::runtime_error("[DIRECTX 12] Failed To Get Back Buffer");
+					WS_THROW("[DIRECTX 12] Failed To Get Back Buffer");
 
 				pDevice->CreateRenderTargetView(this->m_pObject, nullptr, rtvHandle);
 			}
@@ -6931,16 +6959,16 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
 			 */
 
-			D3D12CommandAllocator::D3D12CommandAllocator(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type)
+			D3D12CommandAllocator::D3D12CommandAllocator(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT
 			{
 				if (pDevice->CreateCommandAllocator(type, IID_PPV_ARGS(&this->m_pObject)) != S_OK)
-					throw std::runtime_error("[DIRECTX 12] Could Not Create Command Allocator");
+					WS_THROW("[DIRECTX 12] Could Not Create Command Allocator");
 			}
 
-			void D3D12CommandAllocator::Reset() const
+			void D3D12CommandAllocator::Reset() const WS_NOEXCEPT
 			{
 				if (DX_FAILED(this->m_pObject->Reset()))
-					throw std::runtime_error("[DIRECTX 12] Could Not Reset Command Allocator");
+					WS_THROW("[DIRECTX 12] Could Not Reset Command Allocator");
 			}
 
 			/*
@@ -6952,14 +6980,14 @@ namespace WS {
 			 */
 
 			D3D12CommandList::D3D12CommandList(D3D12DeviceObjectWrapper& pDevice,
-									   D3D12CommandAllocatorObjectWrapper& pCommandAllocator,
-									   const D3D12_COMMAND_LIST_TYPE& type)
+											   D3D12CommandAllocatorObjectWrapper& pCommandAllocator,
+											   const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT
 			{
 				if (DX_FAILED(pDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, pCommandAllocator, NULL, IID_PPV_ARGS(&this->m_pObject))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Command List");
+					WS_THROW("[DIRECTX 12] Failed To Create Command List");
 			}
 
-			D3D12CommandList& D3D12CommandList::operator=(D3D12CommandList&& other) noexcept
+			D3D12CommandList& D3D12CommandList::operator=(D3D12CommandList&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6967,19 +6995,19 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D12CommandList::Close()
+			void D3D12CommandList::Close() WS_NOEXCEPT
 			{
 				if (DX_FAILED(this->m_pObject->Close()))
-					throw std::runtime_error("[DIRECTX 12] Failed To Close Command List");
+					WS_THROW("[DIRECTX 12] Failed To Close Command List");
 			}
 
-			void D3D12CommandList::Reset(D3D12CommandAllocatorObjectWrapper& pCommandAllocator) const
+			void D3D12CommandList::Reset(D3D12CommandAllocatorObjectWrapper& pCommandAllocator) const WS_NOEXCEPT
 			{
 				if (DX_FAILED(this->m_pObject->Reset(pCommandAllocator, NULL)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Reset Command List");
+					WS_THROW("[DIRECTX 12] Failed To Reset Command List");
 			}
 
-			void D3D12CommandList::TransitionResource(ID3D12Resource* pResource, const D3D12_RESOURCE_STATES& before, const D3D12_RESOURCE_STATES& after)
+			void D3D12CommandList::TransitionResource(ID3D12Resource* pResource, const D3D12_RESOURCE_STATES& before, const D3D12_RESOURCE_STATES& after) WS_NOEXCEPT
 			{
 				this->m_pObject->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(pResource, before, after));
 			}
@@ -6992,7 +7020,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\-///////////////// \\ 
 			 */
 
-			D3D12DepthBuffer::D3D12DepthBuffer(D3D12Device& pDevice, Window* pWindow)
+			D3D12DepthBuffer::D3D12DepthBuffer(D3D12Device& pDevice, Window* pWindow) WS_NOEXCEPT
 			{
 				D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
 				dsvHeapDesc.NumDescriptors = 1;
@@ -7000,7 +7028,7 @@ namespace WS {
 				dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 				if (DX_FAILED(pDevice->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(this->m_pDescriptorHeap.GetPtr()))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Descriptor Heap For Depth Buffer");
+					WS_THROW("[DIRECTX 12] Failed To Create Descriptor Heap For Depth Buffer");
 
 				D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
 				depthStencilDesc.Format        = DXGI_FORMAT_D32_FLOAT;
@@ -7016,7 +7044,7 @@ namespace WS {
 															&CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, pWindow->GetClientWidth(), pWindow->GetClientHeight(), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
 															D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthOptimizedClearValue,
 															IID_PPV_ARGS(this->m_pDepthStencilBuffer.GetPtr()))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Depth Stencil Heap");
+					WS_THROW("[DIRECTX 12] Failed To Create Depth Stencil Heap");
 			
 				this->m_pDepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap");
 
@@ -7025,12 +7053,12 @@ namespace WS {
 				this->m_dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(this->m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 			}
 
-			void D3D12DepthBuffer::Clear(D3D12CommandListObjectWrapper& pCommandList)
+			void D3D12DepthBuffer::Clear(D3D12CommandListObjectWrapper& pCommandList) WS_NOEXCEPT
 			{
 				pCommandList->ClearDepthStencilView(this->m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart(), D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 			}
 
-			D3D12DepthBuffer::operator CD3DX12_CPU_DESCRIPTOR_HANDLE* () noexcept
+			D3D12DepthBuffer::operator CD3DX12_CPU_DESCRIPTOR_HANDLE* () WS_NOEXCEPT
 			{
 				return &this->m_dsvHandle;
 			}
@@ -7044,7 +7072,7 @@ namespace WS {
 			 */
 
 			D3D12RootSignature::D3D12RootSignature(D3D12DeviceObjectWrapper& pDevice, const D3D12_ROOT_SIGNATURE_FLAGS& flags,
-										   const std::vector<D3D12_ROOT_PARAMETER1>& rootParameters, const std::vector<D3D12_STATIC_SAMPLER_DESC>& samplers)
+												   const std::vector<D3D12_ROOT_PARAMETER1>& rootParameters, const std::vector<D3D12_STATIC_SAMPLER_DESC>& samplers) WS_NOEXCEPT
 			{
 				Microsoft::WRL::ComPtr<ID3DBlob> pSignature;
 				Microsoft::WRL::ComPtr<ID3DBlob> pError;
@@ -7058,10 +7086,10 @@ namespace WS {
 				rootSignatureDesc.Desc_1_1.NumStaticSamplers = static_cast<UINT>(samplers.size());
 
 				if (DX_FAILED(D3D12SerializeVersionedRootSignature(&rootSignatureDesc, &pSignature, &pError)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Serialize Root Signature");
+					WS_THROW("[DIRECTX 12] Failed To Serialize Root Signature");
 
 				if (DX_FAILED(pDevice->CreateRootSignature(0, pSignature->GetBufferPointer(), pSignature->GetBufferSize(), IID_PPV_ARGS(&this->m_pObject))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Root Signature");
+					WS_THROW("[DIRECTX 12] Failed To Create Root Signature");
 			}
 
 			D3D12RootSignature& D3D12RootSignature::operator=(D3D12RootSignature&& other) noexcept
@@ -7081,8 +7109,8 @@ namespace WS {
 			 */
 
 			D3D12CommittedResource::D3D12CommittedResource(D3D12DeviceObjectWrapper& pDevice,   const D3D12_HEAP_TYPE& heapType,
-												   const D3D12_HEAP_FLAGS& flags,       const D3D12_RESOURCE_DESC* descPtr,
-												   const D3D12_RESOURCE_STATES& states, const char* name)
+														   const D3D12_HEAP_FLAGS& flags,       const D3D12_RESOURCE_DESC* descPtr,
+														   const D3D12_RESOURCE_STATES& states, const char* name) WS_NOEXCEPT
 				: m_originalState(states), m_currentState(states)
 			{
 				
@@ -7091,14 +7119,14 @@ namespace WS {
 				{
 					const std::string errorString = "[DIRECTX 12] Failed To Create A Committed Resource Named " + std::string(name);
 
-					throw std::runtime_error(errorString.c_str());
+					WS_THROW(errorString.c_str());
 				}
 			
 				const std::wstring nameW(&name[0], &name[strlen(name) + 1u]);
 				this->m_pObject->SetName(nameW.c_str());
 			}
 			
-			D3D12CommittedResource& D3D12CommittedResource::operator=(D3D12CommittedResource&& other) noexcept
+			D3D12CommittedResource& D3D12CommittedResource::operator=(D3D12CommittedResource&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -7118,8 +7146,8 @@ namespace WS {
 			 */
 
 			D3D12VertexBuffer::D3D12VertexBuffer(D3D12DeviceObjectWrapper& pDevice,
-										 D3D12CommandList* pCommandList,
-										 const size_t nVertices, const size_t vertexSize)
+												 D3D12CommandList* pCommandList,
+												 const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 				: m_vertexSize((UINT)vertexSize), m_pCommandList(pCommandList)
 			{
 				const UINT bufferSize = static_cast<UINT>(vertexSize * nVertices);
@@ -7138,12 +7166,12 @@ namespace WS {
 				this->m_vertexBufferView.BufferLocation = this->m_pVertexBuffer->GetGPUVirtualAddress();
 			}
 
-			void D3D12VertexBuffer::Bind()
+			void D3D12VertexBuffer::Bind() WS_NOEXCEPT
 			{
 				(*this->m_pCommandList)->IASetVertexBuffers(0u, 1u, &this->m_vertexBufferView);
 			}
 
-			void D3D12VertexBuffer::Update()
+			void D3D12VertexBuffer::Update() WS_NOEXCEPT
 			{
 				this->m_pVertexBuffer.TransitionTo(*this->m_pCommandList, D3D12_RESOURCE_STATE_COPY_DEST);
 
@@ -7166,8 +7194,8 @@ namespace WS {
 			 */
 
 			D3D12IndexBuffer::D3D12IndexBuffer(D3D12DeviceObjectWrapper& pDevice,
-											D3D12CommandList* pCommandList,
-											const size_t nIndices)
+											   D3D12CommandList* pCommandList,
+											   const size_t nIndices) WS_NOEXCEPT
 				: m_nIndices(nIndices), m_pCommandList(pCommandList)
 			{
 				const UINT bufferSize = static_cast<UINT>(nIndices * sizeof(uint32_t));
@@ -7186,12 +7214,12 @@ namespace WS {
 				this->m_indexBufferView.BufferLocation = this->m_pIndexBuffer->GetGPUVirtualAddress();
 			}
 
-			void D3D12IndexBuffer::Bind()
+			void D3D12IndexBuffer::Bind() WS_NOEXCEPT
 			{
 				(*this->m_pCommandList)->IASetIndexBuffer(&this->m_indexBufferView);
 			}
 
-			void D3D12IndexBuffer::Update()
+			void D3D12IndexBuffer::Update() WS_NOEXCEPT
 			{
 				this->m_pIndexBuffer.TransitionTo(*this->m_pCommandList, D3D12_RESOURCE_STATE_COPY_DEST);
 
@@ -7215,7 +7243,7 @@ namespace WS {
 
 			D3D12ConstantBuffer::D3D12ConstantBuffer(D3D12DeviceObjectWrapper& pDevice,
 													D3D12CommandList* pCommandList,
-													const size_t objSize, const size_t slot)
+													const size_t objSize, const size_t slot) WS_NOEXCEPT
 				: m_objSize(objSize), m_slot(slot), m_pCommandList(pCommandList)
 			{
 				this->m_constantBufferData.resize(objSize);
@@ -7236,18 +7264,18 @@ namespace WS {
 				}
 			}
 
-			void D3D12ConstantBuffer::UpdateIfNeeded(const size_t frameIndex)
+			void D3D12ConstantBuffer::UpdateIfNeeded(const size_t frameIndex) WS_NOEXCEPT
 			{
 				if (this->m_bNeedsUpdating[frameIndex])
 					this->UpdateHeap(frameIndex);
 			}
 
-			void D3D12ConstantBuffer::Update()
+			void D3D12ConstantBuffer::Update() WS_NOEXCEPT
 			{
 				std::fill(this->m_bNeedsUpdating.begin(), this->m_bNeedsUpdating.end(), true);
 			}
 
-			void D3D12ConstantBuffer::UpdateHeap(const size_t heapIndex)
+			void D3D12ConstantBuffer::UpdateHeap(const size_t heapIndex) WS_NOEXCEPT
 			{
 				this->m_bNeedsUpdating[heapIndex] = false;
 
@@ -7258,7 +7286,7 @@ namespace WS {
 
 				uint8_t* gpuDestAddr;
 				if (DX_FAILED(uploadHeap->Map(0, &readRange, reinterpret_cast<void**>(&gpuDestAddr))))
-					throw std::runtime_error("[DIRECTX 12] Failed To Map Constant Buffer Memory");
+					WS_THROW("[DIRECTX 12] Failed To Map Constant Buffer Memory");
 
 				memcpy((void*)gpuDestAddr, this->m_constantBufferData.data(), this->m_objSize);
 
@@ -7273,7 +7301,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
 			 */
 
-			D3D12Texture::D3D12Texture(D3D12DeviceObjectWrapper& pDevice, D3D12CommandList* pCommandList, const size_t width, const size_t height, const size_t slot, const bool useMipmaps)
+			D3D12Texture::D3D12Texture(D3D12DeviceObjectWrapper& pDevice, D3D12CommandList* pCommandList, const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 				: m_pCommandList(pCommandList), m_slot(slot)
 			{
 				D3D12_RESOURCE_DESC resourceDesc {};
@@ -7309,7 +7337,7 @@ namespace WS {
 				pDevice->CreateShaderResourceView(this->m_textureResource, &this->m_textureResourceView, this->m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 			}
 			
-			void D3D12Texture::Update()
+			void D3D12Texture::Update() WS_NOEXCEPT
 			{
 				this->m_textureResource.TransitionTo(*this->m_pCommandList, D3D12_RESOURCE_STATE_COPY_DEST);
 
@@ -7331,7 +7359,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
 			 */
 
-			D3D12TextureSampler::D3D12TextureSampler(const TextureFilter& filter)
+			D3D12TextureSampler::D3D12TextureSampler(const TextureFilter& filter) WS_NOEXCEPT
 			{
 				switch (filter)
 				{
@@ -7345,7 +7373,7 @@ namespace WS {
 					this->m_samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 					break;
 				default:
-					throw std::runtime_error("[DIRECTX 12] Your Filtering Method Is Not Supported");
+					WS_THROW("[DIRECTX 12] Your Filtering Method Is Not Supported");
 				}
 				
 				this->m_samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -7370,7 +7398,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
-			inline void D3D12DescriptorHandles::OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) noexcept
+			inline void D3D12DescriptorHandles::OffsetCurrent(const UINT numDescriptors, const UINT incrementSize) WS_NOEXCEPT
 			{
 				this->m_cpuHandles.m_current.Offset(numDescriptors, incrementSize);
 				this->m_gpuHandles.m_current.Offset(numDescriptors, incrementSize);
@@ -7384,7 +7412,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
 			 */
 
-			void D3D12DescriptorHeapManager::AddHeapToVector()
+			void D3D12DescriptorHeapManager::AddHeapToVector() WS_NOEXCEPT
 			{
 				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> handles;
 
@@ -7411,7 +7439,7 @@ namespace WS {
 				this->m_handles.push_back(handles);
 			}
 
-			D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(D3D12Device& device)
+			D3D12DescriptorHeapManager::D3D12DescriptorHeapManager(D3D12Device& device) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
 				this->m_incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
@@ -7432,10 +7460,10 @@ namespace WS {
 				return *this;
 			}
 
-			std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> D3D12DescriptorHeapManager::AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors)
+			std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> D3D12DescriptorHeapManager::AddDesriptors(const std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>>& descriptors) WS_NOEXCEPT
 			{
 				if (descriptors.size() > WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP)
-					throw std::runtime_error("[D3D12] Too Many Descriptors !");
+					WS_THROW("[D3D12] Too Many Descriptors !");
 
 				std::array<D3D12DescriptorHandles, WEISS__FRAME_BUFFER_COUNT> starts;
 
@@ -7478,7 +7506,7 @@ namespace WS {
 				return starts;
 			}
 
-			void D3D12DescriptorHeapManager::Bind(D3D12CommandList& commandList, const size_t frameIndex) const noexcept
+			void D3D12DescriptorHeapManager::Bind(D3D12CommandList& commandList, const size_t frameIndex) const WS_NOEXCEPT
 			{
 				commandList->SetDescriptorHeaps(this->m_heaps.size(), this->m_nativeHeapsPtr[frameIndex].data());
 			}
@@ -7491,7 +7519,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
 			 */
 
-			D3D12RenderPipeline::D3D12RenderPipeline(D3D12RenderPipeline&& other)
+			D3D12RenderPipeline::D3D12RenderPipeline(D3D12RenderPipeline&& other) noexcept
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -7504,7 +7532,7 @@ namespace WS {
 
 			D3D12RenderPipeline::D3D12RenderPipeline(D3D12Device& pDevice, const RenderPipelineDesc& pipelineDesc,
 													 std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures,
-													 std::vector<D3D12TextureSampler*> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager)
+													 std::vector<D3D12TextureSampler*> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager) WS_NOEXCEPT
 				: m_pDevice(&pDevice), m_constantBufferIndices(pipelineDesc.constantBufferIndices), m_textureIndices(pipelineDesc.textureIndices),
 				m_pConstantBuffers(pConstantBuffers), m_pTextures(pTextures), m_pTextureSamplers(pTextureSamplers), m_pDescriptorHeapManager(&descriptorHeapManager)
 			{
@@ -7534,7 +7562,7 @@ namespace WS {
 					OutputDebugStringA((char*)pErrorBuff->GetBufferPointer());
 		#endif // __WEISS__DEBUG_MODE
 
-					throw std::runtime_error("[DIRECTX 12] Failed To Compile Vertex Shader");
+					WS_THROW("[DIRECTX 12] Failed To Compile Vertex Shader");
 				}
 
 				D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
@@ -7559,7 +7587,7 @@ namespace WS {
 
 		#endif // __WEISS__DEBUG_MODE
 
-					throw std::runtime_error("[DIRECTX 12] Failed To Compile Pixel Shader");
+					WS_THROW("[DIRECTX 12] Failed To Compile Pixel Shader");
 				}
 
 				D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
@@ -7591,7 +7619,7 @@ namespace WS {
 						inputElementDescriptors[i].Format = DXGI_FORMAT::DXGI_FORMAT_R32G32B32A32_FLOAT;
 						break;
 					default:
-						throw std::runtime_error("[DIRECTX 12] Input Element Type Not Supported");
+						WS_THROW("[DIRECTX 12] Input Element Type Not Supported");
 					}
 
 					inputElementDescriptors[i].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
@@ -7619,7 +7647,7 @@ namespace WS {
 					this->m_topology = D3D_PRIMITIVE_TOPOLOGY::D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP;
 					break;
 				default:
-					throw std::runtime_error("[DIRECTX 12] The Primitive Topology Type You Resquested Is Not Supported");
+					WS_THROW("[DIRECTX 12] The Primitive Topology Type You Resquested Is Not Supported");
 					break;
 				}
 
@@ -7680,7 +7708,7 @@ namespace WS {
 
 				// create the pso
 				if (DX_FAILED(pDevice->CreateGraphicsPipelineState(&psoDesc, __uuidof(ID3D12PipelineState), (void**)&this->m_pObject)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Create Graphics Pipeline State");
+					WS_THROW("[DIRECTX 12] Failed To Create Graphics Pipeline State");
 
 				// Fill GPU Descriptor Heap
 				std::vector<std::array<CD3DX12_CPU_DESCRIPTOR_HANDLE, WEISS__FRAME_BUFFER_COUNT>> srcCpuDescriptorHandles;
@@ -7722,7 +7750,7 @@ namespace WS {
 				return *this;
 			}
 
-			void D3D12RenderPipeline::Bind(D3D12CommandList& pCommandList, const size_t frameIndex) noexcept
+			void D3D12RenderPipeline::Bind(D3D12CommandList& pCommandList, const size_t frameIndex) WS_NOEXCEPT
 			{
 				for (uint32_t cbIndex : this->m_constantBufferIndices)
 					dynamic_cast<D3D12ConstantBuffer*>(this->m_pConstantBuffers[cbIndex])->UpdateIfNeeded(frameIndex);
@@ -7741,7 +7769,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
 			 */
 
-			D3D12CommandSubmitter::D3D12CommandSubmitter(D3D12DeviceObjectWrapper& pDevice)
+			D3D12CommandSubmitter::D3D12CommandSubmitter(D3D12DeviceObjectWrapper& pDevice) WS_NOEXCEPT
 			{
 				for (uint16_t i = 0; i < WEISS__FRAME_BUFFER_COUNT; i++)
 					this->m_pCommandAllocators[i] = D3D12CommandAllocator(pDevice, D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -7754,18 +7782,18 @@ namespace WS {
 				}
 			}
 
-			void D3D12CommandSubmitter::Close()
+			void D3D12CommandSubmitter::Close() WS_NOEXCEPT
 			{
 				this->m_pCommandList.Close();
 			}
 
-			void D3D12CommandSubmitter::Reset(const size_t frameIndex)
+			void D3D12CommandSubmitter::Reset(const size_t frameIndex) WS_NOEXCEPT
 			{
 				this->m_pCommandAllocators[frameIndex].Reset();
 				this->m_pCommandList.Reset(this->m_pCommandAllocators[frameIndex]);
 			}
 
-			void D3D12CommandSubmitter::Execute(D3D12CommandQueueObjectWrapper& pCommandQueue, const size_t frameIndex)
+			void D3D12CommandSubmitter::Execute(D3D12CommandQueueObjectWrapper& pCommandQueue, const size_t frameIndex) WS_NOEXCEPT
 			{
 				ID3D12CommandList* ppCommandLists[] = { this->m_pCommandList };
 				pCommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
@@ -7774,17 +7802,17 @@ namespace WS {
 				UINT64&     fenceValue = this->m_fenceValues[frameIndex];
 
 				if (DX_FAILED(pCommandQueue->Signal(pFence, fenceValue)))
-					throw std::runtime_error("[DIRECTX 12] Failed To Signal The Fence");
+					WS_THROW("[DIRECTX 12] Failed To Signal The Fence");
 			}
 
-			void D3D12CommandSubmitter::WaitForCompletion(const size_t frameIndex)
+			void D3D12CommandSubmitter::WaitForCompletion(const size_t frameIndex) WS_NOEXCEPT
 			{
 				D3D12Fence& pFence     = *this->m_pFences[frameIndex];
 				UINT64&     fenceValue = this->m_fenceValues[frameIndex];
 
 				if (pFence->GetCompletedValue() < fenceValue) {
 					if (DX_FAILED(pFence->SetEventOnCompletion(fenceValue, pFence.GetEvent())))
-						throw std::runtime_error("[DIRECTX 12] Failed To Set Event On Completion For Fence");
+						WS_THROW("[DIRECTX 12] Failed To Set Event On Completion For Fence");
 
 					WaitForSingleObject(pFence.GetEvent(), INFINITE);
 
@@ -7801,7 +7829,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
 			 */
 
-			void D3D12RenderAPI::CreateRenderTargets()
+			void D3D12RenderAPI::CreateRenderTargets() WS_NOEXCEPT
 			{
 				CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(this->m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
@@ -7814,7 +7842,7 @@ namespace WS {
 				}
 			}
 
-			void D3D12RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps)
+			void D3D12RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
 			{
 				this->m_pDevice         = D3D12Device(this->m_pAdapter);
 				this->m_pDepthBuffer    = D3D12DepthBuffer(this->m_pDevice, pWindow);
@@ -7841,14 +7869,14 @@ namespace WS {
 				this->m_descriptorHeapManager = D3D12DescriptorHeapManager(this->m_pDevice);
 			}
 
-			void D3D12RenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs)
+			void D3D12RenderAPI::InitPipelines(const std::vector<RenderPipelineDesc>& pipelineDescs) WS_NOEXCEPT
 			{
 				// Create Pipelines
 				for (const RenderPipelineDesc& pipelineDesc : pipelineDescs)
 					this->m_renderPipelines.emplace_back(this->m_pDevice, pipelineDesc, this->m_pConstantBuffers, this->m_pTextures, this->m_pTextureSamplers, this->m_descriptorHeapManager);
 			}
 
-			void D3D12RenderAPI::Draw(const Drawable& drawable, const size_t nVertices)
+			void D3D12RenderAPI::Draw(const Drawable& drawable, const size_t nVertices) WS_NOEXCEPT
 			{
 				D3D12CommandList& pGfxCommandList = this->m_commandSubmitter.GetCommandList();
 
@@ -7864,7 +7892,7 @@ namespace WS {
 				}
 			}
 
-			void D3D12RenderAPI::BeginDrawing()
+			void D3D12RenderAPI::BeginDrawing() WS_NOEXCEPT
 			{
 				// Wait For Next Frame
 				this->currentFrameIndex = this->m_pSwapChain->GetCurrentBackBufferIndex();
@@ -7886,7 +7914,7 @@ namespace WS {
 				this->Fill();
 			}
 
-			void D3D12RenderAPI::EndDrawing()
+			void D3D12RenderAPI::EndDrawing() WS_NOEXCEPT
 			{
 				D3D12RenderTarget& renderTarget    = this->m_pRenderTargets[this->currentFrameIndex];
 				D3D12CommandList&  pGfxCommandList = this->m_commandSubmitter.GetCommandList();
@@ -7898,7 +7926,7 @@ namespace WS {
 				this->m_commandSubmitter.Execute(this->m_pCommandQueue, this->currentFrameIndex);
 			}
 
-			void D3D12RenderAPI::Present(const bool vSync)
+			void D3D12RenderAPI::Present(const bool vSync) WS_NOEXCEPT
 			{
 				this->m_pSwapChain.Present(vSync);
 
@@ -7906,7 +7934,7 @@ namespace WS {
 				this->m_commandSubmitter.Reset(this->currentFrameIndex);
 			}
 
-			size_t D3D12RenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize)
+			size_t D3D12RenderAPI::CreateVertexBuffer(const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT
 			{
 				const size_t vertexBufferIndex = this->m_pVertexBuffers.size();
 
@@ -7915,7 +7943,7 @@ namespace WS {
 				return vertexBufferIndex;
 			}
 
-			size_t D3D12RenderAPI::CreateIndexBuffer(const size_t nIndices)
+			size_t D3D12RenderAPI::CreateIndexBuffer(const size_t nIndices) WS_NOEXCEPT
 			{
 				const size_t indexBufferIndex = this->m_pIndexBuffers.size();
 
@@ -7924,28 +7952,28 @@ namespace WS {
 				return indexBufferIndex;
 			}
 
-			size_t D3D12RenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot)
+			size_t D3D12RenderAPI::CreateConstantBuffer(const size_t objSize, const size_t slot) WS_NOEXCEPT
 			{
 				this->m_pConstantBuffers.push_back(new D3D12ConstantBuffer(this->m_pDevice, this->m_commandSubmitter.GetCommandListPr(), objSize, slot));
 
 				return this->m_pConstantBuffers.size() - 1u;
 			}
-
-			size_t D3D12RenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps)
+			
+			size_t D3D12RenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 			{
 				this->m_pTextures.push_back(new D3D12Texture(this->m_pDevice, this->m_commandSubmitter.GetCommandListPr(), width, height, slot, useMipmaps));
 
 				return this->m_pTextures.size() - 1u;
 			}
 
-			size_t D3D12RenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot)
+			size_t D3D12RenderAPI::CreateTextureSampler(const TextureFilter& filter, const size_t slot) WS_NOEXCEPT
 			{
 				this->m_pTextureSamplers.push_back(new D3D12TextureSampler(filter));
 
 				return this->m_pTextureSamplers.size() - 1u;
 			}
 
-			void D3D12RenderAPI::Fill(const Colorf32& color)
+			void D3D12RenderAPI::Fill(const Colorf32& color) WS_NOEXCEPT
 			{
 				D3D12CommandList& pGfxCommandList = this->m_commandSubmitter.GetCommandList();
 
@@ -8011,10 +8039,10 @@ namespace WS {
 		this->m_socket = socket(AF_INET, SOCK_STREAM, 0);
 
 		if (this->m_socket == INVALID_SOCKET)
-			throw std::runtime_error("[CLIENT SOCKET] Creation Failed");
+			WS_THROW("[CLIENT SOCKET] Creation Failed");
 
 		if (connect(this->m_socket, (sockaddr*)&sockAddr, sizeof(sockAddr)) == SOCKET_ERROR)
-			throw std::runtime_error("[CLIENT SOCKET] Failed To Connect");
+			WS_THROW("[CLIENT SOCKET] Failed To Connect");
 	}
 
 	void ClientSocket::Send(const char* data, int length)
@@ -8023,7 +8051,7 @@ namespace WS {
 			length = static_cast<int>(strlen(data) + 1u);
 
 		if (send(this->m_socket, data, length, 0) == SOCKET_ERROR)
-			throw std::runtime_error("[CLIENT SOCKET] Error While Sending Data");
+			WS_THROW("[CLIENT SOCKET] Error While Sending Data");
 	}
 
 	[[nodiscard]] std::pair<std::array<char, 1024u>, size_t> ClientSocket::Receive()
@@ -8033,12 +8061,12 @@ namespace WS {
 		const int iResult = recv(this->m_socket, buffer.data(), 1024u, 0);
 
 		if (iResult == 0 || iResult == SOCKET_ERROR)
-			throw std::runtime_error("[CLIENT SOCKET] Error While Receiving Data");
+			WS_THROW("[CLIENT SOCKET] Error While Receiving Data");
 
 		return { buffer, (size_t)iResult };
 	}
 
-	void ClientSocket::Disconnect() noexcept
+	void ClientSocket::Disconnect() WS_NOEXCEPT
 	{
 		this->m_socket = INVALID_SOCKET;
 
@@ -8058,7 +8086,7 @@ namespace WS {
 		this->m_socket = socket(AF_INET, SOCK_STREAM, 0);
 
 		if (this->m_socket == INVALID_SOCKET)
-			throw std::runtime_error("[SERVER SOCKET] Creation Failed");
+			WS_THROW("[SERVER SOCKET] Creation Failed");
 
 		sockaddr_in sockAddr;
 		sockAddr.sin_addr.s_addr = INADDR_ANY;
@@ -8066,13 +8094,13 @@ namespace WS {
 		sockAddr.sin_port        = htons(5555);
 
 		if (bind(this->m_socket, (sockaddr*)&sockAddr, sizeof(sockAddr)) == SOCKET_ERROR)
-			throw std::runtime_error("[SERVER SOCKET] Binding Failed");
+			WS_THROW("[SERVER SOCKET] Binding Failed");
 
 		if (listen(this->m_socket, 0) == SOCKET_ERROR)
-			throw std::runtime_error("[SERVER SOCKET] Listening Failed");
+			WS_THROW("[SERVER SOCKET] Listening Failed");
 	}
 
-	[[nodiscard]] int ServerSocket::Accept() noexcept
+	[[nodiscard]] int ServerSocket::Accept() WS_NOEXCEPT
 	{
 		sockaddr_in clientAddr;
 		int clientAddrSize = 0;
@@ -8095,7 +8123,7 @@ namespace WS {
 			length = static_cast<int>(strlen(data) + 1);
 
 		if (send(this->m_clients[clientID], data, length, 0) == SOCKET_ERROR)
-			throw std::runtime_error("[SERVER SOCKET] Could Not Send Data To Client");
+			WS_THROW("[SERVER SOCKET] Could Not Send Data To Client");
 	}
 
 	[[nodiscard]] std::pair<std::array<char, 1024u>, size_t> ServerSocket::Receive(const int clientID)
@@ -8105,12 +8133,12 @@ namespace WS {
 		const int iResult = recv(this->m_clients[clientID], buffer.data(), 1024u, 0);
 
 		if (iResult == 0 || iResult == SOCKET_ERROR)
-			throw std::runtime_error("[SERVER SOCKET] Error While Receiving Data From Client");
+			WS_THROW("[SERVER SOCKET] Error While Receiving Data From Client");
 
 		return { buffer, (size_t)iResult };
 	}
 
-	void ServerSocket::Disconnect() noexcept
+	void ServerSocket::Disconnect() WS_NOEXCEPT
 	{
 		this->m_socket = INVALID_SOCKET;
 
@@ -8125,7 +8153,7 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\ 
 	 */
 
-	WindowHandle Window::Create(const WindowDescriptor &descriptor)
+	WindowHandle Window::Create(const WindowDescriptor &descriptor) WS_NOEXCEPT
 	{
 #ifdef __WEISS__OS_WINDOWS
 
@@ -8133,10 +8161,10 @@ namespace WS {
 
 #endif // __WEISS__OS_WINDOWS
 
-		throw std::runtime_error("Could Not Create A Window For Your Operating System");
+		WS_THROW("Could Not Create A Window For Your Operating System");
 	}
 
-	RenderAPIHandle RenderAPI::Create(const RenderAPIName &apiName)
+	RenderAPIHandle RenderAPI::Create(const RenderAPIName &apiName) WS_NOEXCEPT
 	{
 		switch (apiName)
 		{
@@ -8153,7 +8181,7 @@ namespace WS {
 #endif // __WEISS__OS_WINDOWS
 		}
 
-		throw std::runtime_error("[RENDER API] Your Render API Is Not Supported");
+		WS_THROW("[RENDER API] Your Render API Is Not Supported");
 	}
 
 }; // WS
@@ -8171,11 +8199,11 @@ int main(int argc, char** argv)
 #ifdef __WEISS__OS_WINDOWS
 
 	if (WIN_FAILED(CoInitializeEx(NULL, COINIT_MULTITHREADED)))
-		throw std::runtime_error("[COM] Failed To CoInitialize");
+		WS_THROW("[COM] Failed To CoInitialize");
 
 	WSADATA wsaData;
 	if (WIN_FAILED(WSAStartup(MAKEWORD(2, 0), &wsaData)))
-		throw std::runtime_error("[WINSOCK] Failed To WSAStartup");
+		WS_THROW("[WINSOCK] Failed To WSAStartup");
 
 #endif // __WEISS__OS_WINDOWS
 
@@ -8184,7 +8212,7 @@ int main(int argc, char** argv)
 #ifdef __WEISS__OS_WINDOWS
 
 	if (WIN_FAILED(WSACleanup()))
-		throw std::runtime_error("[WINSOCK] Failed To WSACleanup");
+		WS_THROW("[WINSOCK] Failed To WSACleanup");
 
 	CoUninitialize();
 
@@ -8209,6 +8237,8 @@ int main(int argc, char** argv)
 #endif // __WEISS__OS_WINDOWS
 
 #undef VK_FAILED
+#undef WS_THROW
+#undef __WEISS__THROWS
 
 /*
  * Let's be honest, you just came down here to see the SLOC.
