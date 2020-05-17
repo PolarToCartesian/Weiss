@@ -169,6 +169,7 @@
 #include <exception>
 #include <algorithm>
 #include <functional>
+#include <immintrin.h>
 
 /*
  * // //////////////////--\\\\\\\\\\\\\\\\\\ \\
@@ -203,6 +204,20 @@
 #endif
 
 /*
+ * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+ * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+ * // ||-----------------------SSE CHECK-----------------------|| \\
+ * // |\_______________________________________________________/| \\
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
+ */
+
+#ifdef __WEISS__DISABLE_SIMD
+
+#pragma message("[WEISS] Vector Math Will Be Slower Since __WEISS__DISABLE__SIMD is defined")
+
+#endif
+
+/*
  * // //////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
  * // ||-------------TO THROW OR NOT TO THROW------------|| \\
@@ -210,6 +225,7 @@
  * // \\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////// \\
  * 
  * The use of noexcept can speed up execution but exceptions are needed in debug mode
+ * The "WS_THROW" macro can be used to track exceptions even in release mode (i.e logging..)
  */
 
 #ifdef __WEISS__DEBUG_MODE
@@ -282,7 +298,7 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-	static constexpr const size_t WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP = 1024u;
+	static constexpr const uint32_t WEISS__D3D12_MAX_DESCRIPTORS_PER_HEAP = 1024u;
 
 #endif // __WEISS__OS_WINDOWS
 
@@ -488,7 +504,7 @@ namespace WS
 
 		[[nodiscard]] inline size_t GetColCount() const WS_NOEXCEPT;
 
-		[[nodiscard]] inline T* operator[](const size_t r);
+		[[nodiscard]] inline T* operator[](const size_t r) { return this->m[r]; }
 
 		[[nodiscard]] inline T&       Get     (const size_t r, const size_t c) WS_NOEXCEPT;
 		[[nodiscard]] inline const T& GetValue(const size_t r, const size_t c) const WS_NOEXCEPT;
@@ -632,28 +648,28 @@ namespace WS
 	}
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
+	[[nodiscard]] inline auto operator+(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT -> Vector2D<decltype(a.x + b.x)> { return Vector2D<T>{a.x + b.x, a.y + b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
+	[[nodiscard]] inline auto operator-(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT -> Vector2D<decltype(a.x - b.x)> { return Vector2D<T>{a.x - b.x, a.y - b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
+	[[nodiscard]] inline auto operator*(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT -> Vector2D<decltype(a.x * b.x)> { return Vector2D<T>{a.x * b.x, a.y * b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
+	[[nodiscard]] inline auto operator/(const Vector2D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT -> Vector2D<decltype(a.x / b.x)> { return Vector2D<T>{a.x / b.x, a.y / b.y}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator+(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x + n, v.y + n}; }
+	[[nodiscard]] inline auto operator+(const Vector2D<T> &v, const K &n) WS_NOEXCEPT -> Vector2D<decltype(v.x + n)> { return Vector2D<T>{v.x + n, v.y + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator-(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x - n, v.y - n}; }
+	[[nodiscard]] inline auto operator-(const Vector2D<T> &v, const K &n) WS_NOEXCEPT -> Vector2D<decltype(v.x - n)> { return Vector2D<T>{v.x - n, v.y - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator*(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x * n, v.y * n}; }
+	[[nodiscard]] inline auto operator*(const Vector2D<T> &v, const K &n) WS_NOEXCEPT -> Vector2D<decltype(v.x * n)> { return Vector2D<T>{v.x * n, v.y * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector2D<T> operator/(const Vector2D<T> &v, const K &n) WS_NOEXCEPT { return Vector2D<T>{v.x / n, v.y / n}; }
+	[[nodiscard]] inline auto operator/(const Vector2D<T> &v, const K &n) WS_NOEXCEPT -> Vector2D<decltype(v.x / n)> { return Vector2D<T>{v.x / n, v.y / n}; }
 
 	// ///////////////-\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -683,7 +699,7 @@ namespace WS
 		Vector3D(const K &x, const L &y, const M &z) WS_NOEXCEPT : Vector2D<T>(x, y), z(static_cast<T>(z)) {}
 
 		template <typename T2>
-		Vector3D(const Vector2D<T2> &v) WS_NOEXCEPT : Vector2D<T>(v) {}
+		Vector3D(const Vector2D<T2> &v, const T& z) WS_NOEXCEPT : Vector2D<T>(v), z(z) {}
 
 		template <typename K>
 		inline void operator+=(const Vector2D<K> &v) WS_NOEXCEPT
@@ -794,40 +810,28 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z}; }
+	[[nodiscard]] inline auto operator+(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT -> Vector3D<decltype(a.x + b.x)> { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z}; }
+	[[nodiscard]] inline auto operator-(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT -> Vector3D<decltype(a.x - b.x)> { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z}; }
+	[[nodiscard]] inline auto operator*(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT -> Vector3D<decltype(a.x * b.x)> { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector2D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z}; }
+	[[nodiscard]] inline auto operator/(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT -> Vector3D<decltype(a.x / b.x)> { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x + b.x, a.y + b.y, a.z + b.z}; }
+	[[nodiscard]] inline auto operator+(const Vector3D<T> &v, const K &n) WS_NOEXCEPT -> Vector3D<decltype(v.x + n)> { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x - b.x, a.y - b.y, a.z - b.z}; }
+	[[nodiscard]] inline auto operator-(const Vector3D<T> &v, const K &n) WS_NOEXCEPT -> Vector3D<decltype(v.x - n)> { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x * b.x, a.y * b.y, a.z * b.z}; }
+	[[nodiscard]] inline auto operator*(const Vector3D<T> &v, const K &n) WS_NOEXCEPT -> Vector3D<decltype(v.x * n)> { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &a, const Vector3D<K> &b) WS_NOEXCEPT { return Vector3D<T>{a.x / b.x, a.y / b.y, a.z / b.z}; }
-
-	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator+(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x + n, v.y + n, v.z + n}; }
-
-	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator-(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x - n, v.y - n, v.z - n}; }
-
-	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator*(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x * n, v.y * n, v.z * n}; }
-
-	template <typename T, typename K>
-	[[nodiscard]] inline Vector3D<T> operator/(const Vector3D<T> &v, const K &n) WS_NOEXCEPT { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
+	[[nodiscard]] inline auto operator/(const Vector3D<T> &v, const K &n) WS_NOEXCEPT -> Vector3D<decltype(v.x / n)> { return Vector3D<T>{v.x / n, v.y / n, v.z / n}; }
 
 	template <typename T>
 	inline std::ostream &operator<<(std::ostream &os, const Vector3D<T> &v) WS_NOEXCEPT
@@ -962,28 +966,28 @@ namespace WS
 	};
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
+	[[nodiscard]] inline auto operator+(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT -> Vector4D<decltype(a.x + b.x)> { return Vector4D<T>{a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
+	[[nodiscard]] inline auto operator-(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT -> Vector4D<decltype(a.x - b.x)> { return Vector4D<T>{a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
+	[[nodiscard]] inline auto operator*(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT -> Vector4D<decltype(a.x * b.x)> { return Vector4D<T>{a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
+	[[nodiscard]] inline auto operator/(const Vector4D<T> &a, const Vector4D<K> &b) WS_NOEXCEPT -> Vector4D<decltype(a.x / b.x)> { return Vector4D<T>{a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator+(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
+	[[nodiscard]] inline auto operator+(const Vector4D<T> &v, const K &n) WS_NOEXCEPT -> Vector4D<decltype(v.x + n)> { return Vector4D<T>{v.x + n, v.y + n, v.z + n, v.w + n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator-(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
+	[[nodiscard]] inline auto operator-(const Vector4D<T> &v, const K &n) WS_NOEXCEPT -> Vector4D<decltype(v.x - n)> { return Vector4D<T>{v.x - n, v.y - n, v.z - n, v.w - n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator*(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
+	[[nodiscard]] inline auto operator*(const Vector4D<T> &v, const K &n) WS_NOEXCEPT -> Vector4D<decltype(v.x * n)> { return Vector4D<T>{v.x * n, v.y * n, v.z * n, v.w * n}; }
 
 	template <typename T, typename K>
-	[[nodiscard]] inline Vector4D<T> operator/(const Vector4D<T> &v, const K &n) WS_NOEXCEPT { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
+	[[nodiscard]] inline auto operator/(const Vector4D<T> &v, const K &n) WS_NOEXCEPT -> Vector4D<decltype(v.x / n)> { return Vector4D<T>{v.x / n, v.y / n, v.z / n, v.w / n}; }
 
 	template <typename T>
 	inline std::ostream &operator<<(std::ostream &os, const Vector4D<T> &v) WS_NOEXCEPT
@@ -3750,7 +3754,7 @@ namespace WS {
 	[[nodiscard]] inline size_t Matrix<T, R, C>::GetColCount() const WS_NOEXCEPT { return C; }
 
 	template <typename T, size_t R, size_t C>
-	[[nodiscard]] inline T* Matrix<T, R, C>::operator[](const size_t r) { return this->m[r]; }
+	[[nodiscard]] inline T* Matrix<T, R, C>::operator[](const size_t r);
 
 	template <typename T, size_t R, size_t C>
 	[[nodiscard]] inline T& Matrix<T, R, C>::Get(const size_t r, const size_t c) WS_NOEXCEPT { return this->m[r][c]; }
@@ -7508,7 +7512,7 @@ namespace WS {
 
 			void D3D12DescriptorHeapManager::Bind(D3D12CommandList& commandList, const size_t frameIndex) const WS_NOEXCEPT
 			{
-				commandList->SetDescriptorHeaps(this->m_heaps.size(), this->m_nativeHeapsPtr[frameIndex].data());
+				commandList->SetDescriptorHeaps(static_cast<UINT>(this->m_heaps.size()), this->m_nativeHeapsPtr[frameIndex].data());
 			}
 
 			/*
@@ -8182,6 +8186,7 @@ namespace WS {
 		}
 
 		WS_THROW("[RENDER API] Your Render API Is Not Supported");
+		std::exit(-1);
 	}
 
 }; // WS
