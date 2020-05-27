@@ -553,7 +553,7 @@ namespace WS
 		else if constexpr (std::is_same_v<_T, int32_t>)
 			return _mm_set_epi32(w, z, y, x);
 		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_set_epi16(w, z, y, x, 0, 0, 0, 0);
+			return _mm_set_epi16(0, 0, 0, 0, w, z, y, x);
 		else if constexpr (std::is_same_v<_T, double>)
 			return _mm256_set_pd(w, z, y, x);
 	}
@@ -589,11 +589,11 @@ namespace WS
 		}
 		else if constexpr (std::is_same_v<_T, int32_t>) {
 			const int l = _mm_extract_epi16(sseVector, INDEX);
-			return *reinterpret_cast<_T*>(&l);
+			return *reinterpret_cast<const _T*>(&l);
 		}
 		else if constexpr (std::is_same_v<_T, int16_t>) {
 			const int l = _mm_extract_epi16(sseVector, INDEX);
-			return *reinterpret_cast<_T*>(&l);
+			return *reinterpret_cast<const _T*>(&l);
 		}
 		else if constexpr (std::is_same_v<_T, double>) {
 			if constexpr (INDEX <= 1) {
@@ -645,13 +645,10 @@ namespace WS
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
-				SIMDStore<_T>((_T*)&other.m_arr,
-					this->m_sseVector);
+				this->m_sseVector = SIMDSet(other.x, other.y, other.z, other.w);
 #endif
-			}
-			else {
-				std::memcpy(&this->m_arr, &other.m_arr,
-					sizeof(_T) * 4u);
+			} else {
+				std::memcpy(&this->m_arr, &other.m_arr, sizeof(_T) * 4u);
 			}
 		}
 
@@ -664,8 +661,7 @@ namespace WS
 
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				this->m_sseVector = other;
-			}
-			else {
+			} else {
 				this->m_sseVector = SIMDSet(
 					static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
 					static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
@@ -677,14 +673,13 @@ namespace WS
 #endif
 
 		inline void Set(const _T& x = 0.0f, const _T& y = 0.0f,
-			const _T& z = 0.0f, const _T& w = 0.0f) noexcept
+						const _T& z = 0.0f, const _T& w = 0.0f) noexcept
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDSet<_T>(x, y, z, w);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x = x;
 				this->y = y;
 				this->z = z;
@@ -700,8 +695,7 @@ namespace WS
 				this->m_sseVector = SIMDAdd<_T>(
 					this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x += other.x;
 				this->y += other.y;
 				this->z += other.z;
@@ -717,8 +711,7 @@ namespace WS
 				this->m_sseVector = SIMDSub<_T>(
 					this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x -= other.x;
 				this->y -= other.y;
 				this->z -= other.z;
@@ -734,8 +727,7 @@ namespace WS
 				this->m_sseVector = SIMDMul<_T>(
 					this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x *= other.x;
 				this->y *= other.y;
 				this->z *= other.z;
@@ -751,8 +743,7 @@ namespace WS
 				this->m_sseVector = SIMDDiv<_T>(
 					this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x /= other.x;
 				this->y /= other.y;
 				this->z /= other.z;
@@ -765,8 +756,7 @@ namespace WS
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) == 0;
-			}
-			else {
+			} else {
 				return this->x == other.x && this->y == other.y &&
 					this->z == other.z && this->w == other.w;
 			}
@@ -777,8 +767,7 @@ namespace WS
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) != 0;
-			}
-			else {
+			} else {
 				return this->x != other.x || this->y != other.y ||
 					this->z != other.z || this->w != other.w;
 			}
@@ -815,11 +804,12 @@ namespace WS
 		-> decltype(a.x + b.x)
 	{
 		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
 			return SIMDDotProduct<_T>(a.m_sseVector, b.m_sseVector);
-		}
-		else {
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
 			return a.x * b.x + a.y * b.y
-				+ a.z * b.z + a.w * b.w;
+				 + a.z * b.z + a.w * b.w;
 		}
 	}
 
@@ -1329,7 +1319,7 @@ namespace WS
 		inline void OnRightButtonUp  (const std::function<void(Vecu16)>& functor) WS_NOEXCEPT { this->m_onRightButtonUpFunctors.push_back(functor);   }
 		inline void OnRightButtonDown(const std::function<void(Vecu16)>& functor) WS_NOEXCEPT { this->m_onRightButtonDownFunctors.push_back(functor); }
 
-		inline void OnWheelTurn (const std::function<void(const int16_t)> &functor)                WS_NOEXCEPT { this->m_onWheelTurnFunctors.push_back(functor); }
+		inline void OnWheelTurn (const std::function<void(const int16_t)> &functor)              WS_NOEXCEPT { this->m_onWheelTurnFunctors.push_back(functor); }
 		inline void OnMouseMove (const std::function<void(const Vecu16, const Veci16)>& functor) WS_NOEXCEPT { this->m_onMouseMoveFunctors.push_back(functor);  }
 		inline void OnCursorMove(const std::function<void(const Vecu16, const Veci16)>& functor) WS_NOEXCEPT { this->m_onCursorMoveFunctors.push_back(functor); }
 	};
@@ -1343,8 +1333,8 @@ namespace WS
 	class Mouse : public MouseEventInterface
 	{
 	protected:
-		Vecu16 m_position      { 0, 0 };
-		Veci16 m_deltaPosition { 0, 0 };
+		Vecu16 m_position      = Vecu16(0, 0, 0, 0);
+		Veci16 m_deltaPosition = Veci16(0, 0, 0, 0);
 
 		int16_t m_wheelDelta = 0;
 
@@ -1663,7 +1653,7 @@ namespace WS
 		[[nodiscard]] inline const Vecf32& GetPosition() const WS_NOEXCEPT { return this->m_position; }
 		[[nodiscard]] inline const Vecf32& GetRotation() const WS_NOEXCEPT { return this->m_rotation; }
 
-		inline void Rotate     (const Vecf32 &delta)    WS_NOEXCEPT { this->m_rotation += delta;   }
+		inline void Rotate     (const Vecf32& delta)    WS_NOEXCEPT { this->m_rotation += delta;   }
 		inline void SetRotation(const Vecf32 &rotation) WS_NOEXCEPT { this->m_rotation = rotation; }
 
 		inline void Translate  (const Vecf32 &delta)    WS_NOEXCEPT { this->m_position += delta;   }
@@ -1694,12 +1684,12 @@ namespace WS
 	class PerspectiveCamera : public Camera
 	{
 	private:
-		const Vecf32 UP_VECTOR{0.0f, 1.0f, 0.0f};
-		const Vecf32 FORWARD_VECTOR{0.0f, 0.0f, 1.0f};
-		const Vecf32 RIGHT_VECTOR{1.0f, 0.0f, 0.0f};
+		const Vecf32 UP_VECTOR      = Vecf32(0.0f, 1.0f, 0.0f);
+		const Vecf32 FORWARD_VECTOR = Vecf32(0.0f, 0.0f, 1.0f);
+		const Vecf32 RIGHT_VECTOR   = Vecf32(1.0f, 0.0f, 0.0f);
 
 		Vecf32 m_forwardVector = FORWARD_VECTOR;
-		Vecf32 m_rightVector = RIGHT_VECTOR;
+		Vecf32 m_rightVector   = RIGHT_VECTOR;
 
 		float m_fov = 0.0f, m_aspectRatio = 0.0f, m_zNear = 0.0f, m_zFar = 0.0f;
 
@@ -4179,7 +4169,7 @@ namespace WS {
 			void WindowsMouse::__OnWindowUpdateBegin() WS_NOEXCEPT
 			{
 				this->m_wheelDelta = 0;
-				this->m_deltaPosition = { 0, 0 };
+				this->m_deltaPosition = Veci16(0, 0, 0, 0);
 				this->m_wasMouseMovedDuringUpdate = false;
 				this->m_wasCursorMovedDuringUpdate = false;
 			}
@@ -4202,7 +4192,7 @@ namespace WS {
 
 							if (ri.header.dwType == RIM_TYPEMOUSE && (ri.data.mouse.lLastX != 0 || ri.data.mouse.lLastY != 0))
 							{
-								this->m_deltaPosition += Veci16{ static_cast<int16_t>(ri.data.mouse.lLastX), static_cast<int16_t>(ri.data.mouse.lLastY) };
+								this->m_deltaPosition += Veci16(static_cast<int16_t>(ri.data.mouse.lLastX), static_cast<int16_t>(ri.data.mouse.lLastY), 0, 0);
 
 								this->m_wasMouseMovedDuringUpdate = true;
 							}
@@ -4530,14 +4520,15 @@ namespace WS {
 
 	void PerspectiveCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		const MatrixFloat32 rotationMatrix = MatrixFloat32::MakeIdentity();
+		const MatrixFloat32 rotationMatrix = MatrixFloat32::MakeRotation(this->m_rotation);
 		const Vecf32        focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
 		const Vecf32        upDirection    = UP_VECTOR * rotationMatrix;
 		
 		this->m_forwardVector = FORWARD_VECTOR * rotationMatrix;
 		this->m_rightVector   = RIGHT_VECTOR   * rotationMatrix;
 
-		this->m_transform = MatrixFloat32::MakeTranslation(this->m_position);
+		this->m_transform = MatrixFloat32::MakeTranslation(this->m_position * (-1))
+						  * rotationMatrix;
 
 //#ifdef __WEISS__OS_WINDOWS
 //		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYawFromVector(this->m_rotation);
@@ -4557,7 +4548,7 @@ namespace WS {
 		mouse.OnMouseMove([sensitivity, this, &mouse](const Vecu16 position, const Veci16 delta)
 			{
 				if (mouse.IsCursorInWindow()) {
-					this->Rotate({ sensitivity * delta.y, sensitivity * delta.x, 0.0f });
+					this->Rotate(Vecf32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
 				}
 			});
 	}
@@ -4615,19 +4606,19 @@ namespace WS {
 
 	void OrthographicCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
-#ifdef __WEISS__OS_WINDOWS
-
-		if (keyboard.IsKeyDown(right))
-			this->m_position = DirectX::XMVectorSet(this->m_position.x - speed, this->m_position.y, 0.0f, 0.0f);
-		if (keyboard.IsKeyDown(left))
-			this->m_position = DirectX::XMVectorSet(this->m_position.x + speed, this->m_position.y, 0.0f, 0.0f);
-
-		if (keyboard.IsKeyDown(up))
-			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y - speed, 0.0f, 0.0f);
-		if (keyboard.IsKeyDown(down))
-			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y + speed, 0.0f, 0.0f);
-
-#endif // __WEISS__OS_WINDOWS
+//#ifdef __WEISS__OS_WINDOWS
+//
+//		if (keyboard.IsKeyDown(right))
+//			this->m_position = DirectX::XMVectorSet(this->m_position.x - speed, this->m_position.y, 0.0f, 0.0f);
+//		if (keyboard.IsKeyDown(left))
+//			this->m_position = DirectX::XMVectorSet(this->m_position.x + speed, this->m_position.y, 0.0f, 0.0f);
+//
+//		if (keyboard.IsKeyDown(up))
+//			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y - speed, 0.0f, 0.0f);
+//		if (keyboard.IsKeyDown(down))
+//			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y + speed, 0.0f, 0.0f);
+//
+//#endif // __WEISS__OS_WINDOWS
 	}
 
 	/*
