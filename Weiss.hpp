@@ -76,7 +76,6 @@
 
 	// Windows DirectX 11/12 Includes
 	#include <d3dcompiler.h>
-	#include <DirectXMath.h>
 
 	// Vulkan
 	#define VK_USE_PLATFORM_WIN32_KHR
@@ -368,7 +367,7 @@ namespace WS
 
 #ifdef __WEISS__OS_WINDOWS
 
-		Rect(const RECT &rect) noexcept;
+		Rect(const RECT &rect) WS_NOEXCEPT;
 
 		inline operator const RECT&() const WS_NOEXCEPT { return RECT{ left, top, right, bottom }; }
 
@@ -489,8 +488,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDAdd(const GET_SIMD_TYPE<_T>& vecA,
-		const GET_SIMD_TYPE<_T>& vecB) noexcept
+	static inline GET_SIMD_TYPE<_T> SIMDAdd(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_add_ps(vecA, vecB);
@@ -503,8 +501,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDSub(const GET_SIMD_TYPE<_T>& vecA,
-		const GET_SIMD_TYPE<_T>& vecB) noexcept
+	static inline GET_SIMD_TYPE<_T> SIMDSub(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_sub_ps(vecA, vecB);
@@ -517,8 +514,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDMul(const GET_SIMD_TYPE<_T>& vecA,
-		const GET_SIMD_TYPE<_T>& vecB) noexcept
+	static inline GET_SIMD_TYPE<_T> SIMDMul(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_mul_ps(vecA, vecB);
@@ -531,8 +527,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDDiv(const GET_SIMD_TYPE<_T>& vecA,
-		const GET_SIMD_TYPE<_T>& vecB) noexcept
+	static inline GET_SIMD_TYPE<_T> SIMDDiv(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_div_ps(vecA, vecB);
@@ -546,7 +541,7 @@ namespace WS
 
 	template <typename _T>
 	static inline GET_SIMD_TYPE<_T> SIMDSet(const _T& x, const _T& y, const _T& z,
-		const _T& w) noexcept
+		const _T& w) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_set_ps(w, z, y, x);
@@ -559,7 +554,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline void SIMDStore(_T* src, const GET_SIMD_TYPE<_T>& sseVec) noexcept
+	static inline void SIMDStore(_T* src, const GET_SIMD_TYPE<_T>& sseVec) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			_mm_store_ps(src, sseVec);
@@ -570,7 +565,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDLoad(_T* src) noexcept
+	static inline GET_SIMD_TYPE<_T> SIMDLoad(_T* src) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return _mm_load_ps(src);
@@ -581,7 +576,7 @@ namespace WS
 	}
 
 	template <typename _T, int INDEX>
-	static inline _T SIMDExtractElement(const GET_SIMD_TYPE<_T>& sseVector) noexcept
+	static inline _T SIMDExtractElement(const GET_SIMD_TYPE<_T>& sseVector) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>) {
 			const int l = _mm_extract_ps(sseVector, INDEX);
@@ -609,8 +604,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	static inline _T SIMDDotProduct(const GET_SIMD_TYPE<_T>& a,
-		const GET_SIMD_TYPE<_T>& b) noexcept
+	static inline _T SIMDDotProduct(const GET_SIMD_TYPE<_T>& a, const GET_SIMD_TYPE<_T>& b) WS_NOEXCEPT
 	{
 		if constexpr (std::is_same_v<_T, float>)
 			return SIMDExtractElement<_T, 0>(_mm_dp_ps(a, b, 0xFF));
@@ -624,7 +618,7 @@ namespace WS
 
 #endif // #ifndef __WEISS__DISABLE_SIMD
 
-	template <typename _T>
+	template <typename _T = _WS_TYPE_DOESNT_EXIST>
 	struct Vector
 	{
 		union {
@@ -636,12 +630,12 @@ namespace WS
 			_T m_arr[4u];
 		};
 
-		inline Vector(const _T& x = 0, const _T& y = 0, const _T& z = 0, const _T& w = 0) noexcept
+		inline Vector(const _T& x = 0, const _T& y = 0, const _T& z = 0, const _T& w = 0) WS_NOEXCEPT
 		{
 			this->Set(x, y, z, w);
 		}
 
-		inline Vector(const Vector<_T>& other) noexcept
+		inline Vector(const Vector<_T>& other) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
@@ -655,25 +649,24 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 
 		template <typename _T_2 = _T>
-		inline Vector(const GET_SIMD_TYPE<_T_2>& other) noexcept
+		inline Vector(const GET_SIMD_TYPE<_T_2>& other) WS_NOEXCEPT
 		{
 			static_assert(WS_CAN_PERFORM_SIMD(_T));
 
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				this->m_sseVector = other;
 			} else {
-				this->m_sseVector = SIMDSet(
-					static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
-					static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
-					static_cast<_T>(SIMDExtractElement<_T_2, 2u>(this->m_sseVector)),
-					static_cast<_T>(SIMDExtractElement<_T_2, 3u>(this->m_sseVector)));
+				this->m_sseVector = SIMDSet(static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
+											static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
+											static_cast<_T>(SIMDExtractElement<_T_2, 2u>(this->m_sseVector)),
+											static_cast<_T>(SIMDExtractElement<_T_2, 3u>(this->m_sseVector)));
 			}
 		}
 
 #endif
 
 		inline void Set(const _T& x = 0.0f, const _T& y = 0.0f,
-						const _T& z = 0.0f, const _T& w = 0.0f) noexcept
+						const _T& z = 0.0f, const _T& w = 0.0f) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
@@ -687,13 +680,29 @@ namespace WS
 			}
 		}
 
+		template <typename _T_2 = float>
+		[[nodiscard]] inline float GetLength() const WS_NOEXCEPT
+		{
+			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
+#ifndef __WEISS__DISABLE_SIMD
+				return std::sqrt(SIMDDotProduct<_T>(this->m_sseVector, this->m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+			} else {
+				return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z + this->w * this->w);
+			}
+		}
+
+		inline void Normalize() WS_NOEXCEPT
+		{
+			this->operator/=(this->GetLength());
+		}
+
 		template <typename _T_2>
-		inline void operator+=(const Vector<_T_2>& other) noexcept
+		inline void operator+=(const Vector<_T_2>& other) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDAdd<_T>(
-					this->m_sseVector, other.m_sseVector);
+				this->m_sseVector = SIMDAdd<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
 			} else {
 				this->x += other.x;
@@ -704,7 +713,7 @@ namespace WS
 		}
 
 		template <typename _T_2>
-		inline void operator-=(const Vector<_T_2>& other) noexcept
+		inline void operator-=(const Vector<_T_2>& other) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
@@ -720,12 +729,11 @@ namespace WS
 		}
 
 		template <typename _T_2>
-		inline void operator*=(const Vector<_T_2>& other) noexcept
+		inline void operator*=(const Vector<_T_2>& other) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDMul<_T>(
-					this->m_sseVector, other.m_sseVector);
+				this->m_sseVector = SIMDMul<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
 			} else {
 				this->x *= other.x;
@@ -736,12 +744,11 @@ namespace WS
 		}
 
 		template <typename _T_2>
-		inline void operator/=(const Vector<_T_2>& other) noexcept
+		inline void operator/=(const Vector<_T_2>& other) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDDiv<_T>(
-					this->m_sseVector, other.m_sseVector);
+				this->m_sseVector = SIMDDiv<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
 			} else {
 				this->x /= other.x;
@@ -752,165 +759,186 @@ namespace WS
 		}
 
 		template <typename _T_2>
-		inline bool operator==(const Vector<_T_2>& other) const noexcept
+		inline bool operator==(const Vector<_T_2>& other) const WS_NOEXCEPT
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) == 0;
 			} else {
 				return this->x == other.x && this->y == other.y &&
-					this->z == other.z && this->w == other.w;
+					   this->z == other.z && this->w == other.w;
 			}
 		}
 
 		template <typename _T_2>
-		inline bool operator!=(const Vector<_T_2>& other) const noexcept
+		inline bool operator!=(const Vector<_T_2>& other) const WS_NOEXCEPT
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) != 0;
 			} else {
 				return this->x != other.x || this->y != other.y ||
-					this->z != other.z || this->w != other.w;
+					   this->z != other.z || this->w != other.w;
 			}
 		}
 
 		template <typename _T_2, typename = std::enable_if_t<std::is_arithmetic_v<_T_2>, void>>
-		inline void operator+=(const _T_2& n) noexcept
+		inline void operator+=(const _T_2& n) WS_NOEXCEPT
 		{
 			this->operator+=(Vector<_T_2>(n, n, n, n));
 		}
 
 		template <typename _T_2>
-		inline void operator-=(const _T_2& n) noexcept
+		inline void operator-=(const _T_2& n) WS_NOEXCEPT
 		{
 			this->operator-=(Vector<_T_2>(n, n, n, n));
 		}
 
 		template <typename _T_2>
-		inline void operator*=(const _T_2& n) noexcept
+		inline void operator*=(const _T_2& n) WS_NOEXCEPT
 		{
 			this->operator*=(Vector<_T_2>(n, n, n, n));
 		}
 
 		template <typename _T_2>
-		inline void operator/=(const _T_2& n) noexcept
+		inline void operator/=(const _T_2& n) WS_NOEXCEPT
 		{
 			this->operator/=(Vector<_T_2>(n, n, n, n));
 		}
-	};
 
-	template <typename _T, typename _T_2>
-	inline auto VectorDotProduct(const Vector<_T>& a,
-		const Vector<_T_2>& b) noexcept
-		-> decltype(a.x + b.x)
-	{
-		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-			return SIMDDotProduct<_T>(a.m_sseVector, b.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-		} else {
-			return a.x * b.x + a.y * b.y
-				 + a.z * b.z + a.w * b.w;
+		template <typename _T_2>
+		inline static Vector<_T_2> Normalized(const Vector<_T_2>& vec) WS_NOEXCEPT
+		{
+			Vector<_T> cp(vec);
+			cp.Normalize();
+
+			return cp;
 		}
-	}
 
+		template <typename _T_2, typename _T_3>
+		inline static auto CrossProduct3D(const Vector<_T_2>& vecA, const Vector<_T_3>& vecB) WS_NOEXCEPT
+			-> Vector<decltype(vecA.x + vecB.x)>
+		{
+			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
+#ifndef __WEISS__DISABLE_SIMD
+				const Vector<_T_2> tempA1(vecA.y, vecA.z, vecA.x, 0);
+				const Vector<_T_2> tempB1(vecB.z, vecB.x, vecB.y, 0);
+				const Vector<_T_2> tempA2(vecA.z, vecA.x, vecA.y, 0);
+				const Vector<_T_2> tempB2(vecB.y, vecB.z, vecB.x, 0);
+
+				return tempA1 * tempB1 - tempA2 * tempB2;
+#endif // #ifndef __WEISS__DISABLE_SIMD
+			} else {
+				return Vector<decltype(vecA.x + vecB.x)>(
+					vecA.y * vecB.z - vecA.z * vecB.y,
+					vecA.z * vecB.x - vecA.x * vecB.z,
+					vecA.x * vecB.y - vecA.y * vecB.x,
+					0
+				);
+			}
+		}
+
+		template <typename _T_2, typename _T_3>
+		static inline auto DotProduct(const Vector<_T_2>& a, const Vector<_T_3>& b) WS_NOEXCEPT
+			-> decltype(a.x + b.x)
+		{
+			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
+#ifndef __WEISS__DISABLE_SIMD
+				return SIMDDotProduct<_T_2>(a.m_sseVector, b.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+			} else {
+				return a.x * b.x + a.y * b.y
+					 + a.z * b.z + a.w * b.w;
+			}
+		}
+	};
+	
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator+(const Vector<_T>& a,
-		const Vector<_T_2>& b) noexcept
+		const Vector<_T_2>& b) WS_NOEXCEPT
 		-> Vector<decltype(a.x + b.x)>
 	{
 		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(
-				SIMDAdd<_T>(a.m_sseVector, b.m_sseVector));
+			return Vector<_T>(SIMDAdd<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
 		}
 		else {
 			return Vector<decltype(a.x + b.x)>(a.x + b.x, a.y + b.y,
-				a.z + b.z, a.w + b.w);
+											   a.z + b.z, a.w + b.w);
 		}
 	}
 
 	template <typename _T, typename _T_2>
-	[[nodiscard]] inline auto operator-(const Vector<_T>& a,
-		const Vector<_T_2>& b) noexcept
+	[[nodiscard]] inline auto operator-(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
 		-> Vector<decltype(a.x - b.x)>
 	{
 		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(
-				SIMDSub<_T>(a.m_sseVector, b.m_sseVector));
+			return Vector<_T>(SIMDSub<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
+		} else {
 			return Vector<decltype(a.x - b.x)>(a.x - b.x, a.y - b.y,
-				a.z - b.z, a.w - b.w);
+											   a.z - b.z, a.w - b.w);
 		}
 	}
 
 	template <typename _T, typename _T_2>
-	[[nodiscard]] inline auto operator*(const Vector<_T>& a,
-		const Vector<_T_2>& b) noexcept
+	[[nodiscard]] inline auto operator*(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
 		-> Vector<decltype(a.x* b.x)>
 	{
 		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(
-				SIMDMul<_T>(a.m_sseVector, b.m_sseVector));
+			return Vector<_T>(SIMDMul<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
+		} else {
 			return Vector<decltype(a.x* b.x)>(a.x * b.x, a.y * b.y,
-				a.z * b.z, a.w * b.w);
+											  a.z * b.z, a.w * b.w);
 		}
 	}
 
 	template <typename _T, typename _T_2>
-	[[nodiscard]] inline auto operator/(const Vector<_T>& a,
-		const Vector<_T_2>& b) noexcept
+	[[nodiscard]] inline auto operator/(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
 		-> Vector<decltype(a.x / b.x)>
 	{
 		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
 #ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(
-				SIMDDiv<_T>(a.m_sseVector, b.m_sseVector));
+			return Vector<_T>(SIMDDiv<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
+		} else {
 			return Vector<decltype(a.x / b.x)>(a.x / b.x, a.y / b.y,
-				a.z / b.z, a.w / b.w);
+											   a.z / b.z, a.w / b.w);
 		}
 	}
 
 	template <typename _T, typename _T_2>
-	inline auto operator+(const Vector<_T>& vec, const _T_2& n) noexcept
+	inline auto operator+(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
 		-> Vector<decltype(vec.x + n)>
 	{
-		return vec + Vector<_T>(n, n, n, n);
+		return vec + Vector<_T_2>(n, n, n, n);
 	}
 
 	template <typename _T, typename _T_2>
-	inline auto operator-(const Vector<_T>& vec, const _T_2& n) noexcept
+	inline auto operator-(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
 		-> Vector<decltype(vec.x - n)>
 	{
-		return vec - Vector<_T>(n, n, n, n);
+		return vec - Vector<_T_2>(n, n, n, n);
 	}
 
 	template <typename _T, typename _T_2>
-	inline auto operator*(const Vector<_T>& vec, const _T_2& n) noexcept
+	inline auto operator*(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
 		-> Vector<decltype(vec.x * n)>
 	{
-		return vec * Vector<_T>(n, n, n, n);
+		return vec * Vector<_T_2>(n, n, n, n);
 	}
 
 	template <typename _T, typename _T_2>
-	inline auto operator/(const Vector<_T>& vec, const _T_2& n) noexcept
+	inline auto operator/(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
 		-> Vector<decltype(vec.x / n)>
 	{
-		return vec / Vector<_T>(n, n, n, n);
+		return vec / Vector<_T_2>(n, n, n, n);
 	}
 
 	template <typename _T>
-	inline std::ostream& operator<<(std::ostream& stream, const Vector<_T>& vec) noexcept
+	inline std::ostream& operator<<(std::ostream& stream, const Vector<_T>& vec) WS_NOEXCEPT
 	{
 		stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
 
@@ -935,89 +963,91 @@ namespace WS
 	public:
 		Matrix() = default;
 
-		inline Matrix(const _T* buff)                 noexcept { std::memcpy(this->m, buff, sizeof(_T) * 16u); }
-		inline Matrix(const std::array<_T, 16u>& arr) noexcept { std::memcpy(this->m, arr.data(), sizeof(_T) * 16u); }
+		inline Matrix(const _T* buff)                 WS_NOEXCEPT { std::memcpy(this->m, buff, sizeof(_T) * 16u); }
+		inline Matrix(const std::array<_T, 16u>& arr) WS_NOEXCEPT { std::memcpy(this->m, arr.data(), sizeof(_T) * 16u); }
 
-		inline Matrix(const Matrix<_T>& other) noexcept { std::memcpy(this->m, other.m, sizeof(_T) * 16u); }
+		inline Matrix(const Matrix<_T>& other) WS_NOEXCEPT { std::memcpy(this->m, other.m, sizeof(_T) * 16u); }
 
-		inline _T& operator[](const size_t i) noexcept { return this->m[i]; }
+		inline _T& operator[](const size_t i) WS_NOEXCEPT { return this->m[i]; }
 
-		inline const _T& operator[](const size_t i) const noexcept { return this->m[i]; }
+		inline const _T& operator[](const size_t i) const WS_NOEXCEPT { return this->m[i]; }
 
-		inline _T& operator()(const size_t r, const size_t c) noexcept { return this->m[r * 4u + c]; }
+		inline _T& operator()(const size_t r, const size_t c) WS_NOEXCEPT { return this->m[r * 4u + c]; }
 
-		inline const _T& operator()(const size_t r, const size_t c) const noexcept { return this->m[r * 4u + c]; }
+		inline const _T& operator()(const size_t r, const size_t c) const WS_NOEXCEPT { return this->m[r * 4u + c]; }
 
 		// --- Static Functions --- //
 
-		static inline Matrix<_T> MakeZeros()    noexcept { return Matrix<_T>(); }
-		static inline Matrix<_T> MakeIdentity() noexcept {
-			return Matrix<_T>(std::array<_T, 16u>{1, 0, 0, 0,
+		static inline Matrix<_T> MakeZeros()    WS_NOEXCEPT { return Matrix<_T>(); }
+		static inline Matrix<_T> MakeIdentity() WS_NOEXCEPT {
+			return Matrix<_T>(std::array<_T, 16u>{
+				1, 0, 0, 0,
 				0, 1, 0, 0,
 				0, 0, 1, 0,
-				0, 0, 0, 1});
+				0, 0, 0, 1
+			});
 		}
 
-		static inline Matrix<_T> MakeRotationX(const float radX = 0.0f) noexcept
+		static inline Matrix<_T> MakeRotationX(const float radX = 0.0f) WS_NOEXCEPT
 		{
 			const _T sinX = std::sin(radX);
 			const _T cosX = std::cos(radX);
 
 			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, 0,
-					0, cosX, -sinX, 0,
-					0, sinX, cosX, 0,
-					0, 0, 0, 1
+				1, 0,    0,     0,
+				0, cosX, -sinX, 0,
+				0, sinX, cosX,  0,
+				0, 0,    0,     1
 			});
 		}
 
-		static inline Matrix<_T> MakeRotationY(const float radY = 0.0f) noexcept
+		static inline Matrix<_T> MakeRotationY(const float radY = 0.0f) WS_NOEXCEPT
 		{
 			const _T sinY = std::sin(radY);
 			const _T cosY = std::cos(radY);
 
 			return Matrix<_T>(std::array<_T, 16u>{
-				cosY, 0, 0, sinY,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					-sinY, 0, 0, cosY
+				cosY,  0, sinY, 0,
+				0,     1, 0,    0,
+				-sinY, 0, cosY, 0,
+				0,     0, 0,    1
 			});
 		}
 
-		static inline Matrix<_T> MakeRotationZ(const float radZ = 0.0f) noexcept
+		static inline Matrix<_T> MakeRotationZ(const float radZ = 0.0f) WS_NOEXCEPT
 		{
 			const _T sinZ = std::sin(radZ);
 			const _T cosZ = std::cos(radZ);
 
 			return Matrix<_T>(std::array<_T, 16u>{
 				cosZ, -sinZ, 0, 0,
-					sinZ, cosZ, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1
+				sinZ, cosZ,  0, 0,
+				0,    0,     1, 0,
+				0,    0,     0, 1
 			});
 		}
 
-		static inline Matrix<_T> MakeRotation(const float radX = 0.0f, const float radY = 0.0f, const float radZ = 0.0f) noexcept
+		static inline Matrix<_T> MakeRotation(const float radX = 0.0f, const float radY = 0.0f, const float radZ = 0.0f) WS_NOEXCEPT
 		{
-			return MakeRotationX(radX) * MakeRotationY(radY) * MakeRotationZ(radZ);
+			return MakeRotationZ(radZ) * MakeRotationY(radY) * MakeRotationX(radX);
 		}
 
-		static inline Matrix<_T> MakeRotation(const Vector<_T>& radians) noexcept
+		static inline Matrix<_T> MakeRotation(const Vector<_T>& radians) WS_NOEXCEPT
 		{
 			return Matrix<_T>::MakeRotation(radians.x, radians.y, radians.z);
 		}
 
-		static inline Matrix<_T> MakeTranslation(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f) noexcept
+		static inline Matrix<_T> MakeTranslation(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, x,
-				0, 1, 0, y,
-				0, 0, 1, z,
+				1, 0, 0, -x,
+				0, 1, 0, -y,
+				0, 0, 1, -z,
 				0, 0, 0, 1,
 			});
 		}
 
-		static inline Matrix<_T> MakeTranslation(const Vector<_T>& translation) noexcept
+		static inline Matrix<_T> MakeTranslation(const Vector<_T>& translation) WS_NOEXCEPT
 		{
 			return Matrix<_T>::MakeTranslation(translation.x, translation.y, translation.z);
 		}
@@ -1025,14 +1055,14 @@ namespace WS
 		static inline Matrix<_T> MakePerspective(const float zNear, const float zFar, const float fovRad, const float aspectRatio)
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
-				aspectRatio* fovRad, 0, 0, 0,
-					0, fovRad, 0, 0,
-					0, 0, zFar / (zFar - zNear), 1,
-					0, 0, (-zFar * zNear) / (zFar - zNear), 0,
+				aspectRatio * fovRad, 0,      0,                                0,
+				0,                    fovRad, 0,                                0,
+				0,                    0,      zFar / (zFar - zNear),            1,
+				0,                    0,      (-zFar * zNear) / (zFar - zNear), 1,
 			});
 		}
 
-		static inline Matrix<_T> MakeScaling(const float scaleX = 1.0f, const float scaleY = 1.0f, const float scaleZ = 1.0f, const float scaleW = 1.0f) noexcept
+		static inline Matrix<_T> MakeScaling(const float scaleX = 1.0f, const float scaleY = 1.0f, const float scaleZ = 1.0f, const float scaleW = 1.0f) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
 				scaleX, 0, 0, 0,
@@ -1042,7 +1072,7 @@ namespace WS
 			});
 		}
 
-		static inline Matrix<_T> MakeTransposed(const Matrix<_T>& mat) noexcept
+		static inline Matrix<_T> MakeTransposed(const Matrix<_T>& mat) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
 				mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0),
@@ -1051,10 +1081,29 @@ namespace WS
 				mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)
 			});
 		}
+
+		// Thanks to: https://stackoverflow.com/questions/349050/calculating-a-lookat-matrix
+		static inline Matrix<_T> MakeLookAt(const Vector<_T>& cameraPosition, const Vector<_T>& focalPoint, const Vector<_T>& upDirection) WS_NOEXCEPT
+		{
+			const Vector<_T> zaxis = Vector<_T>::Normalized(focalPoint - cameraPosition);
+			const Vector<_T> xaxis = Vector<_T>::Normalized(Vector<_T>::CrossProduct3D(upDirection, zaxis));
+			const Vector<_T> yaxis = Vector<_T>::CrossProduct3D(zaxis, xaxis);
+
+			const _T m30 = -Vector<_T>::DotProduct(xaxis, cameraPosition);
+			const _T m31 = -Vector<_T>::DotProduct(yaxis, cameraPosition);
+			const _T m32 = -Vector<_T>::DotProduct(zaxis, cameraPosition);
+
+			return Matrix<_T>(std::array<_T, 16u>{
+				xaxis.x, yaxis.x, zaxis.x, 0,
+				xaxis.y, yaxis.y, zaxis.y, 0,
+				xaxis.z, yaxis.z, zaxis.z, 0,
+				m30,     m31,     m32,     1 
+			});
+		}
 	};
 
 	template <typename _T, typename _T_2>
-	inline auto operator*(const Matrix<_T>& matA, const Matrix<_T_2>& matB) noexcept
+	inline auto operator*(const Matrix<_T>& matA, const Matrix<_T_2>& matB) WS_NOEXCEPT
 		-> Matrix<decltype(matA[0] + matB[0])>
 	{
 		Matrix<decltype(matA[0] + matB[0])> matResult;
@@ -1064,7 +1113,7 @@ namespace WS
 				const Vector<_T>   vecA = Vector<_T>(matA(r, 0), matA(r, 1), matA(r, 2), matA(r, 3));
 				const Vector<_T_2> vecB = Vector<_T_2>(matB(0, c), matB(1, c), matB(2, c), matB(3, c));
 
-				matResult(r, c) = VectorDotProduct(vecA, vecB);
+				matResult(r, c) = Vector<>::DotProduct(vecA, vecB);
 			}
 		}
 
@@ -1072,8 +1121,7 @@ namespace WS
 	}
 
 	template <typename _T>
-	inline std::ostream& operator<<(std::ostream& stream,
-		const Matrix<_T>& mat) noexcept
+	inline std::ostream& operator<<(std::ostream& stream, const Matrix<_T>& mat) WS_NOEXCEPT
 	{
 		constexpr const size_t MAX_DIGITS = 5u;
 
@@ -1102,17 +1150,17 @@ namespace WS
 		return stream;
 	}
 
-	typedef Matrix<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>> MatrixFloat32;
+	typedef Matrix<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>> Matf32;
 
 	template <typename _T, typename _T_2>
-	inline auto operator*(const Vector<_T>& vec, const Matrix<_T_2>& mat) noexcept
+	inline auto operator*(const Vector<_T>& vec, const Matrix<_T_2>& mat) WS_NOEXCEPT
 		-> Vector<decltype(vec.x + mat[0])>
 	{
 		return Vector<decltype(vec.x + mat[0])>(
-			VectorDotProduct(vec, Vector<_T_2>(mat(0, 0), mat(0, 1), mat(0, 2), mat(0, 3))),
-			VectorDotProduct(vec, Vector<_T_2>(mat(1, 0), mat(1, 1), mat(1, 2), mat(1, 3))),
-			VectorDotProduct(vec, Vector<_T_2>(mat(2, 0), mat(2, 1), mat(2, 2), mat(2, 3))),
-			VectorDotProduct(vec, Vector<_T_2>(mat(3, 0), mat(3, 1), mat(3, 2), mat(3, 3)))
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 0), mat(0, 1), mat(0, 2), mat(0, 3))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(1, 0), mat(1, 1), mat(1, 2), mat(1, 3))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(2, 0), mat(2, 1), mat(2, 2), mat(2, 3))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(3, 0), mat(3, 1), mat(3, 2), mat(3, 3)))
 		);
 	}
 
@@ -1128,7 +1176,7 @@ namespace WS
 		Vecf32 m_rotation;
 		Vecf32 m_translation;
 
-		MatrixFloat32 m_transform = MatrixFloat32::MakeIdentity();
+		Matf32 m_transform = Matf32::MakeIdentity();
 
 	public:
 		Transform() = default;
@@ -1142,8 +1190,8 @@ namespace WS
 		inline void Rotate   (const Vecf32 &delta) WS_NOEXCEPT { this->m_rotation    += delta; }
 		inline void Translate(const Vecf32 &delta) WS_NOEXCEPT { this->m_translation += delta; }
 
-		[[nodiscard]] inline MatrixFloat32 GetTransform()           const WS_NOEXCEPT { return this->m_transform;                 }
-		[[nodiscard]] inline MatrixFloat32 GetTransposedTransform() const WS_NOEXCEPT { return Matrix<float>::MakeTransposed(this->m_transform); }
+		[[nodiscard]] inline Matf32 GetTransform()           const WS_NOEXCEPT { return this->m_transform;                 }
+		[[nodiscard]] inline Matf32 GetTransposedTransform() const WS_NOEXCEPT { return Matrix<float>::MakeTransposed(this->m_transform); }
 
 		void CalculateTransform() WS_NOEXCEPT;
 	};
@@ -1243,7 +1291,6 @@ namespace WS
 
 		namespace WIN
 		{
-
 			// ////////////////--\\\\\\\\\\\\\\\\ \\
 			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			// |----------WindowsImage----------| \\
@@ -1255,9 +1302,9 @@ namespace WS
 			public:
 				WindowsImage() = default;
 
-				WindowsImage(WindowsImage &&other) noexcept;
+				WindowsImage(WindowsImage &&other) WS_NOEXCEPT;
 
-				WindowsImage(const WindowsImage &other) noexcept;
+				WindowsImage(const WindowsImage &other) WS_NOEXCEPT;
 
 				WindowsImage(const char *filename) WS_NOEXCEPT;
 
@@ -1637,7 +1684,7 @@ namespace WS
 	class Camera
 	{
 	protected:
-		MatrixFloat32 m_transform = MatrixFloat32::MakeIdentity();
+		Matf32 m_transform = Matf32::MakeIdentity();
 
 		Vecf32 m_position;
 		Vecf32 m_rotation;
@@ -1647,8 +1694,8 @@ namespace WS
 
 		Camera(const Vecf32& position, const Vecf32& rotation) : m_position(position), m_rotation(rotation) { }
 
-		[[nodiscard]] inline MatrixFloat32 GetTransform()           const WS_NOEXCEPT { return this->m_transform;                 }
-		[[nodiscard]] inline MatrixFloat32 GetTransposedTransform() const WS_NOEXCEPT { return MatrixFloat32::MakeTransposed(this->m_transform); }
+		[[nodiscard]] inline Matf32 GetTransform()           const WS_NOEXCEPT { return this->m_transform;                         }
+		[[nodiscard]] inline Matf32 GetTransposedTransform() const WS_NOEXCEPT { return Matf32::MakeTransposed(this->m_transform); }
 
 		[[nodiscard]] inline const Vecf32& GetPosition() const WS_NOEXCEPT { return this->m_position; }
 		[[nodiscard]] inline const Vecf32& GetRotation() const WS_NOEXCEPT { return this->m_rotation; }
@@ -1691,7 +1738,7 @@ namespace WS
 		Vecf32 m_forwardVector = FORWARD_VECTOR;
 		Vecf32 m_rightVector   = RIGHT_VECTOR;
 
-		float m_fov = 0.0f, m_aspectRatio = 0.0f, m_zNear = 0.0f, m_zFar = 0.0f;
+		float m_fov = 0.0f, m_InvAspectRatio = 0.0f, m_zNear = 0.0f, m_zFar = 0.0f;
 
 	public:
 		PerspectiveCamera(Window *pWindow, const PerspectiveCameraDescriptor &descriptor) WS_NOEXCEPT;
@@ -2226,7 +2273,7 @@ namespace WS
 
 				VKFence(const VKDevice& device) WS_NOEXCEPT;
 
-				VKFence& operator=(VKFence&& other) noexcept;
+				VKFence& operator=(VKFence&& other) WS_NOEXCEPT;
 
 				inline void Wait()  const WS_NOEXCEPT;
 				inline void Reset() const WS_NOEXCEPT;
@@ -2647,7 +2694,7 @@ namespace WS
 								  D3D11DeviceContextObjectWrapper *pDeviceContext,
 								  const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT;
 				
-				D3D11VertexBuffer &operator=(D3D11VertexBuffer &&other) noexcept;
+				D3D11VertexBuffer &operator=(D3D11VertexBuffer &&other) WS_NOEXCEPT;
 
 				void Bind() WS_NOEXCEPT;
 
@@ -3001,7 +3048,7 @@ namespace WS
 							D3D12CommandQueueObjectWrapper &pCommandQueue,
 							const Window *pWindow, const uint16_t maxFps, const UINT bufferCount) WS_NOEXCEPT;
 
-				D3D12SwapChain &operator=(D3D12SwapChain &&other) noexcept;
+				D3D12SwapChain &operator=(D3D12SwapChain &&other) WS_NOEXCEPT;
 
 				void Present(const bool vSync) const WS_NOEXCEPT;
 
@@ -3028,7 +3075,7 @@ namespace WS
 									const uint32_t numDescriptors,
 									const D3D12_DESCRIPTOR_HEAP_FLAGS &flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE) WS_NOEXCEPT;
 
-				D3D12DescriptorHeap &operator=(D3D12DescriptorHeap &&other) noexcept;
+				D3D12DescriptorHeap &operator=(D3D12DescriptorHeap &&other) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Resource> D3D12RenderTargetObjectWrapper;
@@ -3052,7 +3099,7 @@ namespace WS
 								const CD3DX12_CPU_DESCRIPTOR_HANDLE &rtvHandle,
 								const uint16_t frameIndex) WS_NOEXCEPT;
 
-				D3D12RenderTarget &operator=(D3D12RenderTarget &&other) noexcept;
+				D3D12RenderTarget &operator=(D3D12RenderTarget &&other) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12CommandAllocator> D3D12CommandAllocatorObjectWrapper;
@@ -3150,7 +3197,7 @@ namespace WS
 								   const std::vector<D3D12_ROOT_PARAMETER1> &rootParameters,
 								   const std::vector<D3D12_STATIC_SAMPLER_DESC> &samplers) WS_NOEXCEPT;
 
-				D3D12RootSignature &operator=(D3D12RootSignature &&other) noexcept;
+				D3D12RootSignature &operator=(D3D12RootSignature &&other) WS_NOEXCEPT;
 			};
 
 			typedef D3D12ObjectWrapper<ID3D12Resource> D3D12CommittedResourceObjectWrapper;
@@ -3412,7 +3459,7 @@ namespace WS
 
 				D3D12DescriptorHeapManager(D3D12Device& device) WS_NOEXCEPT;
 
-				D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&& other) noexcept;
+				D3D12DescriptorHeapManager& operator=(D3D12DescriptorHeapManager&& other) WS_NOEXCEPT;
 
 				/*
 				 * Given an array of descriptor handles to a single descriptor each,
@@ -3459,13 +3506,13 @@ namespace WS
 			public:
 				D3D12RenderPipeline() = default;
 
-				D3D12RenderPipeline(D3D12RenderPipeline &&other) noexcept;
+				D3D12RenderPipeline(D3D12RenderPipeline &&other) WS_NOEXCEPT;
 
 				D3D12RenderPipeline(D3D12Device &pDevice, const RenderPipelineDesc &pipelineDesc,
 									std::vector<ConstantBuffer *> &pConstantBuffers, std::vector<Texture *> pTextures,
 									std::vector<D3D12TextureSampler *> pTextureSamplers, D3D12DescriptorHeapManager& descriptorHeapManager) WS_NOEXCEPT;
 
-				D3D12RenderPipeline &operator=(D3D12RenderPipeline &&other) noexcept;
+				D3D12RenderPipeline &operator=(D3D12RenderPipeline &&other) WS_NOEXCEPT;
 
 				void Bind(D3D12CommandList &pCommandList, const size_t frameIndex) WS_NOEXCEPT;
 			};
@@ -3756,7 +3803,7 @@ namespace WS {
 
 #ifdef __WEISS__OS_WINDOWS
 
-	Rect::Rect(const RECT& rect) noexcept
+	Rect::Rect(const RECT& rect) WS_NOEXCEPT
 	{
 		this->left   = static_cast<uint16_t>(rect.left);
 		this->top    = static_cast<uint16_t>(rect.top);
@@ -3774,7 +3821,7 @@ namespace WS {
 
 	void Transform::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = MatrixFloat32::MakeTranslation(this->m_translation) * MatrixFloat32::MakeRotation(this->m_rotation);
+		this->m_transform = Matf32::MakeTranslation(this->m_translation) * Matf32::MakeRotation(this->m_rotation);
 	}
 
 	// ////////////////-\\\\\\\\\\\\\\\\ \\
@@ -3940,7 +3987,7 @@ namespace WS {
 			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
 			*/
 
-			WindowsImage::WindowsImage(WindowsImage&& other) noexcept
+			WindowsImage::WindowsImage(WindowsImage&& other) WS_NOEXCEPT
 			{
 				this->m_width = other.m_width;
 				this->m_height = other.m_height;
@@ -3949,7 +3996,7 @@ namespace WS {
 				this->m_buff = std::move(other.m_buff);
 			}
 
-			WindowsImage::WindowsImage(const WindowsImage& other) noexcept
+			WindowsImage::WindowsImage(const WindowsImage& other) WS_NOEXCEPT
 			{
 				this->m_width = other.m_width;
 				this->m_height = other.m_height;
@@ -4510,7 +4557,7 @@ namespace WS {
 	{
 		auto recalculateAspectRatio = [this](const Vecu16& clientDims)
 		{
-			this->m_aspectRatio = clientDims.x / static_cast<float>(clientDims.y);
+			this->m_InvAspectRatio = static_cast<float>(clientDims.y) / clientDims.x;
 		};
 
 		recalculateAspectRatio({ pWindow->GetClientWidth(), pWindow->GetClientHeight() });
@@ -4520,27 +4567,15 @@ namespace WS {
 
 	void PerspectiveCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		const MatrixFloat32 rotationMatrix = MatrixFloat32::MakeRotation(this->m_rotation);
-		const Vecf32        focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
-		const Vecf32        upDirection    = UP_VECTOR * rotationMatrix;
+		const Matf32 rotationMatrix = Matf32::MakeRotation(this->m_rotation);
+		const Vecf32 focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
+		const Vecf32 upDirection    = UP_VECTOR * rotationMatrix;
 		
 		this->m_forwardVector = FORWARD_VECTOR * rotationMatrix;
 		this->m_rightVector   = RIGHT_VECTOR   * rotationMatrix;
 
-		this->m_transform = MatrixFloat32::MakeTranslation(this->m_position * (-1))
-						  * rotationMatrix;
-
-//#ifdef __WEISS__OS_WINDOWS
-//		DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationRollPitchYawFromVector(this->m_rotation);
-//		DirectX::XMVECTOR focusPosition  = DirectX::XMVectorAdd(DirectX::XMVector3TransformCoord(FORWARD_VECTOR, rotationMatrix), this->m_position);
-//		DirectX::XMVECTOR upDirection    = DirectX::XMVector3TransformCoord(UP_VECTOR, rotationMatrix);
-//
-//		this->m_forwardVector = DirectX::XMVector3TransformCoord(FORWARD_VECTOR, rotationMatrix);
-//		this->m_rightVector   = DirectX::XMVector3TransformCoord(RIGHT_VECTOR, rotationMatrix);
-//
-//		this->m_transform = DirectX::XMMatrixLookAtLH(this->m_position, focusPosition, upDirection) *
-//							DirectX::XMMatrixPerspectiveFovLH(this->m_fov, this->m_aspectRatio, this->m_zNear, this->m_zFar);
-//#endif // __WEISS__OS_WINDOWS
+		this->m_transform = Matf32::MakeLookAt(this->m_position, focusPosition, upDirection)
+						  * Matf32::MakePerspective(this->m_zNear, this->m_zFar, this->m_fov, this->m_InvAspectRatio);
 	}
 
 	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
@@ -4594,9 +4629,10 @@ namespace WS {
 
 	void OrthographicCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = MatrixFloat32::MakeScaling(this->m_InvAspectRatio)
-						  * MatrixFloat32::MakeTranslation(-this->m_position.x, -this->m_position.y)
-						  * MatrixFloat32::MakeRotationZ(this->m_rotation.z);
+		this->m_transform = Matf32::MakeTranslation(this->m_position);
+			//Matf32::MakeRotationZ(this->m_rotation.z)
+			//Matf32::MakeTranslation(this->m_position * (-1));
+						  //* Matf32::MakeScaling(this->m_InvAspectRatio);
 	}
 
 	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
@@ -4606,19 +4642,15 @@ namespace WS {
 
 	void OrthographicCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
-//#ifdef __WEISS__OS_WINDOWS
-//
-//		if (keyboard.IsKeyDown(right))
-//			this->m_position = DirectX::XMVectorSet(this->m_position.x - speed, this->m_position.y, 0.0f, 0.0f);
-//		if (keyboard.IsKeyDown(left))
-//			this->m_position = DirectX::XMVectorSet(this->m_position.x + speed, this->m_position.y, 0.0f, 0.0f);
-//
-//		if (keyboard.IsKeyDown(up))
-//			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y - speed, 0.0f, 0.0f);
-//		if (keyboard.IsKeyDown(down))
-//			this->m_position = DirectX::XMVectorSet(this->m_position.x, this->m_position.y + speed, 0.0f, 0.0f);
-//
-//#endif // __WEISS__OS_WINDOWS
+		if (keyboard.IsKeyDown(right))
+			this->m_position.x += speed;
+		if (keyboard.IsKeyDown(left))
+			this->m_position.x -= speed;
+
+		if (keyboard.IsKeyDown(up))
+			this->m_position.y += speed;
+		if (keyboard.IsKeyDown(down))
+			this->m_position.y -= speed;
 	}
 
 	/*
@@ -5106,7 +5138,7 @@ namespace WS {
 				this->Reset();
 			}
 
-			VKFence& VKFence::operator=(VKFence&& other) noexcept
+			VKFence& VKFence::operator=(VKFence&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
 
@@ -6149,7 +6181,7 @@ namespace WS {
 					WS_THROW("Unable To Create Vertex Buffer");
 			}
 
-			D3D11VertexBuffer& D3D11VertexBuffer::operator=(D3D11VertexBuffer&& other) noexcept
+			D3D11VertexBuffer& D3D11VertexBuffer::operator=(D3D11VertexBuffer&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6784,7 +6816,7 @@ namespace WS {
 					WS_THROW("[DIRECTX 12] Failed To Create Swap Chain");
 			}
 
-			D3D12SwapChain& D3D12SwapChain::operator=(D3D12SwapChain&& other) noexcept
+			D3D12SwapChain& D3D12SwapChain::operator=(D3D12SwapChain&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6836,7 +6868,7 @@ namespace WS {
 					WS_THROW("[D3D12] Could Not Create Descriptor Heap");
 			}
 
-			D3D12DescriptorHeap& D3D12DescriptorHeap::operator=(D3D12DescriptorHeap&& other) noexcept
+			D3D12DescriptorHeap& D3D12DescriptorHeap::operator=(D3D12DescriptorHeap&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -6864,7 +6896,7 @@ namespace WS {
 				pDevice->CreateRenderTargetView(this->m_pObject, nullptr, rtvHandle);
 			}
 
-			D3D12RenderTarget& D3D12RenderTarget::operator=(D3D12RenderTarget&& other) noexcept
+			D3D12RenderTarget& D3D12RenderTarget::operator=(D3D12RenderTarget&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -7013,7 +7045,7 @@ namespace WS {
 					WS_THROW("[DIRECTX 12] Failed To Create Root Signature");
 			}
 
-			D3D12RootSignature& D3D12RootSignature::operator=(D3D12RootSignature&& other) noexcept
+			D3D12RootSignature& D3D12RootSignature::operator=(D3D12RootSignature&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -7366,7 +7398,7 @@ namespace WS {
 				this->m_incrementSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 			}
 
-			D3D12DescriptorHeapManager& D3D12DescriptorHeapManager::operator=(D3D12DescriptorHeapManager&& other) noexcept
+			D3D12DescriptorHeapManager& D3D12DescriptorHeapManager::operator=(D3D12DescriptorHeapManager&& other) WS_NOEXCEPT
 			{
 				this->m_handles = std::move(other.m_handles);
 
@@ -7440,7 +7472,7 @@ namespace WS {
 			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
 			 */
 
-			D3D12RenderPipeline::D3D12RenderPipeline(D3D12RenderPipeline&& other) noexcept
+			D3D12RenderPipeline::D3D12RenderPipeline(D3D12RenderPipeline&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
@@ -7657,7 +7689,7 @@ namespace WS {
 				this->m_handles = this->m_pDescriptorHeapManager->AddDesriptors(srcCpuDescriptorHandles);
 			}
 
-			D3D12RenderPipeline& D3D12RenderPipeline::operator=(D3D12RenderPipeline&& other) noexcept
+			D3D12RenderPipeline& D3D12RenderPipeline::operator=(D3D12RenderPipeline&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = std::move(other.m_pObject);
 
