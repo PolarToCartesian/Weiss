@@ -36,6 +36,9 @@ Building :
   ```git clone https://github.com/PolarToCartesian/Weiss-II```
 
 + you can run the correct batch or shell script for you platform to build a simple application with Weiss.
+  + if you are on windows, and have installed the windows c++ dev tools, you can run from the root **Weiss directory**
+    + 32 bit : ```call ./scripts/win32.bat```
+    + 64 bit : ```call ./scripts/win32.bat``` 
 
 ## Test Code
 
