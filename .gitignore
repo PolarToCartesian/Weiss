@@ -10,3 +10,8 @@ res/
 *.vcxproj
 x64/
 .vs/
+CMakeFiles/
+WeissEngine.dir/
+cmake_install.cmake
+Release/
+CMakeCache.txt
