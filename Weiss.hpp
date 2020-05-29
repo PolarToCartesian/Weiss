@@ -1029,7 +1029,7 @@ namespace WS
 
 		static inline Matrix<_T> MakeRotation(const float radX = 0.0f, const float radY = 0.0f, const float radZ = 0.0f) WS_NOEXCEPT
 		{
-			return MakeRotationZ(radZ) * MakeRotationY(radY) * MakeRotationX(radX);
+			return MakeRotationX(radX) * MakeRotationY(radY) * MakeRotationZ(radZ);
 		}
 
 		static inline Matrix<_T> MakeRotation(const Vector<_T>& radians) WS_NOEXCEPT
@@ -1040,10 +1040,10 @@ namespace WS
 		static inline Matrix<_T> MakeTranslation(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, -x,
-				0, 1, 0, -y,
-				0, 0, 1, -z,
-				0, 0, 0, 1,
+				1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				-x, -y, -z, 1,
 			});
 		}
 
@@ -1157,10 +1157,10 @@ namespace WS
 		-> Vector<decltype(vec.x + mat[0])>
 	{
 		return Vector<decltype(vec.x + mat[0])>(
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 0), mat(0, 1), mat(0, 2), mat(0, 3))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(1, 0), mat(1, 1), mat(1, 2), mat(1, 3))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(2, 0), mat(2, 1), mat(2, 2), mat(2, 3))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(3, 0), mat(3, 1), mat(3, 2), mat(3, 3)))
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 1), mat(1, 1), mat(2, 1), mat(3, 1))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 2), mat(1, 2), mat(2, 2), mat(3, 2))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)))
 		);
 	}
 
@@ -3821,7 +3821,7 @@ namespace WS {
 
 	void Transform::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = Matf32::MakeTranslation(this->m_translation) * Matf32::MakeRotation(this->m_rotation);
+		this->m_transform = Matf32::MakeTranslation(this->m_translation);
 	}
 
 	// ////////////////-\\\\\\\\\\\\\\\\ \\
@@ -4567,7 +4567,7 @@ namespace WS {
 
 	void PerspectiveCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		const Matf32 rotationMatrix = Matf32::MakeRotation(this->m_rotation);
+		const Matf32 rotationMatrix = Matf32::MakeRotation(this->m_rotation * (-1));
 		const Vecf32 focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
 		const Vecf32 upDirection    = UP_VECTOR * rotationMatrix;
 		
@@ -4630,9 +4630,6 @@ namespace WS {
 	void OrthographicCamera::CalculateTransform() WS_NOEXCEPT
 	{
 		this->m_transform = Matf32::MakeTranslation(this->m_position);
-			//Matf32::MakeRotationZ(this->m_rotation.z)
-			//Matf32::MakeTranslation(this->m_position * (-1));
-						  //* Matf32::MakeScaling(this->m_InvAspectRatio);
 	}
 
 	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
