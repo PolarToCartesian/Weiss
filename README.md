@@ -28,17 +28,18 @@ Dependencies :
 + Install the [Vulkan SDK](https://www.lunarg.com/vulkan-sdk/)
 + Download the [d3dx12.h file](https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/Libraries/D3DX12/d3dx12.h) from microsoft's official github
 + Download & Install the [DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
++ On Windows, download & install [Visual Studio](https://visualstudio.microsoft.com/)
++ Download & Install **CMake**
+  + **Windows:** [CMake](https://cmake.org/download/)
+  + **Linux:** ```sudo apt-get install cmake```
 
-Building :
+In order to build the static library, you must follow the following instructions if you with to build it with cmake:
 
-+ Clone the repository with [Git](https://git-scm.com/)
-
-  ```git clone https://github.com/PolarToCartesian/Weiss-II```
-
-+ you can run the correct batch or shell script for you platform to build a simple application with Weiss.
-  + if you are on windows, and have installed the windows c++ dev tools, you can run from the root **Weiss directory**
-    + 32 bit : ```call ./scripts/win32.bat```
-    + 64 bit : ```call ./scripts/win32.bat``` 
++ Clone the repository with [Git](https://git-scm.com/) and type ```git clone https://github.com/PolarToCartesian/Weiss-II```
++ Open the **Root Weiss Directory** and type ```cmake .```
++ On Windows, open the "Weiss.sln" file in **visual studio and hit build**
++ On Linux ```make```
++ The static library should be in the **"WeissEngine.dir/Release" folder**
 
 ## Test Code
 
@@ -49,7 +50,7 @@ This code should run without any errors and show a colored triangle using direct
 
 
 ```c++
-#include "Weiss.hpp"
+#include "Weiss.h"
 
 struct Vertex {
 	Vec3f position;
