@@ -487,136 +487,46 @@ namespace WS
 
 #ifndef __WEISS__DISABLE_SIMD
 
-	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDAdd(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_add_ps(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return _mm_add_epi32(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_add_epi16(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_add_pd(vecA, vecB);
-	}
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |-------SIMD Operations-------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDSub(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_sub_ps(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return _mm_sub_epi32(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_sub_epi16(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_sub_pd(vecA, vecB);
-	}
+	static inline GET_SIMD_TYPE<_T> SIMDAdd(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDMul(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_mul_ps(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return _mm_mul_epi32(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_mul_epi16(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_mul_pd(vecA, vecB);
-	}
+	static inline GET_SIMD_TYPE<_T> SIMDSub(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDDiv(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_div_ps(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return _mm_div_epi32(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_div_epi16(vecA, vecB);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_div_pd(vecA, vecB);
-	}
+	static inline GET_SIMD_TYPE<_T> SIMDMul(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDSet(const _T& x, const _T& y, const _T& z,
-		const _T& w) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_set_ps(w, z, y, x);
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return _mm_set_epi32(w, z, y, x);
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return _mm_set_epi16(0, 0, 0, 0, w, z, y, x);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_set_pd(w, z, y, x);
-	}
+	static inline GET_SIMD_TYPE<_T> SIMDDiv(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline void SIMDStore(_T* src, const GET_SIMD_TYPE<_T>& sseVec) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			_mm_store_ps(src, sseVec);
-		else if constexpr (std::is_same_v<_T, int32_t> || std::is_same_v<_T, int16_t>)
-			_mm_store_si128((__m128i*)src, sseVec);
-		else if constexpr (std::is_same_v<_T, double>)
-			_mm256_store_pd(src, sseVec);
-	}
+	static inline GET_SIMD_TYPE<_T> SIMDSet(const _T& x, const _T& y, const _T& z, const _T& w) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline GET_SIMD_TYPE<_T> SIMDLoad(_T* src) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return _mm_load_ps(src);
-		else if constexpr (std::is_same_v<_T, int32_t> || std::is_same_v<_T, int16_t>)
-			return _mm_load_si128((__m128i*)src);
-		else if constexpr (std::is_same_v<_T, double>)
-			return _mm256_load_pd(src);
-	}
+	static inline void SIMDStore(_T* src, const GET_SIMD_TYPE<_T>& sseVec) WS_NOEXCEPT;
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDLoad(_T* src) WS_NOEXCEPT;
 
 	template <typename _T, int INDEX>
-	static inline _T SIMDExtractElement(const GET_SIMD_TYPE<_T>& sseVector) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>) {
-			const int l = _mm_extract_ps(sseVector, INDEX);
-			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, int32_t>) {
-			const int l = _mm_extract_epi16(sseVector, INDEX);
-			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, int16_t>) {
-			const int l = _mm_extract_epi16(sseVector, INDEX);
-			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, double>) {
-			if constexpr (INDEX <= 1) {
-				return _mm256_cvtsd_f64(_mm256_shuffle_pd(sseVector, sseVector,
-					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX)));
-			}
-			else {
-				return _mm_cvtsd_f64(_mm_shuffle_pd(_mm256_extractf128_pd(sseVector, 1), // I am
-					_mm256_extractf128_pd(sseVector, 1), // proud of
-					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX))); // this magic
-			}
-		}
-	}
+	static inline _T SIMDExtractElement(const GET_SIMD_TYPE<_T>& sseVector) WS_NOEXCEPT;
 
 	template <typename _T>
-	static inline _T SIMDDotProduct(const GET_SIMD_TYPE<_T>& a, const GET_SIMD_TYPE<_T>& b) WS_NOEXCEPT
-	{
-		if constexpr (std::is_same_v<_T, float>)
-			return SIMDExtractElement<_T, 0>(_mm_dp_ps(a, b, 0xFF));
-		else if constexpr (std::is_same_v<_T, int32_t>)
-			return 0;
-		else if constexpr (std::is_same_v<_T, int16_t>)
-			return 0;
-		else if constexpr (std::is_same_v<_T, double>)
-			return SIMDExtractElement<_T, 0>(_mm256_dp_ps(a, b, 0xFF));
-	}
+	static inline _T SIMDDotProduct(const GET_SIMD_TYPE<_T>& a, const GET_SIMD_TYPE<_T>& b) WS_NOEXCEPT;
 
 #endif // #ifndef __WEISS__DISABLE_SIMD
+
+	// ///////////////--\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------Vector<_T>----------| \\
+	// |\____________________________/| \\
+	// \\\\\\\\\\\\\\\--/////////////// \\
 
 	template <typename _T = _WS_TYPE_DOESNT_EXIST>
 	struct Vector
@@ -630,320 +540,101 @@ namespace WS
 			_T m_arr[4u];
 		};
 
-		inline Vector(const _T& x = 0, const _T& y = 0, const _T& z = 0, const _T& w = 0) WS_NOEXCEPT
-		{
-			this->Set(x, y, z, w);
-		}
+		inline Vector(const _T& x = 0, const _T& y = 0, const _T& z = 0, const _T& w = 0) WS_NOEXCEPT;
 
-		inline Vector(const Vector<_T>& other) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDSet(other.x, other.y, other.z, other.w);
-#endif
-			} else {
-				std::memcpy(&this->m_arr, &other.m_arr, sizeof(_T) * 4u);
-			}
-		}
+		inline Vector(const Vector<_T>& other) WS_NOEXCEPT;
 
 #ifndef __WEISS__DISABLE_SIMD
 
 		template <typename _T_2 = _T>
-		inline Vector(const GET_SIMD_TYPE<_T_2>& other) WS_NOEXCEPT
-		{
-			static_assert(WS_CAN_PERFORM_SIMD(_T));
+		inline Vector(const GET_SIMD_TYPE<_T_2>& other) WS_NOEXCEPT;
 
-			if constexpr (std::is_same_v<_T, _T_2>) {
-				this->m_sseVector = other;
-			} else {
-				this->m_sseVector = SIMDSet(static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
-											static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
-											static_cast<_T>(SIMDExtractElement<_T_2, 2u>(this->m_sseVector)),
-											static_cast<_T>(SIMDExtractElement<_T_2, 3u>(this->m_sseVector)));
-			}
-		}
-
-#endif
+#endif // #ifndef __WEISS__DISABLE_SIMD
 
 		inline void Set(const _T& x = 0.0f, const _T& y = 0.0f,
-						const _T& z = 0.0f, const _T& w = 0.0f) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDSet<_T>(x, y, z, w);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				this->x = x;
-				this->y = y;
-				this->z = z;
-				this->w = w;
-			}
-		}
+						const _T& z = 0.0f, const _T& w = 0.0f) WS_NOEXCEPT;
 
-		template <typename _T_2 = float>
-		[[nodiscard]] inline float GetLength() const WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
-#ifndef __WEISS__DISABLE_SIMD
-				return std::sqrt(SIMDDotProduct<_T>(this->m_sseVector, this->m_sseVector));
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z + this->w * this->w);
-			}
-		}
+		[[nodiscard]] inline float GetLength() const WS_NOEXCEPT;
 
-		inline void Normalize() WS_NOEXCEPT
-		{
-			this->operator/=(this->GetLength());
-		}
+		inline void Normalize() WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator+=(const Vector<_T_2>& other) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDAdd<_T>(this->m_sseVector, other.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				this->x += other.x;
-				this->y += other.y;
-				this->z += other.z;
-				this->w += other.w;
-			}
-		}
+		inline void operator+=(const Vector<_T_2>& other) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator-=(const Vector<_T_2>& other) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDSub<_T>(
-					this->m_sseVector, other.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				this->x -= other.x;
-				this->y -= other.y;
-				this->z -= other.z;
-				this->w -= other.w;
-			}
-		}
+		inline void operator-=(const Vector<_T_2>& other) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator*=(const Vector<_T_2>& other) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDMul<_T>(this->m_sseVector, other.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				this->x *= other.x;
-				this->y *= other.y;
-				this->z *= other.z;
-				this->w *= other.w;
-			}
-		}
+		inline void operator*=(const Vector<_T_2>& other) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator/=(const Vector<_T_2>& other) WS_NOEXCEPT
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-				this->m_sseVector = SIMDDiv<_T>(this->m_sseVector, other.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				this->x /= other.x;
-				this->y /= other.y;
-				this->z /= other.z;
-				this->w /= other.w;
-			}
-		}
+		inline void operator/=(const Vector<_T_2>& other) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline bool operator==(const Vector<_T_2>& other) const WS_NOEXCEPT
-		{
-			if constexpr (std::is_same_v<_T, _T_2>) {
-				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) == 0;
-			} else {
-				return this->x == other.x && this->y == other.y &&
-					   this->z == other.z && this->w == other.w;
-			}
-		}
+		inline bool operator==(const Vector<_T_2>& other) const WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline bool operator!=(const Vector<_T_2>& other) const WS_NOEXCEPT
-		{
-			if constexpr (std::is_same_v<_T, _T_2>) {
-				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) != 0;
-			} else {
-				return this->x != other.x || this->y != other.y ||
-					   this->z != other.z || this->w != other.w;
-			}
-		}
+		inline bool operator!=(const Vector<_T_2>& other) const WS_NOEXCEPT;
 
 		template <typename _T_2, typename = std::enable_if_t<std::is_arithmetic_v<_T_2>, void>>
-		inline void operator+=(const _T_2& n) WS_NOEXCEPT
-		{
-			this->operator+=(Vector<_T_2>(n, n, n, n));
-		}
+		inline void operator+=(const _T_2& n) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator-=(const _T_2& n) WS_NOEXCEPT
-		{
-			this->operator-=(Vector<_T_2>(n, n, n, n));
-		}
+		inline void operator-=(const _T_2& n) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator*=(const _T_2& n) WS_NOEXCEPT
-		{
-			this->operator*=(Vector<_T_2>(n, n, n, n));
-		}
+		inline void operator*=(const _T_2& n) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline void operator/=(const _T_2& n) WS_NOEXCEPT
-		{
-			this->operator/=(Vector<_T_2>(n, n, n, n));
-		}
+		inline void operator/=(const _T_2& n) WS_NOEXCEPT;
 
 		template <typename _T_2>
-		inline static Vector<_T_2> Normalized(const Vector<_T_2>& vec) WS_NOEXCEPT
-		{
-			Vector<_T> cp(vec);
-			cp.Normalize();
-
-			return cp;
-		}
+		inline static Vector<_T_2> Normalized(const Vector<_T_2>& vec) WS_NOEXCEPT;
 
 		template <typename _T_2, typename _T_3>
 		inline static auto CrossProduct3D(const Vector<_T_2>& vecA, const Vector<_T_3>& vecB) WS_NOEXCEPT
-			-> Vector<decltype(vecA.x + vecB.x)>
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
-#ifndef __WEISS__DISABLE_SIMD
-				const Vector<_T_2> tempA1(vecA.y, vecA.z, vecA.x, 0);
-				const Vector<_T_2> tempB1(vecB.z, vecB.x, vecB.y, 0);
-				const Vector<_T_2> tempA2(vecA.z, vecA.x, vecA.y, 0);
-				const Vector<_T_2> tempB2(vecB.y, vecB.z, vecB.x, 0);
-
-				return tempA1 * tempB1 - tempA2 * tempB2;
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				return Vector<decltype(vecA.x + vecB.x)>(
-					vecA.y * vecB.z - vecA.z * vecB.y,
-					vecA.z * vecB.x - vecA.x * vecB.z,
-					vecA.x * vecB.y - vecA.y * vecB.x,
-					0
-				);
-			}
-		}
+			-> Vector<decltype(vecA.x + vecB.x)>;
 
 		template <typename _T_2, typename _T_3>
 		static inline auto DotProduct(const Vector<_T_2>& a, const Vector<_T_3>& b) WS_NOEXCEPT
-			-> decltype(a.x + b.x)
-		{
-			if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
-#ifndef __WEISS__DISABLE_SIMD
-				return SIMDDotProduct<_T_2>(a.m_sseVector, b.m_sseVector);
-#endif // #ifndef __WEISS__DISABLE_SIMD
-			} else {
-				return a.x * b.x + a.y * b.y
-					 + a.z * b.z + a.w * b.w;
-			}
-		}
+			-> decltype(a.x + b.x);
 	};
 	
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator+(const Vector<_T>& a,
 		const Vector<_T_2>& b) WS_NOEXCEPT
-		-> Vector<decltype(a.x + b.x)>
-	{
-		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(SIMDAdd<_T>(a.m_sseVector, b.m_sseVector));
-#endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
-			return Vector<decltype(a.x + b.x)>(a.x + b.x, a.y + b.y,
-											   a.z + b.z, a.w + b.w);
-		}
-	}
+		->Vector<decltype(a.x + b.x)>;
 
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator-(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
-		-> Vector<decltype(a.x - b.x)>
-	{
-		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(SIMDSub<_T>(a.m_sseVector, b.m_sseVector));
-#endif // #ifndef __WEISS__DISABLE_SIMD
-		} else {
-			return Vector<decltype(a.x - b.x)>(a.x - b.x, a.y - b.y,
-											   a.z - b.z, a.w - b.w);
-		}
-	}
+		-> Vector<decltype(a.x - b.x)>;
 
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator*(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
-		-> Vector<decltype(a.x* b.x)>
-	{
-		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(SIMDMul<_T>(a.m_sseVector, b.m_sseVector));
-#endif // #ifndef __WEISS__DISABLE_SIMD
-		} else {
-			return Vector<decltype(a.x* b.x)>(a.x * b.x, a.y * b.y,
-											  a.z * b.z, a.w * b.w);
-		}
-	}
+		-> Vector<decltype(a.x* b.x)>;
 
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator/(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
-		-> Vector<decltype(a.x / b.x)>
-	{
-		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
-#ifndef __WEISS__DISABLE_SIMD
-			return Vector<_T>(SIMDDiv<_T>(a.m_sseVector, b.m_sseVector));
-#endif // #ifndef __WEISS__DISABLE_SIMD
-		} else {
-			return Vector<decltype(a.x / b.x)>(a.x / b.x, a.y / b.y,
-											   a.z / b.z, a.w / b.w);
-		}
-	}
+		-> Vector<decltype(a.x / b.x)>;
 
 	template <typename _T, typename _T_2>
 	inline auto operator+(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
-		-> Vector<decltype(vec.x + n)>
-	{
-		return vec + Vector<_T_2>(n, n, n, n);
-	}
+		-> Vector<decltype(vec.x + n)>;
 
 	template <typename _T, typename _T_2>
 	inline auto operator-(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
-		-> Vector<decltype(vec.x - n)>
-	{
-		return vec - Vector<_T_2>(n, n, n, n);
-	}
+		-> Vector<decltype(vec.x - n)>;
 
 	template <typename _T, typename _T_2>
 	inline auto operator*(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
-		-> Vector<decltype(vec.x * n)>
-	{
-		return vec * Vector<_T_2>(n, n, n, n);
-	}
+		-> Vector<decltype(vec.x * n)>;
 
 	template <typename _T, typename _T_2>
 	inline auto operator/(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
-		-> Vector<decltype(vec.x / n)>
-	{
-		return vec / Vector<_T_2>(n, n, n, n);
-	}
+		-> Vector<decltype(vec.x / n)>;
 
 	template <typename _T>
-	inline std::ostream& operator<<(std::ostream& stream, const Vector<_T>& vec) WS_NOEXCEPT
-	{
-		stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
-
-		return stream;
-	}
+	inline std::ostream& operator<<(std::ostream& stream, const Vector<_T>& vec) WS_NOEXCEPT;
 
 	typedef Vector<int16_t> Veci16;
 	typedef Vector<int32_t> Veci32;
@@ -954,6 +645,22 @@ namespace WS
 	typedef Vector<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>>   Vecf32;
 	typedef Vector<std::enable_if_t<std::numeric_limits<double>::is_iec559, double>> Vecd64;
 
+	// ///////////////--\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------Matrix<_T>----------| \\
+	// |\____________________________/| \\
+	// \\\\\\\\\\\\\\\--/////////////// \\
+
+	/*
+	 * Represents a row-major 4x4 matrix of "_T" values as shown below
+	 * |-------------------|-------------------|-------------------|-------------------|
+	 * | _T m00 (index 0)  | _T m01 (index 1)  | _T m02 (index 2)  | _T m03 (index 3)  |
+	 * | _T m10 (index 4)  | _T m11 (index 5)  | _T m12 (index 6)  | _T m13 (index 7)  |
+	 * | _T m20 (index 8)  | _T m21 (index 9)  | _T m22 (index 10) | _T m23 (index 11) |
+	 * | _T m30 (index 12) | _T m31 (index 13) | _T m32 (index 14) | _T m33 (index 15) |
+	 * |-------------------|-------------------|-------------------|-------------------|
+	 */
+
 	template <typename _T>
 	class Matrix
 	{
@@ -963,211 +670,72 @@ namespace WS
 	public:
 		Matrix() = default;
 
-		inline Matrix(const _T* buff)                 WS_NOEXCEPT { std::memcpy(this->m, buff, sizeof(_T) * 16u); }
-		inline Matrix(const std::array<_T, 16u>& arr) WS_NOEXCEPT { std::memcpy(this->m, arr.data(), sizeof(_T) * 16u); }
+		inline Matrix(const _T* buff)                 WS_NOEXCEPT;
+		inline Matrix(const std::array<_T, 16u>& arr) WS_NOEXCEPT;
 
-		inline Matrix(const Matrix<_T>& other) WS_NOEXCEPT { std::memcpy(this->m, other.m, sizeof(_T) * 16u); }
+		inline Matrix(const Matrix<_T>& other) WS_NOEXCEPT;
 
-		inline _T& operator[](const size_t i) WS_NOEXCEPT { return this->m[i]; }
+		inline _T& operator[](const size_t i) WS_NOEXCEPT;
 
-		inline const _T& operator[](const size_t i) const WS_NOEXCEPT { return this->m[i]; }
+		inline const _T& operator[](const size_t i) const WS_NOEXCEPT;
 
-		inline _T& operator()(const size_t r, const size_t c) WS_NOEXCEPT { return this->m[r * 4u + c]; }
+		inline _T& operator()(const size_t r, const size_t c) WS_NOEXCEPT;
 
-		inline const _T& operator()(const size_t r, const size_t c) const WS_NOEXCEPT { return this->m[r * 4u + c]; }
+		inline const _T& operator()(const size_t r, const size_t c) const WS_NOEXCEPT;
 
 		// --- Static Functions --- //
 
-		static inline Matrix<_T> MakeZeros()    WS_NOEXCEPT { return Matrix<_T>(); }
-		static inline Matrix<_T> MakeIdentity() WS_NOEXCEPT {
-			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, 0,
-				0, 1, 0, 0,
-				0, 0, 1, 0,
-				0, 0, 0, 1
-			});
-		}
+		static inline Matrix<_T> MakeZeros()    WS_NOEXCEPT;
+		static inline Matrix<_T> MakeIdentity() WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeRotationX(const float radX = 0.0f) WS_NOEXCEPT
-		{
-			const _T sinX = std::sin(radX);
-			const _T cosX = std::cos(radX);
+		static inline Matrix<_T> MakeRotationX(const float radX = 0.0f) WS_NOEXCEPT;
 
-			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0,    0,     0,
-				0, cosX, -sinX, 0,
-				0, sinX, cosX,  0,
-				0, 0,    0,     1
-			});
-		}
+		static inline Matrix<_T> MakeRotationY(const float radY = 0.0f) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeRotationY(const float radY = 0.0f) WS_NOEXCEPT
-		{
-			const _T sinY = std::sin(radY);
-			const _T cosY = std::cos(radY);
+		static inline Matrix<_T> MakeRotationZ(const float radZ = 0.0f) WS_NOEXCEPT;
 
-			return Matrix<_T>(std::array<_T, 16u>{
-				cosY,  0, sinY, 0,
-				0,     1, 0,    0,
-				-sinY, 0, cosY, 0,
-				0,     0, 0,    1
-			});
-		}
+		static inline Matrix<_T> MakeRotation(const float radX = 0.0f, const float radY = 0.0f, const float radZ = 0.0f) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeRotationZ(const float radZ = 0.0f) WS_NOEXCEPT
-		{
-			const _T sinZ = std::sin(radZ);
-			const _T cosZ = std::cos(radZ);
+		static inline Matrix<_T> MakeRotation(const Vector<_T>& radians) WS_NOEXCEPT;
 
-			return Matrix<_T>(std::array<_T, 16u>{
-				cosZ, -sinZ, 0, 0,
-				sinZ, cosZ,  0, 0,
-				0,    0,     1, 0,
-				0,    0,     0, 1
-			});
-		}
+		static inline Matrix<_T> MakeTranslation(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeRotation(const float radX = 0.0f, const float radY = 0.0f, const float radZ = 0.0f) WS_NOEXCEPT
-		{
-			return MakeRotationX(radX) * MakeRotationY(radY) * MakeRotationZ(radZ);
-		}
+		static inline Matrix<_T> MakeTranslation(const Vector<_T>& translation) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeRotation(const Vector<_T>& radians) WS_NOEXCEPT
-		{
-			return Matrix<_T>::MakeRotation(radians.x, radians.y, radians.z);
-		}
+		static inline Matrix<_T> MakePerspective(const float zNear, const float zFar, const float fovRad, const float aspectRatio);
 
-		static inline Matrix<_T> MakeTranslation(const float x = 0.0f, const float y = 0.0f, const float z = 0.0f) WS_NOEXCEPT
-		{
-			return Matrix<_T>(std::array<_T, 16u>{
-				1,  0,  0,  0,
-				0,  1,  0,  0,
-				0,  0,  1,  0,
-				-x, -y, -z, 1,
-			});
-		}
+		static inline Matrix<_T> MakeScaling(const float scaleX = 1.0f, const float scaleY = 1.0f, const float scaleZ = 1.0f, const float scaleW = 1.0f) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakeTranslation(const Vector<_T>& translation) WS_NOEXCEPT
-		{
-			return Matrix<_T>::MakeTranslation(translation.x, translation.y, translation.z);
-		}
+		static inline Matrix<_T> MakeScaling(const Vecf32& scale) WS_NOEXCEPT;
 
-		static inline Matrix<_T> MakePerspective(const float zNear, const float zFar, const float fovRad, const float aspectRatio)
-		{
-			return Matrix<_T>(std::array<_T, 16u>{
-				aspectRatio * fovRad, 0,      0,                                0,
-				0,                    fovRad, 0,                                0,
-				0,                    0,      zFar / (zFar - zNear),            1,
-				0,                    0,      (-zFar * zNear) / (zFar - zNear), 1,
-			});
-		}
-
-		static inline Matrix<_T> MakeScaling(const float scaleX = 1.0f, const float scaleY = 1.0f, const float scaleZ = 1.0f, const float scaleW = 1.0f) WS_NOEXCEPT
-		{
-			return Matrix<_T>(std::array<_T, 16u>{
-				scaleX, 0, 0, 0,
-				0, scaleY, 0, 0,
-				0, 0, scaleZ, 0,
-				0, 0, 0, scaleW
-			});
-		}
-
-		static inline Matrix<_T> MakeScaling(const Vecf32& scale) WS_NOEXCEPT
-		{
-			return Matrix<_T>::MakeScaling(scale.x, scale.y, scale.z);
-		}
-
-		static inline Matrix<_T> MakeTransposed(const Matrix<_T>& mat) WS_NOEXCEPT
-		{
-			return Matrix<_T>(std::array<_T, 16u>{
-				mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0),
-				mat(0, 1), mat(1, 1), mat(2, 1), mat(3, 1),
-				mat(0, 2), mat(1, 2), mat(2, 2), mat(3, 2),
-				mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)
-			});
-		}
+		static inline Matrix<_T> MakeTransposed(const Matrix<_T>& mat) WS_NOEXCEPT;
 
 		// Thanks to: https://stackoverflow.com/questions/349050/calculating-a-lookat-matrix
-		static inline Matrix<_T> MakeLookAt(const Vector<_T>& cameraPosition, const Vector<_T>& focalPoint, const Vector<_T>& upDirection) WS_NOEXCEPT
-		{
-			const Vector<_T> zaxis = Vector<_T>::Normalized(focalPoint - cameraPosition);
-			const Vector<_T> xaxis = Vector<_T>::Normalized(Vector<_T>::CrossProduct3D(upDirection, zaxis));
-			const Vector<_T> yaxis = Vector<_T>::CrossProduct3D(zaxis, xaxis);
-
-			const _T m30 = -Vector<_T>::DotProduct(xaxis, cameraPosition);
-			const _T m31 = -Vector<_T>::DotProduct(yaxis, cameraPosition);
-			const _T m32 = -Vector<_T>::DotProduct(zaxis, cameraPosition);
-
-			return Matrix<_T>(std::array<_T, 16u>{
-				xaxis.x, yaxis.x, zaxis.x, 0,
-				xaxis.y, yaxis.y, zaxis.y, 0,
-				xaxis.z, yaxis.z, zaxis.z, 0,
-				m30,     m31,     m32,     1 
-			});
-		}
+		static inline Matrix<_T> MakeLookAt(const Vector<_T>& cameraPosition, const Vector<_T>& focalPoint, const Vector<_T>& upDirection) WS_NOEXCEPT;
 	};
 
 	template <typename _T, typename _T_2>
 	inline auto operator*(const Matrix<_T>& matA, const Matrix<_T_2>& matB) WS_NOEXCEPT
-		-> Matrix<decltype(matA[0] + matB[0])>
-	{
-		Matrix<decltype(matA[0] + matB[0])> matResult;
-
-		for (size_t r = 0u; r < 4u; r++) {
-			for (size_t c = 0u; c < 4u; c++) {
-				const Vector<_T>   vecA = Vector<_T>(matA(r, 0), matA(r, 1), matA(r, 2), matA(r, 3));
-				const Vector<_T_2> vecB = Vector<_T_2>(matB(0, c), matB(1, c), matB(2, c), matB(3, c));
-
-				matResult(r, c) = Vector<>::DotProduct(vecA, vecB);
-			}
-		}
-
-		return matResult;
-	}
+		-> Matrix<decltype(matA[0] + matB[0])>;
 
 	template <typename _T>
-	inline std::ostream& operator<<(std::ostream& stream, const Matrix<_T>& mat) WS_NOEXCEPT
-	{
-		constexpr const size_t MAX_DIGITS = 5u;
+	inline std::ostream& operator<<(std::ostream& stream, const Matrix<_T>& mat) WS_NOEXCEPT;
 
-		stream << std::setprecision(MAX_DIGITS) << '|';
-
-		for (size_t i = 0u; i < 4u * ((MAX_DIGITS + 1u) + 1u) + 1u; i++)
-			stream << '-';
-
-		stream << "|\n";
-		for (size_t r = 0u; r < 4u; r++) {
-			stream << "| ";
-
-			for (size_t c = 0u; c < 4u; c++)
-				stream << std::setw(MAX_DIGITS + 1u) << mat(r, c) << ' ';
-
-			stream << "|\n";
-		}
-
-		stream << '|';
-
-		for (size_t i = 0u; i < 4u * ((MAX_DIGITS + 1u) + 1u) + 1u; i++)
-			stream << '-';
-
-		stream << "|\n";
-
-		return stream;
-	}
-
-	typedef Matrix<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>> Matf32;
+	/*
+	 * Multiplies a 1x4 vector with a 4x4 matrix like shown below :
+								    |----------------------------------------|
+								    | _T_2 m00; _T_2 m01; _T_2 m02; _T_2 m03 |
+								    | _T_2 m10; _T_2 m11; _T_2 m12; _T_2 m13 |
+	   |------------------------|   | _T_2 m20; _T_2 m21; _T_2 m22; _T_2 m23 |   |----------------------------|
+	   | _T x; _T y; _T z; _T w | * | _T_2 m30; _T_2 m31; _T_2 m32; _T_2 m33 | = | decltype(x+m00) x, y, z, w |
+	   |------------------------|   |----------------------------------------|   |----------------------------|
+	 */
 
 	template <typename _T, typename _T_2>
 	inline auto operator*(const Vector<_T>& vec, const Matrix<_T_2>& mat) WS_NOEXCEPT
-		-> Vector<decltype(vec.x + mat[0])>
-	{
-		return Vector<decltype(vec.x + mat[0])>(
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 1), mat(1, 1), mat(2, 1), mat(3, 1))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 2), mat(1, 2), mat(2, 2), mat(3, 2))),
-			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)))
-		);
-	}
+		-> Vector<decltype(vec.x + mat[0])>;
+	
+	typedef Matrix<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>> Matf32;
 
 	// ///////////////-\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -3823,6 +3391,701 @@ namespace WS {
 	}
 
 #endif // __WEISS__OS_WINDOWS
+
+	// ///////////////-\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |-------SIMD Operations-------| \\
+	// |\___________________________/| \\
+	// \\\\\\\\\\\\\\\-/////////////// \\
+
+#ifndef __WEISS__DISABLE_SIMD
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDAdd(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_add_ps(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return _mm_add_epi32(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return _mm_add_epi16(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_add_pd(vecA, vecB);
+	}
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDSub(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_sub_ps(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return _mm_sub_epi32(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return _mm_sub_epi16(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_sub_pd(vecA, vecB);
+	}
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDMul(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_mul_ps(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return _mm_mul_epi32(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return _mm_mul_epi16(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_mul_pd(vecA, vecB);
+	}
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDDiv(const GET_SIMD_TYPE<_T>& vecA, const GET_SIMD_TYPE<_T>& vecB) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_div_ps(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return _mm_div_epi32(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return _mm_div_epi16(vecA, vecB);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_div_pd(vecA, vecB);
+	}
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDSet(const _T& x, const _T& y, const _T& z,
+		const _T& w) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_set_ps(w, z, y, x);
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return _mm_set_epi32(w, z, y, x);
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return _mm_set_epi16(0, 0, 0, 0, w, z, y, x);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_set_pd(w, z, y, x);
+	}
+
+	template <typename _T>
+	static inline void SIMDStore(_T* src, const GET_SIMD_TYPE<_T>& sseVec) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			_mm_store_ps(src, sseVec);
+		else if constexpr (std::is_same_v<_T, int32_t> || std::is_same_v<_T, int16_t>)
+			_mm_store_si128((__m128i*)src, sseVec);
+		else if constexpr (std::is_same_v<_T, double>)
+			_mm256_store_pd(src, sseVec);
+	}
+
+	template <typename _T>
+	static inline GET_SIMD_TYPE<_T> SIMDLoad(_T* src) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return _mm_load_ps(src);
+		else if constexpr (std::is_same_v<_T, int32_t> || std::is_same_v<_T, int16_t>)
+			return _mm_load_si128((__m128i*)src);
+		else if constexpr (std::is_same_v<_T, double>)
+			return _mm256_load_pd(src);
+	}
+
+	template <typename _T, int INDEX>
+	static inline _T SIMDExtractElement(const GET_SIMD_TYPE<_T>& sseVector) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>) {
+			const int l = _mm_extract_ps(sseVector, INDEX);
+			return *reinterpret_cast<const _T*>(&l);
+		}
+		else if constexpr (std::is_same_v<_T, int32_t>) {
+			const int l = _mm_extract_epi16(sseVector, INDEX);
+			return *reinterpret_cast<const _T*>(&l);
+		}
+		else if constexpr (std::is_same_v<_T, int16_t>) {
+			const int l = _mm_extract_epi16(sseVector, INDEX);
+			return *reinterpret_cast<const _T*>(&l);
+		}
+		else if constexpr (std::is_same_v<_T, double>) {
+			if constexpr (INDEX <= 1) {
+				return _mm256_cvtsd_f64(_mm256_shuffle_pd(sseVector, sseVector,
+					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX)));
+			}
+			else {
+				return _mm_cvtsd_f64(_mm_shuffle_pd(_mm256_extractf128_pd(sseVector, 1), // I am
+					_mm256_extractf128_pd(sseVector, 1), // proud of
+					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX))); // this magic
+			}
+		}
+	}
+
+	template <typename _T>
+	static inline _T SIMDDotProduct(const GET_SIMD_TYPE<_T>& a, const GET_SIMD_TYPE<_T>& b) WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, float>)
+			return SIMDExtractElement<_T, 0>(_mm_dp_ps(a, b, 0xFF));
+		else if constexpr (std::is_same_v<_T, int32_t>)
+			return 0;
+		else if constexpr (std::is_same_v<_T, int16_t>)
+			return 0;
+		else if constexpr (std::is_same_v<_T, double>)
+			return SIMDExtractElement<_T, 0>(_mm256_dp_ps(a, b, 0xFF));
+	}
+
+#endif // #ifndef __WEISS__DISABLE_SIMD
+
+	// ///////////////--\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------Vector<_T>----------| \\
+	// |\____________________________/| \\
+	// \\\\\\\\\\\\\\\--/////////////// \\
+
+	template <typename _T>
+	inline Vector<_T>::Vector(const _T& x, const _T& y, const _T& z, const _T& w) WS_NOEXCEPT
+	{
+		this->Set(x, y, z, w);
+	}
+
+	template <typename _T>
+	inline Vector<_T>::Vector(const Vector<_T>& other) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDSet(other.x, other.y, other.z, other.w);
+#endif
+		} else {
+			std::memcpy(&this->m_arr, &other.m_arr, sizeof(_T) * 4u);
+		}
+	}
+
+#ifndef __WEISS__DISABLE_SIMD
+
+	template <typename _T> template <typename _T_2>
+	inline Vector<_T>::Vector(const GET_SIMD_TYPE<_T_2>& other) WS_NOEXCEPT
+	{
+		static_assert(WS_CAN_PERFORM_SIMD(_T));
+	
+		if constexpr (std::is_same_v<_T, _T_2>) {
+			this->m_sseVector = other;
+		} else {
+			this->m_sseVector = SIMDSet(static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
+				static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
+				static_cast<_T>(SIMDExtractElement<_T_2, 2u>(this->m_sseVector)),
+				static_cast<_T>(SIMDExtractElement<_T_2, 3u>(this->m_sseVector)));
+		}
+	}
+
+#endif
+
+	template <typename _T>
+	inline void Vector<_T>::Set(const _T& x, const _T& y, const _T& z, const _T& w) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDSet<_T>(x, y, z, w);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			this->x = x;
+			this->y = y;
+			this->z = z;
+			this->w = w;
+		}
+	}
+
+	template <typename _T>
+	[[nodiscard]] inline float Vector<_T>::GetLength() const WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return std::sqrt(SIMDDotProduct<_T>(this->m_sseVector, this->m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z + this->w * this->w);
+		}
+	}
+
+	template <typename _T>
+	inline void Vector<_T>::Normalize() WS_NOEXCEPT
+	{
+		this->operator/=(this->GetLength());
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator+=(const Vector<_T_2>& other) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDAdd<_T>(this->m_sseVector, other.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			this->x += other.x;
+			this->y += other.y;
+			this->z += other.z;
+			this->w += other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator-=(const Vector<_T_2>& other) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDSub<_T>(
+				this->m_sseVector, other.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			this->x -= other.x;
+			this->y -= other.y;
+			this->z -= other.z;
+			this->w -= other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator*=(const Vector<_T_2>& other) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDMul<_T>(this->m_sseVector, other.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			this->x *= other.x;
+			this->y *= other.y;
+			this->z *= other.z;
+			this->w *= other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator/=(const Vector<_T_2>& other) WS_NOEXCEPT
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			this->m_sseVector = SIMDDiv<_T>(this->m_sseVector, other.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			this->x /= other.x;
+			this->y /= other.y;
+			this->z /= other.z;
+			this->w /= other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline bool Vector<_T>::operator==(const Vector<_T_2>& other) const WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, _T_2>) {
+			return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) == 0;
+		} else {
+			return this->x == other.x && this->y == other.y &&
+				this->z == other.z && this->w == other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline bool Vector<_T>::operator!=(const Vector<_T_2>& other) const WS_NOEXCEPT
+	{
+		if constexpr (std::is_same_v<_T, _T_2>) {
+			return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) != 0;
+		} else {
+			return this->x != other.x || this->y != other.y ||
+				this->z != other.z || this->w != other.w;
+		}
+	}
+
+	template <typename _T> template <typename _T_2, typename>
+	inline void Vector<_T>::operator+=(const _T_2& n) WS_NOEXCEPT
+	{
+		this->operator+=(Vector<_T_2>(n, n, n, n));
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator-=(const _T_2& n) WS_NOEXCEPT
+	{
+		this->operator-=(Vector<_T_2>(n, n, n, n));
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator*=(const _T_2& n) WS_NOEXCEPT
+	{
+		this->operator*=(Vector<_T_2>(n, n, n, n));
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline void Vector<_T>::operator/=(const _T_2& n) WS_NOEXCEPT
+	{
+		this->operator/=(Vector<_T_2>(n, n, n, n));
+	}
+
+	template <typename _T> template <typename _T_2>
+	inline static Vector<_T_2> Vector<_T>::Normalized(const Vector<_T_2>& vec) WS_NOEXCEPT
+	{
+		Vector<_T> cp(vec);
+		cp.Normalize();
+
+		return cp;
+	}
+
+	template <typename _T> template <typename _T_2, typename _T_3>
+	inline static auto Vector<_T>::CrossProduct3D(const Vector<_T_2>& vecA, const Vector<_T_3>& vecB) WS_NOEXCEPT
+		-> Vector<decltype(vecA.x + vecB.x)>
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
+#ifndef __WEISS__DISABLE_SIMD
+			const Vector<_T_2> tempA1(vecA.y, vecA.z, vecA.x, 0);
+			const Vector<_T_2> tempB1(vecB.z, vecB.x, vecB.y, 0);
+			const Vector<_T_2> tempA2(vecA.z, vecA.x, vecA.y, 0);
+			const Vector<_T_2> tempB2(vecB.y, vecB.z, vecB.x, 0);
+
+			return tempA1 * tempB1 - tempA2 * tempB2;
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			return Vector<decltype(vecA.x + vecB.x)>(
+				vecA.y * vecB.z - vecA.z * vecB.y,
+				vecA.z * vecB.x - vecA.x * vecB.z,
+				vecA.x * vecB.y - vecA.y * vecB.x,
+				0
+			);
+		}
+	}
+
+	template <typename _T> template <typename _T_2, typename _T_3>
+	static inline auto Vector<_T>::DotProduct(const Vector<_T_2>& a, const Vector<_T_3>& b) WS_NOEXCEPT
+		-> decltype(a.x + b.x)
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T_2, _T_3)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return SIMDDotProduct<_T_2>(a.m_sseVector, b.m_sseVector);
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			return a.x * b.x + a.y * b.y
+				+ a.z * b.z + a.w * b.w;
+		}
+	}
+
+	template <typename _T, typename _T_2>
+	[[nodiscard]] inline auto operator+(const Vector<_T>& a,
+		const Vector<_T_2>& b) WS_NOEXCEPT
+		-> Vector<decltype(a.x + b.x)>
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return Vector<_T>(SIMDAdd<_T>(a.m_sseVector, b.m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		}
+		else {
+			return Vector<decltype(a.x + b.x)>(a.x + b.x, a.y + b.y,
+				a.z + b.z, a.w + b.w);
+		}
+	}
+
+	template <typename _T, typename _T_2>
+	[[nodiscard]] inline auto operator-(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
+		-> Vector<decltype(a.x - b.x)>
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return Vector<_T>(SIMDSub<_T>(a.m_sseVector, b.m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		}
+		else {
+			return Vector<decltype(a.x - b.x)>(a.x - b.x, a.y - b.y,
+				a.z - b.z, a.w - b.w);
+		}
+	}
+
+	template <typename _T, typename _T_2>
+	[[nodiscard]] inline auto operator*(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
+		-> Vector<decltype(a.x* b.x)>
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return Vector<_T>(SIMDMul<_T>(a.m_sseVector, b.m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			return Vector<decltype(a.x* b.x)>(a.x * b.x, a.y * b.y,
+				a.z * b.z, a.w * b.w);
+		}
+	}
+
+	template <typename _T, typename _T_2>
+	[[nodiscard]] inline auto operator/(const Vector<_T>& a, const Vector<_T_2>& b) WS_NOEXCEPT
+		-> Vector<decltype(a.x / b.x)>
+	{
+		if constexpr (WS_CAN_SIMD_PERFORM_ARITHMETIC(_T, _T_2)) {
+#ifndef __WEISS__DISABLE_SIMD
+			return Vector<_T>(SIMDDiv<_T>(a.m_sseVector, b.m_sseVector));
+#endif // #ifndef __WEISS__DISABLE_SIMD
+		} else {
+			return Vector<decltype(a.x / b.x)>(a.x / b.x, a.y / b.y,
+				a.z / b.z, a.w / b.w);
+		}
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator+(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
+		-> Vector<decltype(vec.x + n)>
+	{
+		return vec + Vector<_T_2>(n, n, n, n);
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator-(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
+		-> Vector<decltype(vec.x - n)>
+	{
+		return vec - Vector<_T_2>(n, n, n, n);
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator*(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
+		-> Vector<decltype(vec.x* n)>
+	{
+		return vec * Vector<_T_2>(n, n, n, n);
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator/(const Vector<_T>& vec, const _T_2& n) WS_NOEXCEPT
+		-> Vector<decltype(vec.x / n)>
+	{
+		return vec / Vector<_T_2>(n, n, n, n);
+	}
+
+	template <typename _T>
+	inline std::ostream& operator<<(std::ostream& stream, const Vector<_T>& vec) WS_NOEXCEPT
+	{
+		stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ", " << vec.w << ")";
+
+		return stream;
+	}
+
+	// ///////////////--\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------Matrix<_T>----------| \\
+	// |\____________________________/| \\
+	// \\\\\\\\\\\\\\\--/////////////// \\
+
+	template <typename _T>
+	inline Matrix<_T>::Matrix(const _T* buff)                 WS_NOEXCEPT { std::memcpy(this->m, buff, sizeof(_T) * 16u); }
+	
+	template <typename _T>
+	inline Matrix<_T>::Matrix(const std::array<_T, 16u>& arr) WS_NOEXCEPT { std::memcpy(this->m, arr.data(), sizeof(_T) * 16u); }
+
+	template <typename _T>
+	inline Matrix<_T>::Matrix(const Matrix<_T>& other) WS_NOEXCEPT { std::memcpy(this->m, other.m, sizeof(_T) * 16u); }
+
+	template <typename _T>
+	inline _T& Matrix<_T>::operator[](const size_t i) WS_NOEXCEPT { return this->m[i]; }
+
+	template <typename _T>
+	inline const _T& Matrix<_T>::operator[](const size_t i) const WS_NOEXCEPT { return this->m[i]; }
+
+	template <typename _T>
+	inline _T& Matrix<_T>::operator()(const size_t r, const size_t c) WS_NOEXCEPT { return this->m[r * 4u + c]; }
+
+	template <typename _T>
+	inline const _T& Matrix<_T>::operator()(const size_t r, const size_t c) const WS_NOEXCEPT { return this->m[r * 4u + c]; }
+
+	// --- Static Functions --- //
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeZeros()    WS_NOEXCEPT { return Matrix<_T>(); }
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeIdentity() WS_NOEXCEPT {
+		return Matrix<_T>(std::array<_T, 16u>{
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeRotationX(const float radX) WS_NOEXCEPT
+	{
+		const _T sinX = std::sin(radX);
+		const _T cosX = std::cos(radX);
+
+		return Matrix<_T>(std::array<_T, 16u>{
+			1, 0,    0,     0,
+			0, cosX, -sinX, 0,
+			0, sinX, cosX,  0,
+			0, 0,    0,     1
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeRotationY(const float radY) WS_NOEXCEPT
+	{
+		const _T sinY = std::sin(radY);
+		const _T cosY = std::cos(radY);
+
+		return Matrix<_T>(std::array<_T, 16u>{
+			cosY,  0, sinY, 0,
+			0,     1, 0,    0,
+			-sinY, 0, cosY, 0,
+			0,     0, 0,    1
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeRotationZ(const float radZ) WS_NOEXCEPT
+	{
+		const _T sinZ = std::sin(radZ);
+		const _T cosZ = std::cos(radZ);
+
+		return Matrix<_T>(std::array<_T, 16u>{
+			cosZ, -sinZ, 0, 0,
+			sinZ, cosZ,  0, 0,
+			0,    0,     1, 0,
+			0,    0,     0, 1
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeRotation(const float radX, const float radY, const float radZ) WS_NOEXCEPT
+	{
+		return MakeRotationX(radX) * MakeRotationY(radY) * MakeRotationZ(radZ);
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeRotation(const Vector<_T>& radians) WS_NOEXCEPT
+	{
+		return Matrix<_T>::MakeRotation(radians.x, radians.y, radians.z);
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeTranslation(const float x, const float y, const float z) WS_NOEXCEPT
+	{
+		return Matrix<_T>(std::array<_T, 16u>{
+			1,  0,  0,  0,
+			0,  1,  0,  0,
+			0,  0,  1,  0,
+			-x, -y, -z, 1,
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeTranslation(const Vector<_T>& translation) WS_NOEXCEPT
+	{
+		return Matrix<_T>::MakeTranslation(translation.x, translation.y, translation.z);
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakePerspective(const float zNear, const float zFar, const float fovRad, const float aspectRatio)
+	{
+		return Matrix<_T>(std::array<_T, 16u>{
+			aspectRatio * fovRad, 0,      0,                                0,
+			0,                    fovRad, 0,                                0,
+			0,                    0,      zFar / (zFar - zNear),            1,
+			0,                    0,      (-zFar * zNear) / (zFar - zNear), 1,
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeScaling(const float scaleX, const float scaleY, const float scaleZ, const float scaleW) WS_NOEXCEPT
+	{
+		return Matrix<_T>(std::array<_T, 16u>{
+			scaleX, 0, 0, 0,
+			0, scaleY, 0, 0,
+			0, 0, scaleZ, 0,
+			0, 0, 0, scaleW
+		});
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeScaling(const Vecf32& scale) WS_NOEXCEPT
+	{
+		return Matrix<_T>::MakeScaling(scale.x, scale.y, scale.z);
+	}
+
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeTransposed(const Matrix<_T>& mat) WS_NOEXCEPT
+	{
+		return Matrix<_T>(std::array<_T, 16u>{
+			mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0),
+			mat(0, 1), mat(1, 1), mat(2, 1), mat(3, 1),
+			mat(0, 2), mat(1, 2), mat(2, 2), mat(3, 2),
+			mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)
+		});
+	}
+
+	// Thanks to: https://stackoverflow.com/questions/349050/calculating-a-lookat-matrix
+	template <typename _T>
+	inline Matrix<_T> Matrix<_T>::MakeLookAt(const Vector<_T>& cameraPosition, const Vector<_T>& focalPoint, const Vector<_T>& upDirection) WS_NOEXCEPT
+	{
+		const Vector<_T> zaxis = Vector<_T>::Normalized(focalPoint - cameraPosition);
+		const Vector<_T> xaxis = Vector<_T>::Normalized(Vector<_T>::CrossProduct3D(upDirection, zaxis));
+		const Vector<_T> yaxis = Vector<_T>::CrossProduct3D(zaxis, xaxis);
+
+		const _T m30 = -Vector<_T>::DotProduct(xaxis, cameraPosition);
+		const _T m31 = -Vector<_T>::DotProduct(yaxis, cameraPosition);
+		const _T m32 = -Vector<_T>::DotProduct(zaxis, cameraPosition);
+
+		return Matrix<_T>(std::array<_T, 16u>{
+			xaxis.x, yaxis.x, zaxis.x, 0,
+			xaxis.y, yaxis.y, zaxis.y, 0,
+			xaxis.z, yaxis.z, zaxis.z, 0,
+			m30,     m31,     m32,     1
+		});
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator*(const Matrix<_T>& matA, const Matrix<_T_2>& matB) WS_NOEXCEPT
+		-> Matrix<decltype(matA[0] + matB[0])>
+	{
+		Matrix<decltype(matA[0] + matB[0])> matResult;
+
+		for (size_t r = 0u; r < 4u; r++) {
+			for (size_t c = 0u; c < 4u; c++) {
+				const Vector<_T>   vecA = Vector<_T>(matA(r, 0), matA(r, 1), matA(r, 2), matA(r, 3));
+				const Vector<_T_2> vecB = Vector<_T_2>(matB(0, c), matB(1, c), matB(2, c), matB(3, c));
+
+				matResult(r, c) = Vector<>::DotProduct(vecA, vecB);
+			}
+		}
+
+		return matResult;
+	}
+
+	template <typename _T>
+	inline std::ostream& operator<<(std::ostream& stream, const Matrix<_T>& mat) WS_NOEXCEPT
+	{
+		constexpr const size_t MAX_DIGITS = 5u;
+
+		stream << std::setprecision(MAX_DIGITS) << '|';
+
+		for (size_t i = 0u; i < 4u * ((MAX_DIGITS + 1u) + 1u) + 1u; i++)
+			stream << '-';
+
+		stream << "|\n";
+		for (size_t r = 0u; r < 4u; r++) {
+			stream << "| ";
+
+			for (size_t c = 0u; c < 4u; c++)
+				stream << std::setw(MAX_DIGITS + 1u) << mat(r, c) << ' ';
+
+			stream << "|\n";
+		}
+
+		stream << '|';
+
+		for (size_t i = 0u; i < 4u * ((MAX_DIGITS + 1u) + 1u) + 1u; i++)
+			stream << '-';
+
+		stream << "|\n";
+
+		return stream;
+	}
+
+	template <typename _T, typename _T_2>
+	inline auto operator*(const Vector<_T>& vec, const Matrix<_T_2>& mat) WS_NOEXCEPT
+		-> Vector<decltype(vec.x + mat[0])>
+	{
+		return Vector<decltype(vec.x + mat[0])>(
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 0), mat(1, 0), mat(2, 0), mat(3, 0))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 1), mat(1, 1), mat(2, 1), mat(3, 1))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 2), mat(1, 2), mat(2, 2), mat(3, 2))),
+			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)))
+		);
+	}
 
 	// ///////////////-\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
