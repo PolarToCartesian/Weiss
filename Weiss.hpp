@@ -1072,6 +1072,11 @@ namespace WS
 			});
 		}
 
+		static inline Matrix<_T> MakeScaling(const Vecf32& scale) WS_NOEXCEPT
+		{
+			return Matrix<_T>::MakeScaling(scale.x, scale.y, scale.z);
+		}
+
 		static inline Matrix<_T> MakeTransposed(const Matrix<_T>& mat) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
@@ -1689,10 +1694,12 @@ namespace WS
 		Vecf32 m_position;
 		Vecf32 m_rotation;
 
+		Vecf32 m_scale = { 1, 1, 1 };
+
 	public:
 		Camera() = default;
 
-		Camera(const Vecf32& position, const Vecf32& rotation) : m_position(position), m_rotation(rotation) { }
+		Camera(const Vecf32& position, const Vecf32& rotation, const Vecf32& scale) : m_position(position), m_rotation(rotation), m_scale(scale) { }
 
 		[[nodiscard]] inline Matf32 GetTransform()           const WS_NOEXCEPT { return this->m_transform;                         }
 		[[nodiscard]] inline Matf32 GetTransposedTransform() const WS_NOEXCEPT { return Matf32::MakeTransposed(this->m_transform); }
@@ -1723,9 +1730,10 @@ namespace WS
 		const Vecf32 position;
 		const Vecf32 rotation;
 
-		const float fov = 90.0f;
-		const float zNear = 0.1f;
-		const float zFar = 1000.0f;
+		const float fov    = 90.0f;
+		const float zNear  = 0.1f;
+		const float zFar   = 1000.0f;
+		const Vecf32 scale = { 1, 1, 1 };
 	};
 
 	class PerspectiveCamera : public Camera
@@ -1739,6 +1747,8 @@ namespace WS
 		Vecf32 m_rightVector   = RIGHT_VECTOR;
 
 		float m_fov = 0.0f, m_InvAspectRatio = 0.0f, m_zNear = 0.0f, m_zFar = 0.0f;
+
+		Vecf32 scale{ 1, 1, 1 };
 
 	public:
 		PerspectiveCamera(Window *pWindow, const PerspectiveCameraDescriptor &descriptor) WS_NOEXCEPT;
@@ -1759,7 +1769,8 @@ namespace WS
 	struct OrthographicCameraDescriptor
 	{
 		const Vecf32 position;
-		const float ratation;
+		const float  ratation = 0.0f;
+		const Vecf32 scale    = { 1, 1, 1 };
 	};
 
 	class OrthographicCamera : public Camera
@@ -4553,7 +4564,7 @@ namespace WS {
 	 */
 
 	PerspectiveCamera::PerspectiveCamera(Window* pWindow, const PerspectiveCameraDescriptor& descriptor) WS_NOEXCEPT
-		: Camera(descriptor.position, descriptor.rotation), m_fov(descriptor.fov), m_zNear(descriptor.zNear), m_zFar(descriptor.zFar)
+		: Camera(descriptor.position, descriptor.rotation, descriptor.scale), m_fov(descriptor.fov), m_zNear(descriptor.zNear), m_zFar(descriptor.zFar)
 	{
 		auto recalculateAspectRatio = [this](const Vecu16& clientDims)
 		{
@@ -4574,7 +4585,8 @@ namespace WS {
 		this->m_forwardVector = FORWARD_VECTOR * rotationMatrix;
 		this->m_rightVector   = RIGHT_VECTOR   * rotationMatrix;
 
-		this->m_transform = Matf32::MakeLookAt(this->m_position, focusPosition, upDirection)
+		this->m_transform = Matf32::MakeScaling(this->m_scale)
+						  * Matf32::MakeLookAt(this->m_position, focusPosition, upDirection)
 						  * Matf32::MakePerspective(this->m_zNear, this->m_zFar, this->m_fov, this->m_InvAspectRatio);
 	}
 
@@ -4615,7 +4627,7 @@ namespace WS {
 	 */
 
 	OrthographicCamera::OrthographicCamera(Window* pWindow, const OrthographicCameraDescriptor& descriptor) WS_NOEXCEPT
-		: Camera(descriptor.position, Vecf32{ 0.0f, descriptor.ratation, 0.0f })
+		: Camera(descriptor.position, Vecf32{ 0.0f, descriptor.ratation, 0.0f }, descriptor.scale)
 	{
 		auto recalculateInvAspectRatio = [this](const Vecu16& clientDims)
 		{
@@ -4629,7 +4641,10 @@ namespace WS {
 
 	void OrthographicCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = Matf32::MakeTranslation(this->m_position);
+		this->m_transform = Matf32::MakeTranslation(this->m_position)
+						  * Matf32::MakeRotationZ(this->m_rotation.z)
+						  * Matf32::MakeScaling(Vecf32(this->m_scale.x * this->m_InvAspectRatio,
+													   this->m_scale.y, this->m_scale.z));
 	}
 
 	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
