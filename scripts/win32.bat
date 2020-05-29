@@ -2,7 +2,7 @@
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars32.bat"
 
 :: Compile
-call "scripts/win_cl.bat" win32.exe "C:\VulkanSDK\Lib32"
+call "scripts/internal/win.bat" win32.exe "C:\VulkanSDK\Lib32"
 
 :: Run
 call "bin/win32.exe"

@@ -152,12 +152,14 @@
 #include <array>
 #include <queue>
 #include <mutex>
+#include <cmath>
 #include <thread>
 #include <chrono>
 #include <string>
 #include <vector>
 #include <memory>
 #include <bitset>
+#include <cstring>
 #include <numeric>
 #include <codecvt>
 #include <variant>
