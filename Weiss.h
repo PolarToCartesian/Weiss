@@ -6350,10 +6350,18 @@ namespace WS {
 
 				// Create Shader
 				std::ifstream fileStream(sourceFilename);
-				std::string   sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
 
-				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "vs_5_0", 0, 0, &pBlob, NULL) != S_OK)
+				if (!fileStream.is_open())
+					WS_THROW("Could Not Read Vertex Shader FIle");
+
+				std::string   sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
+				Microsoft::WRL::ComPtr<ID3DBlob> pErrorBlob;
+
+				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "vs_5_0", 0, 0, &pBlob, &pErrorBlob) != S_OK)
+				{
+					//std::cout << ((char*)pErrorBlob->GetBufferPointer()) << '\n';
 					WS_THROW("Could Not Compile Vertex Shader");
+				}
 
 				if (pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
 					WS_THROW("Could Not Create Vertex Shader");
@@ -6416,6 +6424,10 @@ namespace WS {
 				Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
 
 				std::ifstream fileStream(sourceFilename);
+
+				if (!fileStream.is_open())
+					WS_THROW("Could Not Read Pixel Shader FIle");
+
 				std::string sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
 
 				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "ps_5_0", 0, 0, &pBlob, NULL) != S_OK)
