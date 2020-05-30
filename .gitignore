@@ -3,7 +3,6 @@
 d3dx12/
 bin/
 res/
-*.cpp
 *.sln
 *.filters
 *.user
