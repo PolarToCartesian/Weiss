@@ -6,6 +6,7 @@ res/
 *.sln
 *.filters
 *.user
+Debug/
 *.vcxproj
 x64/
 .vs/
@@ -14,3 +15,4 @@ WeissEngine.dir/
 cmake_install.cmake
 Release/
 CMakeCache.txt
+Sandbox.dir/
