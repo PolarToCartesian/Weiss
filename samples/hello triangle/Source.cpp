@@ -73,7 +73,7 @@ int WS::WeissEntryPoint(int argc, char** argv)
             renderAPI->CreateIndexBuffer(indices.size())
         };
 
-        PerspectiveCamera cam(window, {Vecf32{0.0f, 0.0f, -2.0f}, Vecf32{}, WS::HALF_PI, 0.01f, 1000.f, Vecf32{0.2f, 0.2f, 0.2f}});
+        PerspectiveCamera cam(window, {Vecf32{0.0f, 0.0f, -2.0f}, Vecf32{}, WS::HALF_PI, 0.01f, 1000.f, Vecf32{0.2f, 0.2f, 0.2f, 0.2f}});
         //OrthographicCamera cam(window, { Vecf32{0.0f, 0.0f, 0.0f, 1.0f}, 0.0f, Vecf32{0.2f,0.2f,0.2f} });
 
         cbuff.transform = cam.GetTransposedTransform();

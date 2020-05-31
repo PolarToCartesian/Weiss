@@ -749,7 +749,7 @@ namespace WS {
 		this->m_transform = Matf32::MakeTranslation(this->m_position)
 						  * Matf32::MakeRotationZ(this->m_rotation.z)
 						  * Matf32::MakeScaling(Vecf32(this->m_scale.x * this->m_InvAspectRatio,
-													   this->m_scale.y, this->m_scale.z));
+													   this->m_scale.y, this->m_scale.z, 1.0f));
 	}
 
 	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
@@ -927,7 +927,6 @@ namespace WS {
 				createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
 
 #endif // __WEISS__DEBUG_MODE
-
 
 				if (VK_FAILED(vkCreateInstance(&createInfo, nullptr, this->GetPtr())))
 					WS_THROW("[VULKAN] Failed To Create Instance");
