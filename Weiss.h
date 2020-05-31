@@ -589,21 +589,17 @@ namespace WS
 		if constexpr (std::is_same_v<_T, float>) {
 			const int l = _mm_extract_ps(sseVector, INDEX);
 			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, int32_t>) {
+		} else if constexpr (std::is_same_v<_T, int32_t>) {
 			const int l = _mm_extract_epi16(sseVector, INDEX);
 			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, int16_t>) {
+		} else if constexpr (std::is_same_v<_T, int16_t>) {
 			const int l = _mm_extract_epi16(sseVector, INDEX);
 			return *reinterpret_cast<const _T*>(&l);
-		}
-		else if constexpr (std::is_same_v<_T, double>) {
+		} else if constexpr (std::is_same_v<_T, double>) {
 			if constexpr (INDEX <= 1) {
 				return _mm256_cvtsd_f64(_mm256_shuffle_pd(sseVector, sseVector,
 					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX)));
-			}
-			else {
+			} else {
 				return _mm_cvtsd_f64(_mm_shuffle_pd(_mm256_extractf128_pd(sseVector, 1), // I am
 					_mm256_extractf128_pd(sseVector, 1), // proud of
 					_MM_SHUFFLE(INDEX, INDEX, INDEX, INDEX))); // this magic
@@ -655,8 +651,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDSet(other.x, other.y, other.z, other.w);
 #endif
-			}
-			else {
+			} else {
 				std::memcpy(&this->m_arr, &other.m_arr, sizeof(_T) * 4u);
 			}
 		}
@@ -670,8 +665,7 @@ namespace WS
 
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				this->m_sseVector = other;
-			}
-			else {
+			} else {
 				this->m_sseVector = SIMDSet(static_cast<_T>(SIMDExtractElement<_T_2, 0u>(this->m_sseVector)),
 					static_cast<_T>(SIMDExtractElement<_T_2, 1u>(this->m_sseVector)),
 					static_cast<_T>(SIMDExtractElement<_T_2, 2u>(this->m_sseVector)),
@@ -680,7 +674,6 @@ namespace WS
 		}
 
 #endif
-
 	
 		inline void Set(const _T& x, const _T& y, const _T& z, const _T& w) WS_NOEXCEPT
 		{
@@ -688,8 +681,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDSet<_T>(x, y, z, w);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x = x;
 				this->y = y;
 				this->z = z;
@@ -697,15 +689,13 @@ namespace WS
 			}
 		}
 
-	
 		[[nodiscard]] inline float GetLength() const WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
 				return std::sqrt(SIMDDotProduct<_T>(this->m_sseVector, this->m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				return std::sqrt(this->x * this->x + this->y * this->y + this->z * this->z + this->w * this->w);
 			}
 		}
@@ -723,8 +713,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDAdd<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x += other.x;
 				this->y += other.y;
 				this->z += other.z;
@@ -740,8 +729,7 @@ namespace WS
 				this->m_sseVector = SIMDSub<_T>(
 					this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x -= other.x;
 				this->y -= other.y;
 				this->z -= other.z;
@@ -756,8 +744,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDMul<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x *= other.x;
 				this->y *= other.y;
 				this->z *= other.z;
@@ -772,8 +759,7 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				this->m_sseVector = SIMDDiv<_T>(this->m_sseVector, other.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				this->x /= other.x;
 				this->y /= other.y;
 				this->z /= other.z;
@@ -786,8 +772,7 @@ namespace WS
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) == 0;
-			}
-			else {
+			} else {
 				return this->x == other.x && this->y == other.y &&
 					this->z == other.z && this->w == other.w;
 			}
@@ -798,8 +783,7 @@ namespace WS
 		{
 			if constexpr (std::is_same_v<_T, _T_2>) {
 				return std::memcmp(this->m_arr, other.m_arr, 4u * sizeof(_T)) != 0;
-			}
-			else {
+			} else {
 				return this->x != other.x || this->y != other.y ||
 					this->z != other.z || this->w != other.w;
 			}
@@ -851,8 +835,7 @@ namespace WS
 
 				return tempA1 * tempB1 - tempA2 * tempB2;
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
+			} else {
 				return Vector<decltype(vecA.x + vecB.x)>(
 					vecA.y * vecB.z - vecA.z * vecB.y,
 					vecA.z * vecB.x - vecA.x * vecB.z,
@@ -870,10 +853,8 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 				return SIMDDotProduct<_T_2>(a.m_sseVector, b.m_sseVector);
 #endif // #ifndef __WEISS__DISABLE_SIMD
-			}
-			else {
-				return a.x * b.x + a.y * b.y
-					+ a.z * b.z + a.w * b.w;
+			} else {
+				return a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w;
 			}
 		}
 	};
@@ -887,10 +868,8 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 			return Vector<_T>(SIMDAdd<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
-			return Vector<decltype(a.x + b.x)>(a.x + b.x, a.y + b.y,
-				a.z + b.z, a.w + b.w);
+		} else {
+			return Vector<decltype(a.x + b.x)>(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
 		}
 	}
 
@@ -902,10 +881,8 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 			return Vector<_T>(SIMDSub<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
-			return Vector<decltype(a.x - b.x)>(a.x - b.x, a.y - b.y,
-				a.z - b.z, a.w - b.w);
+		} else {
+			return Vector<decltype(a.x - b.x)>(a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w);
 		}
 	}
 
@@ -917,10 +894,8 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 			return Vector<_T>(SIMDMul<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
-			return Vector<decltype(a.x* b.x)>(a.x * b.x, a.y * b.y,
-				a.z * b.z, a.w * b.w);
+		} else {
+			return Vector<decltype(a.x* b.x)>(a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w);
 		}
 	}
 
@@ -932,10 +907,8 @@ namespace WS
 #ifndef __WEISS__DISABLE_SIMD
 			return Vector<_T>(SIMDDiv<_T>(a.m_sseVector, b.m_sseVector));
 #endif // #ifndef __WEISS__DISABLE_SIMD
-		}
-		else {
-			return Vector<decltype(a.x / b.x)>(a.x / b.x, a.y / b.y,
-				a.z / b.z, a.w / b.w);
+		} else {
+			return Vector<decltype(a.x / b.x)>(a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w);
 		}
 	}
 
@@ -1032,9 +1005,9 @@ namespace WS
 		static inline Matrix<_T> MakeIdentity() WS_NOEXCEPT {
 			return Matrix<_T>(std::array<_T, 16u>{
 				1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1
+				0, 1, 0, 0,
+				0, 0, 1, 0,
+				0, 0, 0, 1
 			});
 		}
 
@@ -1044,10 +1017,10 @@ namespace WS
 			const _T cosX = std::cos(radX);
 
 			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, 0,
-					0, cosX, -sinX, 0,
-					0, sinX, cosX, 0,
-					0, 0, 0, 1
+				1, 0,    0,     0,
+				0, cosX, -sinX, 0,
+				0, sinX, cosX,  0,
+				0, 0,    0,     1
 			});
 		}
 
@@ -1057,10 +1030,10 @@ namespace WS
 			const _T cosY = std::cos(radY);
 
 			return Matrix<_T>(std::array<_T, 16u>{
-				cosY, 0, sinY, 0,
-					0, 1, 0, 0,
-					-sinY, 0, cosY, 0,
-					0, 0, 0, 1
+				cosY,  0, sinY, 0,
+				0,     1, 0,    0,
+				-sinY, 0, cosY, 0,
+				0,     0, 0,    1
 			});
 		}
 
@@ -1071,9 +1044,9 @@ namespace WS
 
 			return Matrix<_T>(std::array<_T, 16u>{
 				cosZ, -sinZ, 0, 0,
-					sinZ, cosZ, 0, 0,
-					0, 0, 1, 0,
-					0, 0, 0, 1
+				sinZ, cosZ,  0, 0,
+				0,    0,     1, 0,
+				0,    0,     0, 1
 			});
 		}
 
@@ -1090,10 +1063,10 @@ namespace WS
 		static inline Matrix<_T> MakeTranslation(const float x, const float y, const float z) WS_NOEXCEPT
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
-				1, 0, 0, 0,
-					0, 1, 0, 0,
-					0, 0, 1, 0,
-					-x, -y, -z, 1,
+				1,  0,  0,  0,
+				0,  1,  0,  0,
+				0,  0,  1,  0,
+				-x, -y, -z, 1,
 			});
 		}
 
@@ -1105,10 +1078,10 @@ namespace WS
 		static inline Matrix<_T> MakePerspective(const float zNear, const float zFar, const float fovRad, const float aspectRatio)
 		{
 			return Matrix<_T>(std::array<_T, 16u>{
-				aspectRatio* fovRad, 0, 0, 0,
-					0, fovRad, 0, 0,
-					0, 0, zFar / (zFar - zNear), 1,
-					0, 0, (-zFar * zNear) / (zFar - zNear), 1,
+				aspectRatio * fovRad, 0,      0,                                0,
+				0,                    fovRad, 0,                                0,
+				0,                    0,      zFar / (zFar - zNear),            1,
+				0,                    0,      (-zFar * zNear) / (zFar - zNear), 1,
 			});
 		}
 
@@ -1150,9 +1123,9 @@ namespace WS
 
 			return Matrix<_T>(std::array<_T, 16u>{
 				xaxis.x, yaxis.x, zaxis.x, 0,
-					xaxis.y, yaxis.y, zaxis.y, 0,
-					xaxis.z, yaxis.z, zaxis.z, 0,
-					m30, m31, m32, 1
+				xaxis.y, yaxis.y, zaxis.y, 0,
+				xaxis.z, yaxis.z, zaxis.z, 0,
+				m30,     m31,     m32,     1
 			});
 		}
 	};
@@ -2250,25 +2223,25 @@ namespace WS
 			* in any class that inherits from this base class.
 			* it can also be used to track object life-time
 			*/
-			template <typename T>
+			template <typename _T>
 			class VKObjectWrapper {
 			protected:
-				T m_object = VK_NULL_HANDLE;
+				_T m_object = VK_NULL_HANDLE;
 
 			public:
 				VKObjectWrapper() = default;
 
-				VKObjectWrapper<T>& operator=(VKObjectWrapper<T>&& other) WS_NOEXCEPT;
+				VKObjectWrapper<_T>& operator=(VKObjectWrapper<_T>&& other) WS_NOEXCEPT;
 
-				inline operator T& () WS_NOEXCEPT { return this->m_object; }
+				inline operator _T& () WS_NOEXCEPT { return this->m_object; }
 
-				inline operator T() const WS_NOEXCEPT { return this->m_object; }
+				inline operator _T() const WS_NOEXCEPT { return this->m_object; }
 
-				inline T& GetRef() WS_NOEXCEPT { return this->m_object; }
+				inline _T& GetRef() WS_NOEXCEPT { return this->m_object; }
 
-				inline T* GetPtr() WS_NOEXCEPT { return &this->m_object; }
+				inline _T* GetPtr() WS_NOEXCEPT { return &this->m_object; }
 
-				inline const T* GetPtr() const WS_NOEXCEPT { return &this->m_object; }
+				inline const _T* GetPtr() const WS_NOEXCEPT { return &this->m_object; }
 
 				~VKObjectWrapper();
 			};
@@ -2709,11 +2682,11 @@ namespace WS
 			 * To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
 			 * in any class that inherits from this base class.
 			*/
-			template <typename T>
+			template <typename _T>
 			class D3D11ObjectWrapper
 			{
 			protected:
-				T *m_pObject = nullptr;
+				_T *m_pObject = nullptr;
 
 			public:
 				D3D11ObjectWrapper() = default;
@@ -2723,15 +2696,15 @@ namespace WS
 				* This is done to ensure that the resource isn't freed while this object is being created.
 				* (Preventing a "use after free")
 				*/
-				D3D11ObjectWrapper<T> &operator=(D3D11ObjectWrapper<T> &&other);
+				D3D11ObjectWrapper<_T> &operator=(D3D11ObjectWrapper<_T> &&other);
 
 				virtual ~D3D11ObjectWrapper();
 
-				inline T*  Get()    WS_NOEXCEPT { return this->m_pObject;  }
-				inline T** GetPtr() WS_NOEXCEPT { return &this->m_pObject; }
+				inline _T*  Get()    WS_NOEXCEPT { return this->m_pObject;  }
+				inline _T** GetPtr() WS_NOEXCEPT { return &this->m_pObject; }
 
-				inline T* operator->() WS_NOEXCEPT { return this->m_pObject; }
-				inline operator T*  () WS_NOEXCEPT { return this->m_pObject; }
+				inline _T* operator->() WS_NOEXCEPT { return this->m_pObject; }
+				inline operator _T*  () WS_NOEXCEPT { return this->m_pObject; }
 			};
 
 			typedef D3D11ObjectWrapper<ID3D11Device> D3D11DeviceObjectWrapper;
@@ -3109,11 +3082,11 @@ namespace WS
 			 * To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
 			 * in any class that inherits from this base class.
 			*/
-			template <typename T>
+			template <typename _T>
 			class D3D12ObjectWrapper
 			{
 			protected:
-				T* m_pObject = nullptr;
+				_T* m_pObject = nullptr;
 
 			public:
 				D3D12ObjectWrapper() = default;
@@ -3123,16 +3096,16 @@ namespace WS
 				* This is done to ensure that the resource isn't freed while this object is being created.
 				* (Preventing a "use after free")
 				*/
-				D3D12ObjectWrapper& operator=(D3D12ObjectWrapper<T> &&other) WS_NOEXCEPT;
+				D3D12ObjectWrapper& operator=(D3D12ObjectWrapper<_T> &&other) WS_NOEXCEPT;
 
 				~D3D12ObjectWrapper();
 
-				[[nodiscard]] inline T*  operator->() WS_NOEXCEPT { return this->m_pObject;  }
-				[[nodiscard]] inline T*  Get()        WS_NOEXCEPT { return this->m_pObject;  }
-				[[nodiscard]] inline T** GetPtr()     WS_NOEXCEPT { return &this->m_pObject; }
+				[[nodiscard]] inline _T*  operator->() WS_NOEXCEPT { return this->m_pObject;  }
+				[[nodiscard]] inline _T*  Get()        WS_NOEXCEPT { return this->m_pObject;  }
+				[[nodiscard]] inline _T** GetPtr()     WS_NOEXCEPT { return &this->m_pObject; }
 
 				[[nodiscard]] inline operator IUnknown* () const WS_NOEXCEPT { return (IUnknown *)this->m_pObject; }
-				[[nodiscard]] inline operator T*        () const WS_NOEXCEPT { return this->m_pObject;             }
+				[[nodiscard]] inline operator _T*       () const WS_NOEXCEPT { return this->m_pObject;             }
 			};
 
 			typedef D3D12ObjectWrapper<IDXGIAdapter1> D3D12AdapterObjectWrapper;
