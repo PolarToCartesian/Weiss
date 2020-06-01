@@ -92,7 +92,7 @@ namespace WS {
 		 * // |\_______________________________________________________/| \\
 		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
 		 */
-		
+
 		namespace WIN {
 
 			/*
@@ -665,7 +665,7 @@ namespace WS {
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||--------------------------PERSPECTIVE CAMERA--------------------------|| \\
 	 * // |\______________________________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\
 	 */
 
 	PerspectiveCamera::PerspectiveCamera(Window* pWindow, const PerspectiveCameraDescriptor& descriptor) WS_NOEXCEPT
@@ -686,7 +686,7 @@ namespace WS {
 		const Matf32 rotationMatrix = Matf32::MakeRotation(this->m_rotation * (-1));
 		const Vecf32 focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
 		const Vecf32 upDirection    = UP_VECTOR * rotationMatrix;
-		
+
 		this->m_forwardVector = FORWARD_VECTOR * rotationMatrix;
 		this->m_rightVector   = RIGHT_VECTOR   * rotationMatrix;
 
@@ -728,7 +728,7 @@ namespace WS {
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||--------------------------ORTHOGRAPHIC CAMERA--------------------------|| \\
 	 * // |\_______________________________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////////// \\
 	 */
 
 	OrthographicCamera::OrthographicCamera(Window* pWindow, const OrthographicCameraDescriptor& descriptor) WS_NOEXCEPT
@@ -785,7 +785,7 @@ namespace WS {
 		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 		 * // ||--------------------------VULKAN--------------------------|| \\
 		 * // |\__________________________________________________________/| \\
-		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////// \\ 
+		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////// \\
 		 */
 
 		namespace VK {
@@ -1143,7 +1143,7 @@ namespace WS {
 			VKDevice& VKDevice::operator=(VKDevice&& other) WS_NOEXCEPT
 			{
 				std::swap(this->m_object, other.m_object);
-				
+
 				this->m_pInstance          = other.m_pInstance;
 				this->m_physicalDeviceData = other.m_physicalDeviceData;
 
@@ -1846,7 +1846,7 @@ namespace WS {
 
 			VKRenderAPI::~VKRenderAPI()
 			{
-				
+
 			}
 
 			void VKRenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
@@ -1937,7 +1937,7 @@ namespace WS {
 		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 		 * // ||-----------------D3D11-----------------|| \\
 		 * // |\_______________________________________/| \\
-		 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+		 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 		 */
 
 		namespace D3D11 {
@@ -1947,7 +1947,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D11ObjectWrapper<T>---------|| \\
 			 * // |\_______________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 			 */
 
 			template <typename T>
@@ -1974,7 +1974,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11SwapChain------------|| \\
 			 * // |\______________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\--//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\--//////////////////// \\
 			 */
 
 			D3D11SwapChain::D3D11SwapChain(D3D11DeviceObjectWrapper& pDevice, Window* pWindow) WS_NOEXCEPT
@@ -2032,7 +2032,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11RenderTarget------------|| \\
 			 * // |\_________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
 			 */
 
 			D3D11RenderTarget::D3D11RenderTarget(D3D11DeviceObjectWrapper& pDevice, D3D11SwapChainObjectWrapper& pSwapChain) WS_NOEXCEPT
@@ -2064,7 +2064,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11DepthBuffer------------|| \\
 			 * // |\________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
 			D3D11DepthBuffer::D3D11DepthBuffer(Window* pWindow, D3D11DeviceObjectWrapper& pDevice) WS_NOEXCEPT
@@ -2127,7 +2127,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11VertexShader------------|| \\
 			 * // |\_________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
 			 */
 
 			D3D11VertexShader::D3D11VertexShader(D3D11DeviceObjectWrapper& pDevice,
@@ -2202,7 +2202,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11PixelShader------------|| \\
 			 * // |\________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
 			D3D11PixelShader::D3D11PixelShader(D3D11DeviceObjectWrapper& pDevice,
@@ -2236,7 +2236,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11VertexBuffer------------|| \\
 			 * // |\_________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\-////////////////////// \\
 			 */
 
 			D3D11VertexBuffer::D3D11VertexBuffer(D3D11DeviceObjectWrapper& pDevice,
@@ -2292,7 +2292,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11IndexBuffer------------|| \\
 			 * // |\________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
 			 */
 
 			D3D11IndexBuffer::D3D11IndexBuffer(D3D11DeviceObjectWrapper& pDevice,
@@ -2319,7 +2319,7 @@ namespace WS {
 			{
 				this->m_pObject = other.m_pObject;
 				other.m_pObject = nullptr;
-			
+
 				other.m_nIndices  = other.m_nIndices;
 				other.m_indexData = std::move(other.m_indexData);
 
@@ -2346,7 +2346,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11ConstantBuffer------------|| \\
 			 * // |\___________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\\-/////////////////////// \\
 			 */
 
 			D3D11ConstantBuffer::D3D11ConstantBuffer(D3D11DeviceObjectWrapper& pDevice,
@@ -2376,7 +2376,7 @@ namespace WS {
 				this->m_slot    = other.m_slot;
 				this->m_objSize = other.m_objSize;
 				this->m_constantBufferData = std::move(other.m_constantBufferData);
-				
+
 				return *this;
 			}
 
@@ -2400,7 +2400,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------D3D11Texture------------|| \\
 			 * // |\____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\--/////////////////// \\
 			 */
 
 			D3D11Texture::D3D11Texture(D3D11DeviceObjectWrapper& pDevice,
@@ -2457,7 +2457,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D11TextureSampler---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D11TextureSampler::D3D11TextureSampler(D3D11DeviceObjectWrapper& pDevice,
@@ -2506,7 +2506,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D11RenderPipeline---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D11RenderPipeline::D3D11RenderPipeline(D3D11DeviceObjectWrapper& pDevice,
@@ -2556,7 +2556,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D11RenderAPI---------|| \\
 			 * // |\________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\--///////////////// \\
 			 */
 
 			void D3D11RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
@@ -2667,7 +2667,7 @@ namespace WS {
 		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 		 * // ||-----------------D3D12-----------------|| \\
 		 * // |\_______________________________________/| \\
-		 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+		 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 		 */
 
 		namespace D3D12 {
@@ -2677,7 +2677,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12ObjectWrapper<T>---------|| \\
 			 * // |\_______________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 			 */
 
 			template <typename T>
@@ -2704,7 +2704,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12Adapter---------|| \\
 			 * // |\______________________________/| \\
-			 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\--//////////////// \\
 			 */
 
 			D3D12Adapter::D3D12Adapter()
@@ -2722,7 +2722,7 @@ namespace WS {
 
 					if (desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE)
 						continue;
-					
+
 					if (SUCCEEDED(D3D12CreateDevice(this->m_pObject, D3D_FEATURE_LEVEL_12_1, _uuidof(ID3D12Device2), nullptr)))
 						return;
 
@@ -2745,7 +2745,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12Device---------|| \\
 			 * // |\_____________________________/| \\
-			 * // \\\\\\\\\\\\\\\\-//////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\-//////////////// \\
 			 */
 
 			D3D12Device::D3D12Device(D3D12AdapterObjectWrapper& pAdapter) WS_NOEXCEPT
@@ -2770,9 +2770,9 @@ namespace WS {
 					};
 
 					D3D12_MESSAGE_ID DenyIds[] = {
-						D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,   
-						D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,                         
-						D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,                      
+						D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,
+						D3D12_MESSAGE_ID_MAP_INVALID_NULLRANGE,
+						D3D12_MESSAGE_ID_UNMAP_INVALID_NULLRANGE,
 					};
 
 					D3D12_INFO_QUEUE_FILTER NewFilter = {};
@@ -2801,7 +2801,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12Fence---------|| \\
 			 * // |\____________________________/| \\
-			 * // \\\\\\\\\\\\\\\--/////////////// \\ 
+			 * // \\\\\\\\\\\\\\\--/////////////// \\
 			 */
 
 			D3D12Fence::D3D12Fence(D3D12DeviceObjectWrapper& pDevice, const UINT64 initialValue, const D3D12_FENCE_FLAGS flags) WS_NOEXCEPT
@@ -2832,7 +2832,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12CommandQueue---------|| \\
 			 * // |\___________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
 			 */
 
 			D3D12CommandQueue::D3D12CommandQueue(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT
@@ -2852,7 +2852,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12SwapChain---------|| \\
 			 * // |\________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\--///////////////// \\
 			 */
 
 			D3D12SwapChain::D3D12SwapChain(D3D12DeviceObjectWrapper&       pDevice,
@@ -2871,7 +2871,7 @@ namespace WS {
 
 				if (DX_FAILED(CreateDXGIFactory2(createFactoryFlags, IID_PPV_ARGS(&dxgiFactory4))))
 					WS_THROW("[D3D12] Could Not Create DXGIFactory2");
-			
+
 				DXGI_MODE_DESC backBufferDesc = {};
 				backBufferDesc.Width  = pWindow->GetClientWidth();
 				backBufferDesc.Height = pWindow->GetClientHeight();
@@ -2887,7 +2887,7 @@ namespace WS {
 				swapChainDesc.SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 				swapChainDesc.OutputWindow = reinterpret_cast<const WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
 				swapChainDesc.SampleDesc   = sampleDesc;
-				swapChainDesc.Windowed     = true; 
+				swapChainDesc.Windowed     = true;
 				swapChainDesc.Flags        = D3D12SwapChain::IsTearingSupported() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
 
 				if (DX_FAILED(dxgiFactory4->CreateSwapChain(pCommandQueue, &swapChainDesc, (IDXGISwapChain**) &this->m_pObject)))
@@ -2932,7 +2932,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12DescriptorHeap---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D12DescriptorHeap::D3D12DescriptorHeap(D3D12DeviceObjectWrapper& pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type, const uint32_t numDescriptors, const D3D12_DESCRIPTOR_HEAP_FLAGS& flags) WS_NOEXCEPT
@@ -2959,7 +2959,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12RenderTarget---------|| \\
 			 * // |\___________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
 			 */
 
 			D3D12RenderTarget::D3D12RenderTarget(D3D12DeviceObjectWrapper& pDevice,
@@ -2987,7 +2987,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12CommandAllocator---------|| \\
 			 * // |\_______________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 			 */
 
 			D3D12CommandAllocator::D3D12CommandAllocator(D3D12DeviceObjectWrapper& pDevice, const D3D12_COMMAND_LIST_TYPE& type) WS_NOEXCEPT
@@ -3007,7 +3007,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12CommandList---------|| \\
 			 * // |\__________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-///////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-///////////////// \\
 			 */
 
 			D3D12CommandList::D3D12CommandList(D3D12DeviceObjectWrapper& pDevice,
@@ -3048,7 +3048,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12DepthBuffer---------|| \\
 			 * // |\__________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-///////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-///////////////// \\
 			 */
 
 			D3D12DepthBuffer::D3D12DepthBuffer(D3D12Device& pDevice, Window* pWindow) WS_NOEXCEPT
@@ -3076,7 +3076,7 @@ namespace WS {
 															D3D12_RESOURCE_STATE_DEPTH_WRITE, &depthOptimizedClearValue,
 															IID_PPV_ARGS(this->m_pDepthStencilBuffer.GetPtr()))))
 					WS_THROW("[DIRECTX 12] Failed To Create Depth Stencil Heap");
-			
+
 				this->m_pDepthStencilBuffer->SetName(L"Depth/Stencil Resource Heap");
 
 				pDevice->CreateDepthStencilView(this->m_pDepthStencilBuffer, &depthStencilDesc, this->m_pDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
@@ -3099,7 +3099,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12RootSignature---------|| \\
 			 * // |\____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\-////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\-////////////////// \\
 			 */
 
 			D3D12RootSignature::D3D12RootSignature(D3D12DeviceObjectWrapper& pDevice, const D3D12_ROOT_SIGNATURE_FLAGS& flags,
@@ -3136,7 +3136,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12CommittedResource---------|| \\
 			 * // |\________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D12CommittedResource::D3D12CommittedResource(D3D12DeviceObjectWrapper& pDevice,   const D3D12_HEAP_TYPE& heapType,
@@ -3144,7 +3144,7 @@ namespace WS {
 														   const D3D12_RESOURCE_STATES& states, const char* name) WS_NOEXCEPT
 				: m_originalState(states), m_currentState(states)
 			{
-				
+
 				if (DX_FAILED(pDevice->CreateCommittedResource(&CD3DX12_HEAP_PROPERTIES(heapType), flags, descPtr, states,
 															nullptr, IID_PPV_ARGS(&this->m_pObject))))
 				{
@@ -3152,11 +3152,11 @@ namespace WS {
 
 					WS_THROW(errorString.c_str());
 				}
-			
+
 				const std::wstring nameW(&name[0], &name[strlen(name) + 1u]);
 				this->m_pObject->SetName(nameW.c_str());
 			}
-			
+
 			D3D12CommittedResource& D3D12CommittedResource::operator=(D3D12CommittedResource&& other) WS_NOEXCEPT
 			{
 				this->m_pObject = other.m_pObject;
@@ -3166,14 +3166,14 @@ namespace WS {
 				this->m_originalState = other.m_originalState;
 
 				return *this;
-			}				
+			}
 
 			/*
 			 * // ///////////////////-\\\\\\\\\\\\\\\\\\\ \\
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12VertexBuffer---------|| \\
 			 * // |\___________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\-/////////////////// \\
 			 */
 
 			D3D12VertexBuffer::D3D12VertexBuffer(D3D12DeviceObjectWrapper& pDevice,
@@ -3221,7 +3221,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12IndexBuffer---------|| \\
 			 * // |\__________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\--////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\--////////////////// \\
 			 */
 
 			D3D12IndexBuffer::D3D12IndexBuffer(D3D12DeviceObjectWrapper& pDevice,
@@ -3269,7 +3269,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12ConstantBuffer---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D12ConstantBuffer::D3D12ConstantBuffer(D3D12DeviceObjectWrapper& pDevice,
@@ -3329,7 +3329,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12Texture---------|| \\
 			 * // |\______________________________/| \\
-			 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\--//////////////// \\
 			 */
 
 			D3D12Texture::D3D12Texture(D3D12DeviceObjectWrapper& pDevice, D3D12CommandList* pCommandList, const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
@@ -3338,7 +3338,7 @@ namespace WS {
 				D3D12_RESOURCE_DESC resourceDesc {};
 				resourceDesc = {};
 				resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-				resourceDesc.Alignment = 0; 
+				resourceDesc.Alignment = 0;
 				resourceDesc.Width  = static_cast<UINT>(width);
 				resourceDesc.Height = static_cast<UINT>(height);
 				resourceDesc.DepthOrArraySize = 1;
@@ -3364,10 +3364,10 @@ namespace WS {
 				this->m_textureResourceView.Format = resourceDesc.Format;
 				this->m_textureResourceView.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 				this->m_textureResourceView.Texture2D.MipLevels = useMipmaps ? 0 : 1;
-				
+
 				pDevice->CreateShaderResourceView(this->m_textureResource, &this->m_textureResourceView, this->m_descriptorHeap->GetCPUDescriptorHandleForHeapStart());
 			}
-			
+
 			void D3D12Texture::Update() WS_NOEXCEPT
 			{
 				this->m_textureResource.TransitionTo(*this->m_pCommandList, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -3376,7 +3376,7 @@ namespace WS {
 				textureData.pData      = this->m_image.GetBuffer();
 				textureData.RowPitch   = this->m_image.GetWidth()      * sizeof(Coloru8);
 				textureData.SlicePitch = this->m_image.GetPixelCount() * sizeof(Coloru8);
-		
+
 				UpdateSubresources(*this->m_pCommandList, this->m_textureResource, this->m_uploadHeap, 0, 0, 1, &textureData);
 
 				this->m_textureResource.TransitionBack(*this->m_pCommandList);
@@ -3387,7 +3387,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12TextureSampler---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D12TextureSampler::D3D12TextureSampler(const TextureFilter& filter) WS_NOEXCEPT
@@ -3406,7 +3406,7 @@ namespace WS {
 				default:
 					WS_THROW("[DIRECTX 12] Your Filtering Method Is Not Supported");
 				}
-				
+
 				this->m_samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 				this->m_samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 				this->m_samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -3516,7 +3516,7 @@ namespace WS {
 					for (size_t k = 0u; k < numDescriptors; k++) {
 						(*this->m_pDevice)->CopyDescriptorsSimple(1u, this->m_handles[destIndex.value()][j].m_cpuHandles.m_current,
 																  descriptors[k][j], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-						
+
 						this->m_handles[destIndex.value()][j].OffsetCurrent(1u, this->m_incrementSize);
 					}
 				}
@@ -3534,7 +3534,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12RenderPipeline---------|| \\
 			 * // |\_____________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 			 */
 
 			D3D12RenderPipeline::D3D12RenderPipeline(D3D12RenderPipeline&& other) WS_NOEXCEPT
@@ -3747,7 +3747,7 @@ namespace WS {
 
 					for (size_t frameIndex = 0u; frameIndex < WEISS__FRAME_BUFFER_COUNT; frameIndex++)
 						srcCpuDescriptorHandles[i][frameIndex] = texture.GetDescriptorHeap()->GetCPUDescriptorHandleForHeapStart();
-						
+
 					i++;
 				}
 
@@ -3784,7 +3784,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12CommandSubmitter---------|| \\
 			 * // |\_______________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
 			 */
 
 			D3D12CommandSubmitter::D3D12CommandSubmitter(D3D12DeviceObjectWrapper& pDevice) WS_NOEXCEPT
@@ -3844,7 +3844,7 @@ namespace WS {
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||---------D3D12RenderAPI---------|| \\
 			 * // |\________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
+			 * // \\\\\\\\\\\\\\\\\--///////////////// \\
 			 */
 
 			void D3D12RenderAPI::CreateRenderTargets() WS_NOEXCEPT
@@ -3976,7 +3976,7 @@ namespace WS {
 
 				return this->m_pConstantBuffers.size() - 1u;
 			}
-			
+
 			size_t D3D12RenderAPI::CreateTexture(const size_t width, const size_t height, const size_t slot, const bool useMipmaps) WS_NOEXCEPT
 			{
 				this->m_pTextures.push_back(new D3D12Texture(this->m_pDevice, this->m_commandSubmitter.GetCommandListPr(), width, height, slot, useMipmaps));
@@ -4003,11 +4003,58 @@ namespace WS {
 	}; // namespace Internal
 
 	/*
+	 * // //////////////-\\\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-------SceneObject-------|| \\
+	 * // |\_________________________/| \\
+	 * // \\\\\\\\\\\\\\-////////////// \\
+	*/
+
+ 	SceneObject SceneObject::Load(const char* filename) WS_NOEXCEPT
+	{ //TODO:: FINISH
+		std::ifstream objectFile(filename);
+
+		if (!objectFile.is_open())
+			WS_THROW("Oject File Could Not Be Read/Opened");
+
+		SceneObject newObject;
+
+		char junk;
+		std::string line;
+		while (std::getline(objectFile, line)) {
+			if (line.length() <= 2) continue;
+
+			std::istringstream iss(line);
+
+			if (line[0] == 'f') { // Face
+				uint32_t i1, i2, i3;
+
+				iss >> junk >> i1 >> i2 >> i3;
+
+				newObject.indices.reserve(3u);
+				newObject.indices.push_back(i1 - 1u);
+				newObject.indices.push_back(i2 - 1u);
+				newObject.indices.push_back(i3 - 1u);
+			} else if (line[0] == 'v') { // Vertex Position
+				if (line[1] == ' ') {
+					RawVectorComponents<float, 4u> raw{0.0f, 0.0f, 0.0f, 1.0f};
+
+					iss >> junk >> raw.x >> raw.y >> raw.z;
+
+					newObject.vertices.push_back({raw, COLOR_F32_BLACK});
+				}
+			}
+		}
+
+		return newObject;
+	}
+
+	/*
 	 * // /////////////////--\\\\\\\\\\\\\\\\\ \\
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||---------GraphicsEngine---------|| \\
 	 * // |\________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\--///////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\\--///////////////// \\
 	 */
 
 	GraphicsEngine::GraphicsEngine(const RenderAPIName& apiName)
@@ -4044,7 +4091,7 @@ namespace WS {
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||---------ClientSocket---------|| \\
 	 * // |\______________________________/| \\
-	 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\--//////////////// \\
 	 */
 
 	void ClientSocket::Connect(const char* host, const unsigned int port)
@@ -4096,7 +4143,7 @@ namespace WS {
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||---------ServerSocket---------|| \\
 	 * // |\______________________________/| \\
-	 * // \\\\\\\\\\\\\\\\--//////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\--//////////////// \\
 	 */
 
 	void ServerSocket::Bind(const unsigned int port)
@@ -4168,7 +4215,7 @@ namespace WS {
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||--------------------------::Create()--------------------------|| \\
 	 * // |\______________________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\ 
+	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\
 	 */
 
 	WindowHandle Window::Create(const WindowDescriptor &descriptor) WS_NOEXCEPT

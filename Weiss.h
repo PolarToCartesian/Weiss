@@ -216,7 +216,7 @@
 
 #ifdef __WEISS__DISABLE_SIMD
 
-#pragma message("[WEISS] Vector Math Will Be Slower Since __WEISS__DISABLE__SIMD is defined")
+	#pragma message("[WEISS] Vector Math Will Be Slower Since __WEISS__DISABLE__SIMD is defined")
 
 #endif
 
@@ -656,7 +656,7 @@ namespace WS
 		static_assert(_D <= 4);
 
 		stream << "(";
-		
+
 		if constexpr (_D == 1u)
 			stream << raw.x;
 		else if constexpr (_D == 2u)
@@ -3882,24 +3882,17 @@ namespace WS
 #endif
 
 	/*
-	 * // ////////////--\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||-------Material-------|| \\
-	 * // |\______________________/| \\
-	 * // \\\\\\\\\\\\--//////////// \\
+	 * // ///////////--\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-------Vertex-------|| \\
+	 * // |\____________________/| \\
+	 * // \\\\\\\\\\\--/////////// \\
 	 */
 
-	struct Material {
-
-	};
-
-	struct ColoredMaterial  : Material {
-		Coloru8 color;
-	};
-
-	struct TexturedMaterial : Material {
-
-	};
+	 struct Vertex {
+		 RawVectorComponents<float, 4u> position;
+		 Colorf32 diffuseColor;
+	 };
 
 	/*
 	 * // //////////////-\\\\\\\\\\\\\\ \\
@@ -3907,11 +3900,16 @@ namespace WS
 	 * // ||-------SceneObject-------|| \\
 	 * // |\_________________________/| \\
 	 * // \\\\\\\\\\\\\\-////////////// \\
-	 */
+	*/
 
-	class SceneObject
-	{
-	private:
+	struct SceneObject {
+		std::vector<Vertex>   vertices;
+		std::vector<uint32_t> indices;
+
+		Transform transform;
+
+	public:
+		static SceneObject Load(const char* filename) WS_NOEXCEPT;
 	};
 
 	/*
