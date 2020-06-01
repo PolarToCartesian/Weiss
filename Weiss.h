@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-/*  
+/*
  *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
  *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
  *  | |           ██          ██    ██████████████      ██████████      ██████████████    ██████████████           | |
@@ -20,13 +20,13 @@
  *  | |  ██████████████    ██          ██    ████████████        ██████████      ██          ██    ██████████████  | |
  *  \ \____________________________________________________________________________________________________________/ /
  *   \______________________________________________________________________________________________________________/
- * 
+ *
  * // ////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
  * // ||-----------------------------INFO-----------------------------|| \\
  * // |\______________________________________________________________/| \\
- * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////////// \\ 
- * 
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////////// \\
+ *
  * Project    : Weiss Engine
  * Author     : Henry LE BERRE (PolarToCartesian)
  * Repository : https://github.com/PolarToCartesian/Weiss
@@ -41,11 +41,11 @@
 	#ifdef _WIN64
 
 		#define __WEISS__PLATFORM_X64
-	
+
 	#else // End Of #ifdef _WIN64
-	
+
 		#define __WEISS__PLATFORM_X86
-	
+
 	#endif
 
 	#define _WINSOCKAPI_					// Stops Windows.h from including winsock2
@@ -153,6 +153,7 @@
 #include <queue>
 #include <mutex>
 #include <cmath>
+#include <future>
 #include <thread>
 #include <chrono>
 #include <string>
@@ -225,7 +226,7 @@
  * // ||-------------TO THROW OR NOT TO THROW------------|| \\
  * // |\_________________________________________________/| \\
  * // \\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////// \\
- * 
+ *
  * The use of noexcept can speed up execution but exceptions are needed in debug mode
  * The "WS_THROW" macro can be used to track exceptions even in release mode (i.e logging..)
  */
@@ -233,7 +234,7 @@
 #ifdef __WEISS__DEBUG_MODE
 
 	#define __WEISS__THROWS true
-	#define WS_THROW(errorMsg) (throw std::runtime_error(errorMsg)) 
+	#define WS_THROW(errorMsg) (throw std::runtime_error(errorMsg))
 
 #else
 
@@ -622,24 +623,74 @@ namespace WS
 
 #endif // #ifndef __WEISS__DISABLE_SIMD
 
+	// ////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\ \\
+	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	// |----------RawVectorComponents<_T, _D>----------| \\
+	// |\_____________________________________________/| \\
+	// \\\\\\\\\\\\\\\\\\\\\\\\-//////////////////////// \\
+
+	// Should be used when you don't wish to perform any math operation to the data (i.e just storing it)
+	// If you wish to perform math operations, convert it to a Vector<_T> since it supports SIMD and then convert it back
+
+	// _T : the type of every vector component
+	// _D : the number of dimensions (i.e components) (max 4)
+	template <typename _T, size_t _D>
+	struct RawVectorComponents {  };
+
+	// Template specialisation
+	template <typename _T>
+	struct RawVectorComponents<_T, 1u> { _T x; };
+
+	template <typename _T>
+	struct RawVectorComponents<_T, 2u> : RawVectorComponents<_T, 1u> { _T y; };
+
+	template <typename _T>
+	struct RawVectorComponents<_T, 3u> : RawVectorComponents<_T, 2u> { _T z; };
+
+	template <typename _T>
+	struct RawVectorComponents<_T, 4u> : RawVectorComponents<_T, 3u> { _T w; };
+
+	template <typename _T, size_t _D>
+	inline std::ostream& operator<<(std::ostream& stream, const RawVectorComponents<_T, _D>& raw) WS_NOEXCEPT
+	{
+		static_assert(_D <= 4);
+
+		stream << "(";
+		
+		if constexpr (_D == 1u)
+			stream << raw.x;
+		else if constexpr (_D == 2u)
+			stream << raw.x << ", " << raw.y;
+		else if constexpr (_D == 3u)
+			stream << raw.x << ", " << raw.y << ", " << raw.z;
+		else
+			stream << raw.x << ", " << raw.y << ", " << raw.z << ", " << raw.w;
+
+		stream << ")";
+
+		return stream;
+	}
+
 	// ///////////////--\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	// |----------Vector<_T>----------| \\
 	// |\____________________________/| \\
 	// \\\\\\\\\\\\\\\--/////////////// \\
 
+	// Should be used for quick SIMD Enabled vector math
+	// Can be converted into RawVectorComponents<_T, _D>
+
+	// _T : the type of every vector component
 	template <typename _T = _WS_TYPE_DOESNT_EXIST>
 	struct Vector
 	{
 		union {
 			GET_SIMD_TYPE<_T> m_sseVector; // Is a "_WS_TYPE_DOESNT_EXIST" if no intrinsic type can be created
-			struct
-			{
-				_T x, y, z, w;
-			};
+			RawVectorComponents<_T, 4u> m_rawComponents; // Use to convert this 4 dimensional SIMD Enable Vector into any lower dimension vector.
+			struct { _T x, y, z, w; };
 			_T m_arr[4u];
 		};
-	
+
 		inline Vector(const _T& x = 0, const _T& y = 0, const _T& z = 0, const _T& w = 0) WS_NOEXCEPT
 		{
 			this->Set(x, y, z, w);
@@ -674,8 +725,23 @@ namespace WS
 		}
 
 #endif
-	
-		inline void Set(const _T& x, const _T& y, const _T& z, const _T& w) WS_NOEXCEPT
+
+		template <typename _T_2, size_t _D_2>
+		inline Vector(const RawVectorComponents<_T_2, _D_2>& raw) WS_NOEXCEPT
+		{
+			static_assert(_D_2 <= 4);
+
+			if constexpr (_D_2 == 1)
+				this->Set(raw.x);
+			else if constexpr (_D_2 == 2)
+				this->Set(raw.x, raw.y);
+			else if constexpr (_D_2 == 3)
+				this->Set(raw.x, raw.y, raw.z);
+			else
+				this->Set(raw.x, raw.y, raw.z, raw.w);
+		}
+
+		inline void Set(const _T& x, const _T& y = 0, const _T& z = 0, const _T& w = 0) WS_NOEXCEPT
 		{
 			if constexpr (WS_CAN_PERFORM_SIMD(_T)) {
 #ifndef __WEISS__DISABLE_SIMD
@@ -700,7 +766,7 @@ namespace WS
 			}
 		}
 
-	
+
 		inline void Normalize() WS_NOEXCEPT
 		{
 			this->operator/=(this->GetLength());
@@ -813,6 +879,9 @@ namespace WS
 			this->operator/=(Vector<_T_2>(n, n, n, n));
 		}
 
+		template <size_t _D>
+		inline operator RawVectorComponents<_T, _D>() const WS_NOEXCEPT { return this->m_rawComponents; }
+
 		template <typename _T_2>
 		inline static Vector<_T_2> Normalized(const Vector<_T_2>& vec) WS_NOEXCEPT
 		{
@@ -858,7 +927,7 @@ namespace WS
 			}
 		}
 	};
-	
+
 	template <typename _T, typename _T_2>
 	[[nodiscard]] inline auto operator+(const Vector<_T>& a,
 		const Vector<_T_2>& b) WS_NOEXCEPT
@@ -1199,7 +1268,7 @@ namespace WS
 			Vector<>::DotProduct(vec, Vector<_T_2>(mat(0, 3), mat(1, 3), mat(2, 3), mat(3, 3)))
 		);
 	}
-	
+
 	typedef Matrix<std::enable_if_t<std::numeric_limits<float>::is_iec559, float>> Matf32;
 
 	// ///////////////-\\\\\\\\\\\\\\\ \\
@@ -1286,7 +1355,7 @@ namespace WS
 	/*
 	 * The "LOG" static class implements Thread Safe Logging Functions
 	 * that can be colored (see LOG_TYPE enum class)
-	 */ 
+	 */
 
 	class LOG
 	{
@@ -1351,7 +1420,7 @@ namespace WS
 
 			std::cout << message << '\n' << "\x1B[0m";
 
-#endif 
+#endif
 		}
 
 	public:
@@ -1382,21 +1451,21 @@ namespace WS
 
 	namespace Internal
 	{
-		/* 
+		/*
 		 * We use a per platform image loading system to use
 		 * their platform's preexisting libraries to improve
 		 * performance and use less 3rd party libraries
-		 * 
+		 *
 		 * This system uses a few virtual function calls but they aren't a big nuisance
-		 * 
+		 *
 		 * Any child class shall have the following constructors :
 		 * - Image()
 		 * - Image(Image&& other)
 		 * - Image(const Image& other)
 		 * - Image(const char* filename)
 		 * - Image(const uint16_t width, const uint16_t height, const Coloru8& fillColor = { 255u,255u,255u,255u })
-		 * 
-		 * And the following operators : 
+		 *
+		 * And the following operators :
 		 * - ImageClassName& operator=(ImageClassName&& other)
 		 */
 
@@ -2347,7 +2416,7 @@ namespace WS
 			 */
 
 			class VKDevice : public VKObjectWrapper<VkDevice> {
-			private:				
+			private:
 				const VKInstance* m_pInstance = nullptr;
 
 				VKPhysicalDeviceData m_physicalDeviceData;
@@ -2382,7 +2451,7 @@ namespace WS
 
 				~VKQueue() = default;
 			};
-			
+
 			/*
 			 * // /////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -2416,7 +2485,7 @@ namespace WS
 			class VKFence : public VKObjectWrapper<VkFence> {
 			private:
 				const VKDevice* m_pDevice = nullptr;
-			
+
 			public:
 				VKFence() = default;
 
@@ -2491,7 +2560,7 @@ namespace WS
 				[[nodiscard]] inline VkSurfaceFormatKHR GetFormat()                      const WS_NOEXCEPT { return this->m_surfaceFormat; }
 
 				~VKSwapChain();
-			
+
 			public:
 				static VkPresentModeKHR   PickPresentMode  (const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT;
 				static VkSurfaceFormatKHR PickSurfaceFormat(const VKDevice& device, const VKSurface& surface) WS_NOEXCEPT;
@@ -2526,6 +2595,18 @@ namespace WS
 			};
 
 			/*
+			 * // ////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\ \\
+			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+			 * // ||------------------VKTexture------------------|| \\
+			 * // |\_____________________________________________/| \\
+			 * // \\\\\\\\\\\\\\\\\\\\\\\\-//////////////////////// \\
+			 */
+
+			class VKTexture {
+
+			};
+
+			/*
 			 * // ///////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 			 * // ||------------------VKRenderPipeline------------------|| \\
@@ -2547,7 +2628,7 @@ namespace WS
 				VKRenderPipeline(const VKDevice& device, const VKSwapChain& swapChain, const RenderPipelineDesc& pipelineDesc,
 								 std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures,
 								 std::vector<VKTextureSampler> textureSamplers) WS_NOEXCEPT;
-			
+
 				VKRenderPipeline& operator=(VKRenderPipeline&& other) WS_NOEXCEPT;
 
 				~VKRenderPipeline();
@@ -2590,7 +2671,7 @@ namespace WS
 			private:
 				const VKDevice* m_pDevice = nullptr;
 				const VKQueue*  m_pQueue  = nullptr;
-				
+
 				VKSemaphore m_submitedSemaphore;
 				VKFence     m_submitedfence;
 
@@ -2600,7 +2681,7 @@ namespace WS
 				VKCommandBuffer(const VKDevice& device, const VKCommandPool& commandPool, const VKQueue& queue) WS_NOEXCEPT;
 
 				VKCommandBuffer& operator=(VKCommandBuffer&& other) WS_NOEXCEPT;
-			
+
 				void BeginRecording() const WS_NOEXCEPT;
 
 				void BeginRenderPass(const VKSwapChain& swapChain, const VkFramebuffer& frameBuffer, const VkRenderPass& renderPass) const WS_NOEXCEPT;
@@ -2678,7 +2759,7 @@ namespace WS
 			 * // ||---------------D3D11ObjectWrapper---------------|| \\
 			 * // |\________________________________________________/| \\
 			 * // \\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////// \\
-			 * 
+			 *
 			 * To prevent a "use after free" (and many mental breakdowns) please overload the "void operator=" function with an r-value reference (like the one for this class)
 			 * in any class that inherits from this base class.
 			*/
@@ -2855,7 +2936,7 @@ namespace WS
 				D3D11VertexBuffer(D3D11DeviceObjectWrapper &pDevice,
 								  D3D11DeviceContextObjectWrapper *pDeviceContext,
 								  const size_t nVertices, const size_t vertexSize) WS_NOEXCEPT;
-				
+
 				D3D11VertexBuffer &operator=(D3D11VertexBuffer &&other) WS_NOEXCEPT;
 
 				void Bind() WS_NOEXCEPT;
@@ -3232,7 +3313,7 @@ namespace WS
 			{
 			public:
 				D3D12DescriptorHeap() = default;
-				
+
 				D3D12DescriptorHeap(D3D12DeviceObjectWrapper &pDevice, const D3D12_DESCRIPTOR_HEAP_TYPE type,
 									const uint32_t numDescriptors,
 									const D3D12_DESCRIPTOR_HEAP_FLAGS &flags = D3D12_DESCRIPTOR_HEAP_FLAGS::D3D12_DESCRIPTOR_HEAP_FLAG_NONE) WS_NOEXCEPT;
@@ -3310,7 +3391,7 @@ namespace WS
 				void Close() WS_NOEXCEPT;
 
 				void Reset(D3D12CommandAllocatorObjectWrapper& pCommandAllocator) const WS_NOEXCEPT;
-				
+
 				void TransitionResource(ID3D12Resource *pResource, const D3D12_RESOURCE_STATES &before, const D3D12_RESOURCE_STATES &after) WS_NOEXCEPT;
 			};
 
@@ -3786,6 +3867,40 @@ namespace WS
 
 	}; // Internal
 
+#ifdef __WEISS__OS_WINDOWS
+
+	template <RenderAPIName _R_API_NAME>
+	using GET_TEXTURE_TYPE = typename std::conditional_t<_R_API_NAME == RenderAPIName::DIRECTX11, Internal::D3D11::D3D11Texture,
+							 typename std::conditional_t<_R_API_NAME == RenderAPIName::DIRECTX12, Internal::D3D12::D3D12Texture,
+							 typename std::conditional_t<_R_API_NAME == RenderAPIName::VULKAN,    Internal::VK::VKTexture, _WS_TYPE_DOESNT_EXIST>>>;
+
+#else
+
+	template <RenderAPIName _R_API_NAME>
+	using GET_TEXTURE_TYPE = typename std::conditional_t<_R_API_NAME == RenderAPIName::VULKAN, Internal::VK::VKTexture, _WS_TYPE_DOESNT_EXIST>;
+
+#endif
+
+	/*
+	 * // ////////////--\\\\\\\\\\\\ \\
+	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+	 * // ||-------Material-------|| \\
+	 * // |\______________________/| \\
+	 * // \\\\\\\\\\\\--//////////// \\
+	 */
+
+	struct Material {
+
+	};
+
+	struct ColoredMaterial  : Material {
+		Coloru8 color;
+	};
+
+	struct TexturedMaterial : Material {
+
+	};
+
 	/*
 	 * // //////////////-\\\\\\\\\\\\\\ \\
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -3807,9 +3922,13 @@ namespace WS
 	 * // \\\\\\\\\\\\\\-////////////// \\
 	 */
 
-	class SceneNode
+	struct SceneNode
 	{
-	private:
+		Transform transform;
+		std::vector<std::unique_ptr<SceneNode>> pNodes;
+		std::vector<std::unique_ptr<SceneObject>> pObjects;
+
+		void Draw(RenderAPIHandle& apiHandle, const Matf32& currentTransform = Matf32::MakeIdentity()) const WS_NOEXCEPT;
 	};
 
 	/*
@@ -3823,7 +3942,7 @@ namespace WS
 	class Scene
 	{
 	private:
-		std::unique_ptr<SceneNode *> m_pRootNode;
+		SceneNode m_rootNode;
 
 	public:
 		Scene() = default;
@@ -3937,8 +4056,8 @@ int main(int argc, char** argv);
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
  * // ||-------------------------------EOF-------------------------------|| \\
  * // |\_________________________________________________________________/| \\
- * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\ 
- * 
+ * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
+ *
  *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
  *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
  *  | |           ██          ██    ██████████████      ██████████      ██████████████    ██████████████           | |
