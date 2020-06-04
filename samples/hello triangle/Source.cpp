@@ -28,29 +28,21 @@ int WS::WeissEntryPoint(int argc, char** argv)
 
         WindowHandle window = Window::Create(desc);
 
-        RenderAPIHandle renderAPI = RenderAPI::Create(RenderAPIName::DIRECTX11);
+        RenderAPIHandle renderAPI = RenderAPI::Create(RenderAPIName::DIRECTX12);
 
         TestCB cbuff;
 
-        // std::vector<RenderPipelineDesc> pipelineDescs{
-        //	RenderPipelineDesc{"res/shaders/vs.spv", {
-        //		{ "POSITION", ShaderInputElementType::VECTOR_3D_FLOAT_32 },
-        //		{ "UV",       ShaderInputElementType::VECTOR_2D_FLOAT_32 },
-        //		{ "COLOR",    ShaderInputElementType::VECTOR_3D_FLOAT_32 }
-        //	}, "res/shaders/ps.spv", { 0u }, { 0u }, { 0u },
-        //PrimitiveTopology::TRIANGLES}
-        //};
-
         std::vector<RenderPipelineDesc> pipelineDescs{RenderPipelineDesc{
-            "samples/hello triangle/vs.hlsl",
+            "samples/hello triangle/shader_vert.ws",
             {{"POSITION", ShaderInputElementType::VECTOR_4D_FLOAT_32},
              {"UV",       ShaderInputElementType::VECTOR_4D_FLOAT_32},
              {"COLOR",    ShaderInputElementType::VECTOR_4D_FLOAT_32}},
-            "samples/hello triangle/ps.hlsl",
+            "samples/hello triangle/shader_frag.ws",
             {0u},
             {},
             {},
-            PrimitiveTopology::TRIANGLES}};
+            PrimitiveTopology::TRIANGLES}
+        };
 
         renderAPI->InitRenderAPI(window, 144u);
 

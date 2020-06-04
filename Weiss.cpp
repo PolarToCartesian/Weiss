@@ -780,6 +780,68 @@ namespace WS {
 
 	namespace Internal {
 
+		// //////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
+		// |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
+		// ||------------------------------COMMON-----------------------------|| \\
+		// |\_________________________________________________________________/| \\
+		// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////////////// \\
+
+		namespace Common {
+
+			static std::string GetShaderSourceCodeFromWSShaderFile(const char* filename, const char* shaderCheckHeader, const char* langHeader) WS_NOEXCEPT
+			{
+				std::ifstream fileStream(filename);
+
+				if (!fileStream.is_open())
+					WS_THROW("[WS] Could Not Open/Read Weiss Shader FIle");
+
+				std::string fileContents((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
+				std::istringstream fileContentsStream(fileContents);
+
+				std::string line, sourceCode;
+				bool isFirstLine = true, srcFound = false;
+				while (std::getline(fileContentsStream, line))
+				{
+					if (isFirstLine)
+					{
+						if (line != shaderCheckHeader)
+							WS_THROW("[WS] Vertex Shader File's First Line wasn't correct");
+
+						isFirstLine = false;
+					}
+
+					if (srcFound && line.length() > 3)
+						if (line[0] == '-' && line[1] == '-' && line[2] == '-')
+							srcFound = false;
+
+					if (srcFound)
+						sourceCode += line + '\n';
+
+					if (line == langHeader)
+						srcFound = true;
+				}
+
+				return sourceCode;
+			}
+
+#ifdef __WEISS__OS_WINDOWS
+
+			static void CompileDx11_12Shader(const char* hlslSourceCode, const char* target, ID3DBlob** pOutputByteCode) WS_NOEXCEPT
+			{
+				Microsoft::WRL::ComPtr<ID3DBlob> pErrorBlob;
+
+				if (DX_FAILED(D3DCompile(hlslSourceCode, strlen(hlslSourceCode), NULL, NULL, NULL, "main", target, 0, 0, pOutputByteCode, &pErrorBlob)))
+				{
+					WS::LOG::Println(WS::LOG_TYPE::LOG_ERROR, "Failed To Compile Shader With Error Msg: ", (char*)pErrorBlob->GetBufferPointer());
+
+					WS_THROW("Could Not Compile Shader");
+				}
+			}
+
+#endif // __WEISS__OS_WINDOWS
+
+		}; // Common
+
 		/*
 		 * // //////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
@@ -2135,24 +2197,12 @@ namespace WS {
 										         const char* sourceFilename, const std::vector<ShaderInputElement>& sies) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
-				Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
+				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS VERTEX SHADER SOURCE CODE--", "---HLSL---");
 
-				// Create Shader
-				std::ifstream fileStream(sourceFilename);
+				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
+				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "vs_5_0", &pBinaryBlob);
 
-				if (!fileStream.is_open())
-					WS_THROW("Could Not Read Vertex Shader FIle");
-
-				std::string   sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
-				Microsoft::WRL::ComPtr<ID3DBlob> pErrorBlob;
-
-				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "vs_5_0", 0, 0, &pBlob, &pErrorBlob) != S_OK)
-				{
-					//std::cout << ((char*)pErrorBlob->GetBufferPointer()) << '\n';
-					WS_THROW("Could Not Compile Vertex Shader");
-				}
-
-				if (pDevice->CreateVertexShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
+				if (DX_FAILED(pDevice->CreateVertexShader(pBinaryBlob->GetBufferPointer(), pBinaryBlob->GetBufferSize(), nullptr, &this->m_pShader)))
 					WS_THROW("Could Not Create Vertex Shader");
 
 				// Create Input Layout
@@ -2187,7 +2237,7 @@ namespace WS {
 					inputElementDescriptors[i].InputSlotClass = D3D11_INPUT_CLASSIFICATION::D3D11_INPUT_PER_VERTEX_DATA;
 				}
 
-				if (pDevice->CreateInputLayout(inputElementDescriptors.data(), (UINT)inputElementDescriptors.size(), pBlob->GetBufferPointer(), pBlob->GetBufferSize(), &this->m_pInputLayout) != S_OK)
+				if (pDevice->CreateInputLayout(inputElementDescriptors.data(), (UINT)inputElementDescriptors.size(), pBinaryBlob->GetBufferPointer(), pBinaryBlob->GetBufferSize(), &this->m_pInputLayout) != S_OK)
 					WS_THROW("Could Not Create Input Layout");
 			}
 
@@ -2210,21 +2260,15 @@ namespace WS {
 									   const char* sourceFilename) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
-				Microsoft::WRL::ComPtr<ID3DBlob> pBlob;
+				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
 
-				std::ifstream fileStream(sourceFilename);
+				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS PIXEL SHADER SOURCE CODE--", "---HLSL---");
 
-				if (!fileStream.is_open())
-					WS_THROW("Could Not Read Pixel Shader FIle");
+				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "ps_5_0", &pBinaryBlob);
 
-				std::string sourceCode((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
-
-				if (D3DCompile(sourceCode.c_str(), sourceCode.size(), NULL, NULL, NULL, "main", "ps_5_0", 0, 0, &pBlob, NULL) != S_OK)
-					WS_THROW("Could Not Compile Pixel Shader");
-
-				if (pDevice->CreatePixelShader(pBlob->GetBufferPointer(), pBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
+				if (pDevice->CreatePixelShader(pBinaryBlob->GetBufferPointer(), pBinaryBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
 					WS_THROW("Could Not Create Pixel Shader");
-				}
+			}
 
 			void D3D11PixelShader::Bind() const WS_NOEXCEPT
 			{
@@ -3565,23 +3609,9 @@ namespace WS {
 
 				// Vertex Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderByteCode;
-				Microsoft::WRL::ComPtr<ID3DBlob> pErrorBuff;
+				const std::string vsHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename , "---WS VERTEX SHADER SOURCE CODE--", "---HLSL---");
 
-				wchar_t vsFilenameW[FILENAME_MAX];
-				{
-					size_t convertedCharP = 0;
-					mbstowcs_s(&convertedCharP, vsFilenameW, strlen(pipelineDesc.vsFilename) + 1u, pipelineDesc.vsFilename, _TRUNCATE);
-				}
-
-				if (DX_FAILED(D3DCompileFromFile(vsFilenameW, nullptr, nullptr, "main", "vs_5_0", compileFlags,
-						0, &pVertexShaderByteCode, &pErrorBuff)))
-				{
-		#ifdef __WEISS__DEBUG_MODE
-					OutputDebugStringA((char*)pErrorBuff->GetBufferPointer());
-		#endif // __WEISS__DEBUG_MODE
-
-					WS_THROW("[DIRECTX 12] Failed To Compile Vertex Shader");
-				}
+				WS::Internal::Common::CompileDx11_12Shader(vsHlslSourceCode.c_str(), "vs_5_0", &pVertexShaderByteCode);
 
 				D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
 				vertexShaderBytecode.BytecodeLength  = pVertexShaderByteCode->GetBufferSize();
@@ -3589,24 +3619,9 @@ namespace WS {
 
 				// Pixel Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pPixelShaderByteCode;
+				const std::string psHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.psFilename, "---WS PIXEL SHADER SOURCE CODE--", "---HLSL---");
 
-				wchar_t psFilenameW[FILENAME_MAX];
-				{
-					size_t convertedCharP = 0;
-					mbstowcs_s(&convertedCharP, psFilenameW, strlen(pipelineDesc.psFilename) + 1u, pipelineDesc.psFilename, _TRUNCATE);
-				}
-
-				if (DX_FAILED(D3DCompileFromFile(psFilenameW, nullptr, nullptr, "main", "ps_5_0", compileFlags,
-					0, &pPixelShaderByteCode, &pErrorBuff)))
-				{
-		#ifdef __WEISS__DEBUG_MODE
-
-					OutputDebugStringA((char*)pErrorBuff->GetBufferPointer());
-
-		#endif // __WEISS__DEBUG_MODE
-
-					WS_THROW("[DIRECTX 12] Failed To Compile Pixel Shader");
-				}
+				WS::Internal::Common::CompileDx11_12Shader(psHlslSourceCode.c_str(), "ps_5_0", &pPixelShaderByteCode);
 
 				D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
 				pixelShaderBytecode.BytecodeLength  = pPixelShaderByteCode->GetBufferSize();

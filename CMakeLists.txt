@@ -28,12 +28,8 @@ TARGET_INCLUDE_DIRECTORIES(WeissEngine PUBLIC
 
 # Create A Sandbox Project That Includes WeissEngine
 ADD_EXECUTABLE(Sandbox "${PROJECT_BINARY_DIR}/samples/hello\ triangle/Source.cpp"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/vs.hlsl"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/ps.hlsl"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/vs.spv"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/ps.spv"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/vk.vert"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/vk.frag")
+                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/shader_vert.ws"
+                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/shader_frag.ws")
 
 # Set Target Propreties
 SET_TARGET_PROPERTIES(Sandbox PROPERTIES LINKER_LANGUAGE CXX)
