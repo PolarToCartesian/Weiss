@@ -4003,53 +4003,6 @@ namespace WS {
 	}; // namespace Internal
 
 	/*
-	 * // //////////////-\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||-------SceneObject-------|| \\
-	 * // |\_________________________/| \\
-	 * // \\\\\\\\\\\\\\-////////////// \\
-	*/
-
- 	SceneObject SceneObject::Load(const char* filename) WS_NOEXCEPT
-	{ //TODO:: FINISH
-		std::ifstream objectFile(filename);
-
-		if (!objectFile.is_open())
-			WS_THROW("Oject File Could Not Be Read/Opened");
-
-		SceneObject newObject;
-
-		char junk;
-		std::string line;
-		while (std::getline(objectFile, line)) {
-			if (line.length() <= 2) continue;
-
-			std::istringstream iss(line);
-
-			if (line[0] == 'f') { // Face
-				uint32_t i1, i2, i3;
-
-				iss >> junk >> i1 >> i2 >> i3;
-
-				newObject.indices.reserve(3u);
-				newObject.indices.push_back(i1 - 1u);
-				newObject.indices.push_back(i2 - 1u);
-				newObject.indices.push_back(i3 - 1u);
-			} else if (line[0] == 'v') { // Vertex Position
-				if (line[1] == ' ') {
-					RawVectorComponents<float, 4u> raw{0.0f, 0.0f, 0.0f, 1.0f};
-
-					iss >> junk >> raw.x >> raw.y >> raw.z;
-
-					newObject.vertices.push_back({raw, COLOR_F32_BLACK});
-				}
-			}
-		}
-
-		return newObject;
-	}
-
-	/*
 	 * // /////////////////--\\\\\\\\\\\\\\\\\ \\
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||---------GraphicsEngine---------|| \\

@@ -655,7 +655,7 @@ namespace WS
 	{
 		static_assert(_D <= 4);
 
-		stream << "(";
+		stream << '(';
 
 		if constexpr (_D == 1u)
 			stream << raw.x;
@@ -666,7 +666,7 @@ namespace WS
 		else
 			stream << raw.x << ", " << raw.y << ", " << raw.z << ", " << raw.w;
 
-		stream << ")";
+		stream << ')';
 
 		return stream;
 	}
@@ -3866,85 +3866,6 @@ namespace WS
 #endif // __WEISS__OS_WINDOWS
 
 	}; // Internal
-
-#ifdef __WEISS__OS_WINDOWS
-
-	template <RenderAPIName _R_API_NAME>
-	using GET_TEXTURE_TYPE = typename std::conditional_t<_R_API_NAME == RenderAPIName::DIRECTX11, Internal::D3D11::D3D11Texture,
-							 typename std::conditional_t<_R_API_NAME == RenderAPIName::DIRECTX12, Internal::D3D12::D3D12Texture,
-							 typename std::conditional_t<_R_API_NAME == RenderAPIName::VULKAN,    Internal::VK::VKTexture, _WS_TYPE_DOESNT_EXIST>>>;
-
-#else
-
-	template <RenderAPIName _R_API_NAME>
-	using GET_TEXTURE_TYPE = typename std::conditional_t<_R_API_NAME == RenderAPIName::VULKAN, Internal::VK::VKTexture, _WS_TYPE_DOESNT_EXIST>;
-
-#endif
-
-	/*
-	 * // ///////////--\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||-------Vertex-------|| \\
-	 * // |\____________________/| \\
-	 * // \\\\\\\\\\\--/////////// \\
-	 */
-
-	 struct Vertex {
-		 RawVectorComponents<float, 4u> position;
-		 Colorf32 diffuseColor;
-	 };
-
-	/*
-	 * // //////////////-\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||-------SceneObject-------|| \\
-	 * // |\_________________________/| \\
-	 * // \\\\\\\\\\\\\\-////////////// \\
-	*/
-
-	struct SceneObject {
-		std::vector<Vertex>   vertices;
-		std::vector<uint32_t> indices;
-
-		Transform transform;
-
-	public:
-		static SceneObject Load(const char* filename) WS_NOEXCEPT;
-	};
-
-	/*
-	 * // //////////////-\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||--------SceneNode--------|| \\
-	 * // |\_________________________/| \\
-	 * // \\\\\\\\\\\\\\-////////////// \\
-	 */
-
-	struct SceneNode
-	{
-		Transform transform;
-		std::vector<std::unique_ptr<SceneNode>> pNodes;
-		std::vector<std::unique_ptr<SceneObject>> pObjects;
-
-		void Draw(RenderAPIHandle& apiHandle, const Matf32& currentTransform = Matf32::MakeIdentity()) const WS_NOEXCEPT;
-	};
-
-	/*
-	 * // //////////////-\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||----------Scene----------|| \\
-	 * // |\_________________________/| \\
-	 * // \\\\\\\\\\\\\\-////////////// \\
-	 */
-
-	class Scene
-	{
-	private:
-		SceneNode m_rootNode;
-
-	public:
-		Scene() = default;
-	};
 
 	/*
 	 * // //////////////////--\\\\\\\\\\\\\\\\\\ \\

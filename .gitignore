@@ -7,6 +7,7 @@ res/
 *.filters
 *.user
 Debug/
+models/
 *.vcxproj
 x64/
 .vs/
