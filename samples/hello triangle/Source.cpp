@@ -9,8 +9,8 @@ using namespace WS;
 struct Vertex
 {
     Vecf32 position;
-    Vecf32 uv;
-    Vecf32 color;
+    RawVectorComponents<float, 2u> uv;
+    Colorf32 color;
 };
 
 struct TestCB
@@ -35,7 +35,7 @@ int WS::WeissEntryPoint(int argc, char** argv)
         std::vector<RenderPipelineDesc> pipelineDescs{RenderPipelineDesc{
             "samples/hello triangle/shader_vert.ws",
             {{"POSITION", ShaderInputElementType::VECTOR_4D_FLOAT_32},
-             {"UV",       ShaderInputElementType::VECTOR_4D_FLOAT_32},
+             {"UV",       ShaderInputElementType::VECTOR_2D_FLOAT_32},
              {"COLOR",    ShaderInputElementType::VECTOR_4D_FLOAT_32}},
             "samples/hello triangle/shader_frag.ws",
             {0u},
@@ -53,9 +53,9 @@ int WS::WeissEntryPoint(int argc, char** argv)
         renderAPI->InitPipelines(pipelineDescs);
 
         std::array<Vertex, 3u> vertices{
-            Vertex{Vecf32{+0.0f, +1.0f, 0.0f, 1.0f}, Vecf32{0.5f, 0.0f, 1.0f}, Vecf32{1.0f, 0.0f, 0.0f, 1.0f}},
-            Vertex{Vecf32{+1.0f, -1.0f, 0.0f, 1.0f}, Vecf32{1.0f, 1.0f, 1.0f}, Vecf32{0.0f, 1.0f, 0.0f, 1.0f}},
-            Vertex{Vecf32{-1.0f, -1.0f, 0.0f, 1.0f}, Vecf32{0.0f, 1.0f, 1.0f}, Vecf32{0.0f, 0.0f, 1.0f, 1.0f}},
+            Vertex{{+0.0f, +1.0f, 0.0f, 1.0f}, {0.5f, 0.0f}, {1.0f, 0.0f, 0.0f, 1.0f}},
+            Vertex{{+1.0f, -1.0f, 0.0f, 1.0f}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f}},
+            Vertex{{-1.0f, -1.0f, 0.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f, 1.0f, 1.0f}},
         };
 
         std::array<uint32_t, 3u> indices{0u, 1u, 2u};

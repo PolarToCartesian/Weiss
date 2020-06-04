@@ -14,12 +14,12 @@ cbuffer testCB : register(b0)
     matrix transform;
 };
 
-VSOUT main(float4 position : POSITION, float4 uv : UV, float4 color : COLOR)
+VSOUT main(float4 position : POSITION, float2 uv : UV, float4 color : COLOR)
 {
     VSOUT _out;
     _out.out_position = mul(position, transform);
     _out.out_color = color;
-    _out.out_uv = uv.xy;
+    _out.out_uv = uv;
 
     return _out;
 }
