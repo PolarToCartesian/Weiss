@@ -114,6 +114,26 @@
 
 	#define WEISS__OS_LINUX
 
+	// Vulkan
+	#define VK_USE_PLATFORM_XLIB_KHR
+
+	// Sockets
+	#include <netdb.h>
+	#include <arpa/inet.h>
+	#include <sys/types.h>
+	#include <sys/socket.h>
+	#include <netinet/in.h>
+
+	// Bluetooth
+	#include <bluetooth/bluetooth.h>
+	#include <bluetooth/rfcomm.h>
+	#include <unistd.h>
+
+	// X11 : For Linux Windows
+	#include <X11/Xos.h>
+	#include <X11/Xlib.h>
+	#include <X11/Xutil.h>
+
 #elif defined(__APPLE__) && defined(__MACH__)
 
 	#include <TargetConditionals.h>
@@ -160,6 +180,7 @@
 #include <vector>
 #include <memory>
 #include <bitset>
+#include <cassert>
 #include <cstring>
 #include <numeric>
 #include <codecvt>
@@ -1580,50 +1601,66 @@ namespace WS
 		inline void OnCursorMove(const std::function<void(const Vecu16, const Veci16)>& functor) WS_NOEXCEPT { this->m_onCursorMoveFunctors.push_back(functor); }
 	};
 
+#ifdef __WEISS__OS_WINDOWS
+
+	static LRESULT CALLBACK WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // __WEISS__OS_WINDOWS
+
 	// ////////////////////-\\\\\\\\\\\\\\\\\\\\ \\
 	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	// |-----------------Mouse-----------------| \\
 	// |\_____________________________________/| \\
 	// \\\\\\\\\\\\\\\\\\\\-//////////////////// \\
 
+	class Window;
+
 	class Mouse : public MouseEventInterface
 	{
-	protected:
+#ifdef __WEISS__OS_WINDOWS
+
+		friend static LRESULT CALLBACK::WS::WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // __WEISS__OS_WINDOWS
+
+		friend WS::Window;
+
+	private:
 		Vecu16 m_position      = Vecu16(0, 0, 0, 0);
 		Veci16 m_deltaPosition = Veci16(0, 0, 0, 0);
 
 		int16_t m_wheelDelta = 0;
 
-		bool m_isLeftButtonDown  = false;
-		bool m_isRightButtonDown = false;
+		bool m_bIsLeftButtonDown  = false;
+		bool m_bIsRightButtonDown = false;
 
-		bool m_wasMouseMovedDuringUpdate  = false;
-		bool m_wasCursorMovedDuringUpdate = false;
-
-		bool m_isCursorInWindow = false;
+	private:
+		inline void PrepareForUpdate() noexcept
+		{
+			this->m_deltaPosition = Veci16(0, 0, 0, 0);
+			this->m_wheelDelta    = 0;
+		}
 
 	public:
 		Mouse() = default;
 
-		virtual ~Mouse() = default;
+		~Mouse() = default;
 
-		[[nodiscard]] inline bool IsLeftButtonUp()   const WS_NOEXCEPT { return !this->m_isLeftButtonDown; }
-		[[nodiscard]] inline bool IsLeftButtonDown() const WS_NOEXCEPT { return this->m_isLeftButtonDown;  }
+		[[nodiscard]] inline bool IsLeftButtonUp()   const WS_NOEXCEPT { return !this->m_bIsLeftButtonDown; }
+		[[nodiscard]] inline bool IsLeftButtonDown() const WS_NOEXCEPT { return this->m_bIsLeftButtonDown;  }
 
-		[[nodiscard]] inline bool IsRightButtonUp()   const WS_NOEXCEPT { return !this->m_isRightButtonDown; }
-		[[nodiscard]] inline bool IsRightButtonDown() const WS_NOEXCEPT { return this->m_isRightButtonDown;  }
+		[[nodiscard]] inline bool IsRightButtonUp()   const WS_NOEXCEPT { return !this->m_bIsRightButtonDown; }
+		[[nodiscard]] inline bool IsRightButtonDown() const WS_NOEXCEPT { return this->m_bIsRightButtonDown;  }
 
-		[[nodiscard]] inline bool IsCursorInWindow() const WS_NOEXCEPT { return this->m_isCursorInWindow; }
-
-		virtual inline void Show() const WS_NOEXCEPT = 0;
-		virtual inline void Hide() const WS_NOEXCEPT = 0;
+		void Show() const WS_NOEXCEPT;
+		void Hide() const WS_NOEXCEPT;
 
 		/*
 		 * Limits the mouse movements to a specific "Rect"
 		 * This may be used in games to make the cursor stay
 		 * inside of the window
 		*/
-		virtual void Clip(const Rect &rect) const WS_NOEXCEPT = 0;
+		void Clip(const Rect &rect) const WS_NOEXCEPT;
 	};
 
 	// ////////////////////--\\\\\\\\\\\\\\\\\\\\ \\
@@ -1653,18 +1690,20 @@ namespace WS
 
 	class Keyboard : public KeyboardEventInterface
 	{
-	protected:
-		std::vector<uint8_t> m_downKeys;
+#ifdef __WEISS__OS_WINDOWS
+
+		friend static LRESULT CALLBACK::WS::WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // __WEISS__OS_WINDOWS
+	private:
+		std::array<bool, 0xFE> m_downKeys = { false };
 
 	public:
 		Keyboard() = default;
 
-		virtual ~Keyboard() = default;
+		~Keyboard() = default;
 
-		[[nodiscard]] inline bool IsKeyDown(const uint8_t key) const WS_NOEXCEPT
-		{
-			return this->m_downKeys.end() != std::find(this->m_downKeys.begin(), this->m_downKeys.end(), key);
-		}
+		[[nodiscard]] inline bool IsKeyDown(const uint8_t key) const WS_NOEXCEPT { return this->m_downKeys[key]; }
 	};
 
 	// //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -1683,23 +1722,40 @@ namespace WS
 		bool isResizable = true;
 	};
 
-	struct WindowHandle;
-
 	class Window
 	{
-	protected:
-		Mouse *m_pMouse = nullptr;
-		Keyboard *m_pKeyboard = nullptr;
+#ifdef __WEISS__OS_WINDOWS
 
-		bool m_isRunning = false;
-		bool m_isMinimized = false;
+		friend static LRESULT CALLBACK ::WS::WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+#endif // __WEISS__OS_WINDOWS
+
+	private:
+		Mouse    m_mouse;
+		Keyboard m_keyboard;
+
+		bool m_bIsRunning   = false;
+		bool m_bIsMinimized = false;
 
 		std::vector<std::function<void(const Vecu16)>> m_onResizeFunctors;
 
-	public:
-		Window() = default;
+#ifdef __WEISS__OS_WINDOWS
 
-		virtual ~Window() WS_NOEXCEPT;
+        HWND m_windowHandle = NULL;
+
+#elif defined(__WEISS__OS_LINUX)
+
+        ::Display* m_pDisplayHandle;
+        ::Window   m_windowHandle;
+
+        ::Atom m_deleteMessage;
+
+#endif
+
+	public:
+		Window(const WindowDescriptor &descriptor = WindowDescriptor{}) WS_NOEXCEPT;
+
+		~Window() WS_NOEXCEPT;
 
 		// <<<<---- Events ---->>>> \\
 
@@ -1707,10 +1763,10 @@ namespace WS
 
 		// <<<<---- Getters ---->>>> \\
 
-		[[nodiscard]] inline bool IsRunning() const WS_NOEXCEPT { return this->m_isRunning; }
+		[[nodiscard]] inline bool IsRunning() const WS_NOEXCEPT { return this->m_bIsRunning; }
 
-		[[nodiscard]] inline Mouse&    GetMouse()    WS_NOEXCEPT { return *this->m_pMouse;    }
-		[[nodiscard]] inline Keyboard& GetKeyboard() WS_NOEXCEPT { return *this->m_pKeyboard; }
+		[[nodiscard]] inline Mouse&    GetMouse()    WS_NOEXCEPT { return this->m_mouse;    }
+		[[nodiscard]] inline Keyboard& GetKeyboard() WS_NOEXCEPT { return this->m_keyboard; }
 
 		[[nodiscard]] inline uint16_t GetWindowPositionX() const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetWindowRectangle().left);   }
 		[[nodiscard]] inline uint16_t GetWindowPositionY() const WS_NOEXCEPT { return static_cast<uint16_t>(this->GetWindowRectangle().top);    }
@@ -1731,158 +1787,29 @@ namespace WS
 			return static_cast<uint16_t>(rect.bottom - rect.top);
 		}
 
-		[[nodiscard]] virtual Rect GetWindowRectangle() const WS_NOEXCEPT = 0;
-		[[nodiscard]] virtual Rect GetClientRectangle() const WS_NOEXCEPT = 0;
+		[[nodiscard]] Rect GetWindowRectangle() const WS_NOEXCEPT;
+		[[nodiscard]] Rect GetClientRectangle() const WS_NOEXCEPT;
 
 		// <<<<---- Setters ---->>>> \\
 
-		virtual void SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT = 0;
-		virtual void SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT = 0;
-		virtual void SetTitle(const char *title) const WS_NOEXCEPT = 0;
-		virtual void SetIcon (const char *pathname) WS_NOEXCEPT = 0;
+		void SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT;
+		void SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT;
+		void SetTitle(const char *title) const WS_NOEXCEPT;
+		void SetIcon (const char *pathname) WS_NOEXCEPT;
 
 		// <<<<---- Msc ---->>>> \\
 
-		virtual void Update() = 0;
-
-	public:
-		// To Be Defined Per Platform
-		static WindowHandle Create(const WindowDescriptor &descriptor = WindowDescriptor{}) WS_NOEXCEPT;
-	};
-
-	/*
-	 * The "WindowHandle" struct contains a pointer to the "Window" object and handles
-	 * its proper destruction in order to "free" the user of needing to avoid memory
-	 * leaks when creating windows. The user can access the window's methods by using
-	 * the "->" operator like he would do with a generic "Window*".
-	 */
-	struct WindowHandle
-	{
-		Window* pWindow;
-
-		~WindowHandle() { delete pWindow; }
-
-		inline Window *operator->() const WS_NOEXCEPT { return this->pWindow; }
-		inline operator Window *()  const WS_NOEXCEPT { return this->pWindow; }
-	};
-
-	// /////////////////////--\\\\\\\\\\\\\\\\\\\\\ \\
-	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	// |-----------------Internal-----------------| \\
-	// |\________________________________________/| \\
-	// \\\\\\\\\\\\\\\\\\\\\--///////////////////// \\
-
-	namespace Internal {
+		void Update() WS_NOEXCEPT;
+		void Show() const WS_NOEXCEPT;
+		void Hide() const WS_NOEXCEPT;
+		void Close() WS_NOEXCEPT;
 
 #ifdef __WEISS__OS_WINDOWS
 
-		// /////////////////////-\\\\\\\\\\\\\\\\\\\\\ \\
-		// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-		// |-------------------WIN-------------------| \\
-		// |\_______________________________________/| \\
-		// \\\\\\\\\\\\\\\\\\\\\-///////////////////// \\
+		inline HWND GetHandle() const noexcept { return this->m_windowHandle; }
 
-		namespace WIN
-		{
-
-			// ///////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			// |-------------------WindowsPeripheralDevice-------------------| \\
-			// |\___________________________________________________________/| \\
-			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////// \\
-
-			class WindowsPeripheralDevice : public PeripheralDevice
-			{
-			public:
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT = 0;
-			};
-
-			// ///////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			// |-------------------------WindowsMouse-------------------------| \\
-			// |\____________________________________________________________/| \\
-			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--/////////////////////////////// \\
-
-			class WindowsMouse : public Mouse,
-								 public WindowsPeripheralDevice
-			{
-			public:
-				WindowsMouse() WS_NOEXCEPT;
-
-				virtual inline void Show() const WS_NOEXCEPT override { ShowCursor(true);  }
-				virtual inline void Hide() const WS_NOEXCEPT override { ShowCursor(false); }
-
-				virtual void Clip(const Rect &rect) const WS_NOEXCEPT override;
-
-				virtual void __OnWindowUpdateBegin() WS_NOEXCEPT override;
-
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT override;
-
-				virtual void __OnWindowUpdateEnd() WS_NOEXCEPT override;
-			};
-
-			// /////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			// |-------------------------WindowsKeyboard-------------------------| \\
-			// |\_______________________________________________________________/| \\
-			// \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\
-
-			class WindowsKeyboard : public Keyboard,
-									public WindowsPeripheralDevice
-			{
-			public:
-				virtual bool __HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT override;
-			};
-
-			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
-
-			class WindowsWindow : public Window
-			{
-				friend LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lparam);
-
-			private:
-				HWND m_handle = 0;
-
-			public:
-				WindowsWindow(const WindowDescriptor &descriptor) WS_NOEXCEPT;
-
-				// <<<<---- Getters ---->>>> //
-
-				[[nodiscard]] inline HWND GetHandle()              const WS_NOEXCEPT { return this->m_handle;        }
-				[[nodiscard]] inline HDC  GetDeviceContextHandle() const WS_NOEXCEPT { return GetDC(this->m_handle); }
-
-				[[nodiscard]] virtual Rect GetWindowRectangle() const WS_NOEXCEPT override;
-
-				[[nodiscard]] virtual Rect GetClientRectangle() const WS_NOEXCEPT override;
-
-				// <<<<---- Setters ---->>>> //
-
-				virtual void SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT override;
-
-				virtual void SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT override;
-
-				virtual void SetTitle(const char *title) const WS_NOEXCEPT override;
-
-				virtual void SetIcon(const char *pathname) WS_NOEXCEPT override;
-
-				// <<<<---- Misc ---->>>> //
-
-				[[nodiscard]] LRESULT HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT;
-
-				virtual void Update() WS_NOEXCEPT override;
-
-				void Destroy() WS_NOEXCEPT;
-
-				~WindowsWindow() WS_NOEXCEPT;
-			};
-
-			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-		}; // namespace WIN
-
-#endif // __WEISS__OS_WINDOWS
-
-	}; // namespace Internal
+#endif // __WEISS_OS_WINDOWS
+	};
 
 	// //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 	// |-------------------------------------------------------------------| \\
@@ -2163,7 +2090,7 @@ namespace WS
 
 		// ----- Virtual Functions ----- //
 
-		virtual void InitRenderAPI(Window *pWindow, const uint16_t maxFps = 144u) WS_NOEXCEPT = 0;
+		virtual void InitRenderAPI(Window* pWindow, const uint16_t maxFps = 144u) WS_NOEXCEPT = 0;
 		virtual void InitPipelines(const std::vector<RenderPipelineDesc> &pipelineDescs) WS_NOEXCEPT = 0;
 
 		virtual void Draw(const Drawable &drawable, const size_t nVertices) WS_NOEXCEPT = 0;
@@ -2660,7 +2587,7 @@ namespace WS
 				~VKRenderPipeline();
 
 			public:
-				static VkShaderModule CreateShaderModule(const VKDevice& device, const char* filename) WS_NOEXCEPT;
+				static VkShaderModule CreateShaderModule(const VKDevice& device, const char* binaryShaderCode, const size_t size) WS_NOEXCEPT;
 			};
 
 			/*
@@ -3906,12 +3833,12 @@ namespace WS
 	private:
 		RenderAPIHandle m_renderHandle;
 
-		WindowHandle m_windowHandle;
+		Window* m_pWindow;
 
 	public:
 		GraphicsEngine(const RenderAPIName &apiName);
 
-		void Init(WindowHandle windowHandle);
+		void Init(Window* pWindow);
 
 		void Run(const size_t fps);
 

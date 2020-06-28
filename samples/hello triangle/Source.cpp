@@ -26,25 +26,25 @@ int WS::WeissEntryPoint(int argc, char** argv)
     {
         WindowDescriptor desc = {1920u, 1080u, 0u, 0u, "test"};
 
-        WindowHandle window = Window::Create(desc);
+        Window window(desc);
 
         RenderAPIHandle renderAPI = RenderAPI::Create(RenderAPIName::DIRECTX12);
 
         TestCB cbuff;
 
         std::vector<RenderPipelineDesc> pipelineDescs{RenderPipelineDesc{
-            "samples/hello triangle/shader_vert.ws",
+            "samples/hello triangle/vert.src.ws",
             {{"POSITION", ShaderInputElementType::VECTOR_4D_FLOAT_32},
              {"UV",       ShaderInputElementType::VECTOR_2D_FLOAT_32},
              {"COLOR",    ShaderInputElementType::VECTOR_4D_FLOAT_32}},
-            "samples/hello triangle/shader_frag.ws",
+            "samples/hello triangle/frag.src.ws",
             {0u},
             {},
             {},
             PrimitiveTopology::TRIANGLES}
         };
 
-        renderAPI->InitRenderAPI(window, 144u);
+        renderAPI->InitRenderAPI(&window, 144u);
 
         renderAPI->CreateConstantBuffer(sizeof(TestCB), 0u);
         //renderAPI->CreateTexture(image, 0u, false);
@@ -65,7 +65,7 @@ int WS::WeissEntryPoint(int argc, char** argv)
             renderAPI->CreateIndexBuffer(indices.size())
         };
 
-        PerspectiveCamera cam(window, {Vecf32{0.0f, 0.0f, -2.0f}, Vecf32{}, WS::HALF_PI, 0.01f, 1000.f, Vecf32{0.2f, 0.2f, 0.2f, 0.2f}});
+        PerspectiveCamera cam(&window, {Vecf32{0.0f, 0.0f, -2.0f}, Vecf32{}, WS::HALF_PI, 0.01f, 1000.f, Vecf32{0.2f, 0.2f, 0.2f, 0.2f}});
         //OrthographicCamera cam(window, { Vecf32{0.0f, 0.0f, 0.0f, 1.0f}, 0.0f, Vecf32{0.2f,0.2f,0.2f} });
 
         cbuff.transform = cam.GetTransposedTransform();
@@ -76,20 +76,19 @@ int WS::WeissEntryPoint(int argc, char** argv)
         renderAPI->GetVertexBuffer(drawable.vertexBufferIndex).Update();
         renderAPI->GetIndexBuffer(drawable.indexBufferIndex.value()).Update();
 
-        cam.HandleMouseMovements(window->GetMouse(), 0.001f);
+        cam.HandleMouseMovements(window.GetMouse(), 0.001f);
 
-        while (window->IsRunning())
+        while (window.IsRunning())
         {
+            window.Update();
 
-            window->Update();
-
-            cam.HandleKeyboardInputs(window->GetKeyboard(), 0.1f, 'W', 'S', 'A', 'D',
+            cam.HandleKeyboardInputs(window.GetKeyboard(), 0.1f, 'W', 'S', 'A', 'D',
                                      VK_SPACE, VK_SHIFT);
 
             cam.CalculateTransform();
             renderAPI->GetConstantBuffer(0).Set(cam.GetTransposedTransform());
             renderAPI->GetConstantBuffer(0).Update();
-
+            //--//
             renderAPI->BeginDrawing();
             renderAPI->Draw(drawable, indices.size());
             renderAPI->EndDrawing();

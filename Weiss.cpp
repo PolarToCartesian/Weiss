@@ -270,395 +270,322 @@ namespace WS {
 	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////// \\
 	 */
 
-	Window::~Window() WS_NOEXCEPT
+	#ifdef __WEISS__OS_WINDOWS
+
+	static LRESULT CALLBACK WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
-		if (this->m_pMouse != nullptr)
-			delete this->m_pMouse;
+#ifdef __WEISS__PLATFORM_X64
+		Window* pWindow = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+#else
+		Window* pWindow = reinterpret_cast<Window*>(GetWindowLong(hwnd, GWLP_USERDATA));
+#endif
 
-		if (this->m_pKeyboard != nullptr)
-			delete this->m_pKeyboard;
-	}
+		if (pWindow != nullptr) {
+			switch (msg) {
+				// Window Updates
+			case WM_SIZE:
+				return 0;
+			case WM_DESTROY:
+				pWindow->Close();
 
-	/*
-	 * // ////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||-----------------------Internal-----------------------|| \\
-	 * // |\______________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////// \\
-	 */
-
-	namespace Internal {
-
-		/*
-		 * // /////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-		 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-		 * // ||--------------------------WIN--------------------------|| \\
-		 * // |\_______________________________________________________/| \\
-		 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////// \\
-		 */
-
-#ifdef __WEISS__OS_WINDOWS
-
-		namespace WIN {
-
-			/*
-			* // //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			* // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			* // ||--------------------------WINDOWS MOUSE--------------------------|| \\
-			* // |\_________________________________________________________________/| \\
-			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
-			*/
-
-			WindowsMouse::WindowsMouse() WS_NOEXCEPT
+				return 0;
+				// Mouse Events
+			case WM_INPUT:
 			{
-				RAWINPUTDEVICE mouseInputDevice;
-				mouseInputDevice.usUsagePage = 0x01;
-				mouseInputDevice.usUsage = 0x02;
-				mouseInputDevice.dwFlags = 0;
-				mouseInputDevice.hwndTarget = nullptr;
+				UINT size = 0;
 
-				if (RegisterRawInputDevices(&mouseInputDevice, 1, sizeof(RAWINPUTDEVICE)) == FALSE)
-					WS_THROW("[WIN] Failed To Register Mouse Raw Input Device");
-			}
-
-			void WindowsMouse::Clip(const Rect& rect) const WS_NOEXCEPT
-			{
-				RECT winRect{ rect.left, rect.top, rect.right, rect.bottom };
-
-				if (ClipCursor(&winRect))
-					WS_THROW("[WIN] Failed To Clip Cursor");
-			}
-
-			void WindowsMouse::__OnWindowUpdateBegin() WS_NOEXCEPT
-			{
-				this->m_wheelDelta = 0;
-				this->m_deltaPosition = Veci16(0, 0, 0, 0);
-				this->m_wasMouseMovedDuringUpdate = false;
-				this->m_wasCursorMovedDuringUpdate = false;
-			}
-
-			bool WindowsMouse::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
-			{
-				switch (msg)
+				if (!GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER)))
 				{
-				case WM_INPUT:
-				{
-					UINT size = 0;
+					std::vector<char> rawBuffer(size);
 
-					if (!GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER)))
+					if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, rawBuffer.data(), &size, sizeof(RAWINPUTHEADER)) == size)
 					{
-						std::vector<char> rawBuffer(size);
+						const RAWINPUT& ri = reinterpret_cast<const RAWINPUT&>(*rawBuffer.data());
 
-						if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, rawBuffer.data(), &size, sizeof(RAWINPUTHEADER)) == size)
+						if (ri.header.dwType == RIM_TYPEMOUSE && (ri.data.mouse.lLastX != 0 || ri.data.mouse.lLastY != 0))
 						{
-							const RAWINPUT& ri = reinterpret_cast<const RAWINPUT&>(*rawBuffer.data());
-
-							if (ri.header.dwType == RIM_TYPEMOUSE && (ri.data.mouse.lLastX != 0 || ri.data.mouse.lLastY != 0))
-							{
-								this->m_deltaPosition += Veci16(static_cast<int16_t>(ri.data.mouse.lLastX), static_cast<int16_t>(ri.data.mouse.lLastY), 0, 0);
-
-								this->m_wasMouseMovedDuringUpdate = true;
-							}
+							pWindow->m_mouse.m_deltaPosition.x += static_cast<int16_t>(ri.data.mouse.lLastX);
+							pWindow->m_mouse.m_deltaPosition.y += static_cast<int16_t>(ri.data.mouse.lLastY);
 						}
 					}
-
-					return true;
-				}
-
-				break;
-				case WM_MOUSELEAVE:
-					this->m_isCursorInWindow = false;
-
-					return true;
-				case WM_MOUSEMOVE:
-				{
-					this->m_position = { static_cast<uint16_t>(GET_X_LPARAM(lParam)), static_cast<uint16_t>(GET_Y_LPARAM(lParam)) };
-					this->m_wasCursorMovedDuringUpdate = true;
-				}
-
-				this->m_isCursorInWindow = true;
-
-				return true;
-				case WM_LBUTTONDOWN:
-					this->m_isLeftButtonDown = true;
-
-					for (auto& functor : this->m_onLeftButtonDownFunctors)
-						functor(this->m_position);
-
-					return true;
-				case WM_LBUTTONUP:
-					this->m_isLeftButtonDown = false;
-
-					for (auto& functor : this->m_onLeftButtonUpFunctors)
-						functor(this->m_position);
-
-					return true;
-				case WM_RBUTTONDOWN:
-					this->m_isRightButtonDown = true;
-
-					for (auto& functor : this->m_onRightButtonDownFunctors)
-						functor(this->m_position);
-
-					return true;
-				case WM_RBUTTONUP:
-					this->m_isRightButtonDown = false;
-
-					for (auto& functor : this->m_onRightButtonUpFunctors)
-						functor(this->m_position);
-
-					return true;
-				case WM_MOUSEWHEEL:
-					this->m_wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
-					return true;
-				default:
-					return false;
-				}
-			}
-
-			void WindowsMouse::__OnWindowUpdateEnd() WS_NOEXCEPT
-			{
-				if (this->m_wasMouseMovedDuringUpdate)
-					for (auto& functor : this->m_onMouseMoveFunctors)
-						functor(this->m_position, this->m_deltaPosition);
-
-				if (this->m_wasCursorMovedDuringUpdate)
-					for (auto& functor : this->m_onCursorMoveFunctors)
-						functor(this->m_position, this->m_deltaPosition);
-
-				if (this->m_wheelDelta != 0)
-					for (auto& functor : this->m_onWheelTurnFunctors)
-						functor(this->m_wheelDelta);
-			}
-
-			/*
-			 * // //////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			 * // ||-------------------------WINDOWS KEYBOARD-------------------------|| \\
-			 * // |\__________________________________________________________________/| \\
-			 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////////// \\
-			 */
-
-			bool WindowsKeyboard::__HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
-			{
-				switch (msg)
-				{
-				case WM_KEYDOWN:
-					{
-						const uint8_t keyCode = static_cast<uint8_t>(wParam);
-
-						// Verify that the key was not down before the message was sent
-						if (!CHECK_BIT(lParam, 30))
-						{
-							this->m_downKeys.push_back(keyCode);
-
-							for (auto& functor : this->m_onKeyDownFunctors)
-								functor(keyCode);
-						}
-
-						return true;
-					}
-				case WM_KEYUP:
-					{
-						const uint8_t keyCode = static_cast<uint8_t>(wParam);
-
-						this->m_downKeys.erase(std::remove(this->m_downKeys.begin(), this->m_downKeys.end(), keyCode), this->m_downKeys.end());
-
-						for (auto& functor : this->m_onKeyUpFunctors)
-							functor(keyCode);
-
-						return true;
-					}
-				}
-
-				return false;
-			}
-
-			/*
-			* // //////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-			* // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-			* // ||--------------------------WINDOWS WINDOW--------------------------|| \\
-			* // |\__________________________________________________________________/| \\
-			* // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-/////////////////////////////////// \\
-			*/
-
-			WindowsWindow::WindowsWindow(const WindowDescriptor& descriptor) WS_NOEXCEPT
-			{
-				WNDCLASSA wc;
-				ZeroMemory(&wc, sizeof(WNDCLASSA));
-
-				wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-				wc.lpfnWndProc = WindowProcessMessages;
-				wc.hInstance = GetModuleHandle(NULL);
-				wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-				wc.hbrBackground = (HBRUSH)COLOR_WINDOW;
-				wc.lpszClassName = "WEISS_WNDCLASSA";
-
-				if (!RegisterClassA(&wc))
-					WS_THROW("[WINDOW] Could Not Register Window Class");
-
-				// CS_OWNDC For Opengl
-				const uint32_t windowStyle = CS_OWNDC | (descriptor.isResizable ? WS_OVERLAPPEDWINDOW : (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX));
-
-				RECT windowRect{ 0, 0, descriptor.width, descriptor.height };
-				AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
-
-				this->m_handle = CreateWindowA("WEISS_WNDCLASSA", descriptor.title, windowStyle,
-					descriptor.x, descriptor.y,
-					windowRect.right - windowRect.left,
-					windowRect.bottom - windowRect.top,
-					NULL, NULL, wc.hInstance, NULL);
-
-				if (this->m_handle == NULL)
-					WS_THROW("[WINDOW] Could Not Create Window");
-
-	#ifdef __WEISS__PLATFORM_X64
-
-				SetWindowLongPtr(this->m_handle, GWLP_USERDATA, (LONG_PTR)this);
-
-	#else
-
-				SetWindowLong(this->m_handle, GWLP_USERDATA, (LONG)this);
-
-	#endif
-
-				this->m_pMouse = new WindowsMouse();
-				this->m_pKeyboard = new WindowsKeyboard();
-
-				ShowWindow(this->m_handle, SW_SHOW);
-				UpdateWindow(this->m_handle);
-
-				this->m_isRunning = true;
-
-				if (descriptor.iconPath != nullptr)
-					this->SetIcon(descriptor.iconPath);
-			}
-
-			[[nodiscard]] Rect WindowsWindow::GetWindowRectangle() const WS_NOEXCEPT
-			{
-				RECT windowRect;
-				if (GetWindowRect(this->m_handle, &windowRect) == FALSE)
-					WS_THROW("[WIN] Failed To Get Window Rect");
-
-				return Rect(windowRect);
-			}
-
-			[[nodiscard]] Rect WindowsWindow::GetClientRectangle() const WS_NOEXCEPT
-			{
-				RECT clientRect;
-				if (GetClientRect(this->m_handle, &clientRect) == FALSE)
-					WS_THROW("[WIN] Failed To Get Client Rect");
-
-				return Rect(clientRect);
-			}
-
-			[[nodiscard]] LRESULT WindowsWindow::HandleMessage(UINT msg, WPARAM wParam, LPARAM lParam) WS_NOEXCEPT
-			{
-				switch (msg)
-				{
-				case WM_SIZE:
-				{
-					const Vecu16 client_area_dimensions = {
-						static_cast<uint16_t>(GET_X_LPARAM(lParam)),
-						static_cast<uint16_t>(GET_Y_LPARAM(lParam))
-					};
-
-					this->m_isMinimized = (client_area_dimensions.x == 0 && client_area_dimensions.y == 0);
-
-					for (auto& functor : this->m_onResizeFunctors)
-						functor(client_area_dimensions);
 				}
 
 				return 0;
-				case WM_DESTROY:
-					this->Destroy();
+			}
+			case WM_MOUSEMOVE:
+				pWindow->m_mouse.m_position = { static_cast<uint16_t>(GET_X_LPARAM(lParam)),
+											    static_cast<uint16_t>(GET_Y_LPARAM(lParam)) };
 
-					return 0;
+				return 0;
+			case WM_LBUTTONDOWN:
+				pWindow->m_mouse.m_bIsLeftButtonDown = true;
+
+				return 0;
+			case WM_LBUTTONUP:
+				pWindow->m_mouse.m_bIsLeftButtonDown = false;
+
+				return 0;
+			case WM_RBUTTONDOWN:
+				pWindow->m_mouse.m_bIsRightButtonDown = true;
+
+				return 0;
+			case WM_RBUTTONUP:
+				pWindow->m_mouse.m_bIsRightButtonDown = false;
+
+				return 0;
+			case WM_MOUSEWHEEL:
+				pWindow->m_mouse.m_wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
+
+				return 0;
+				// Keyboard Events
+			case WM_KEYDOWN:
+				pWindow->m_keyboard.m_downKeys[static_cast<uint8_t>(wParam)] = true;
+
+				return 0;
+
+			case WM_KEYUP:
+				pWindow->m_keyboard.m_downKeys[static_cast<uint8_t>(wParam)] = false;
+
+				return 0;
+			}
+		}
+
+		return DefWindowProc(hwnd, msg, wParam, lParam);
+	}
+
+	Window::Window(const WindowDescriptor& descriptor) WS_NOEXCEPT
+	{
+		const HINSTANCE hInstance = GetModuleHandle(NULL);
+
+		// Step 1 : Register Window Class
+		WNDCLASS wc = { };
+		{
+			wc.lpfnWndProc = WS::WindowsWindowWindowProc;
+			wc.hInstance = hInstance;
+			wc.lpszClassName = L"Weiss's Windows Window Class";
+
+			RegisterClass(&wc);
+		}
+
+		{ // Step 2 : Create Window
+			// Convert "const char* title" to "wchar_t* title"
+			std::unique_ptr<wchar_t[]> titleW;
+			{
+				const size_t length = std::strlen(descriptor.title);
+				titleW = std::make_unique<wchar_t[]>(length + 1u);
+				mbstowcs(titleW.get(), descriptor.title, length);
+			}
+
+			// Get The Desired Window Rect From The desired Client Rect
+			RECT rect{ 0, 0, descriptor.width, descriptor.height };
+			{
+				if (WIN_FAILED(AdjustWindowRect(&rect, NULL, false)))
+					WS_THROW("[WS] --> [WIN 32] Failed To Ajust Window Rect");
+			}
+
+			this->m_windowHandle = CreateWindowEx(
+				0, L"Weiss's Windows Window Class",
+				titleW.get(), WS_OVERLAPPEDWINDOW,
+				CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
+				NULL, NULL, hInstance, NULL
+			);
+
+			if (this->m_windowHandle == NULL) {
+				WS_THROW("[WS] --> [WIN 32] Window Creation Failed");
+			} else {
+				this->m_bIsRunning = true;
+			}
+		}
+
+		// Step 3 : Show Window
+		ShowWindow(this->m_windowHandle, SW_SHOWNORMAL);
+
+		// Step 4 : Set Window Pointer
+		{
+#ifdef __WEISS__PLATFORM_X64
+
+			SetWindowLongPtr(this->m_windowHandle, GWLP_USERDATA, (LONG_PTR)this);
+
+#else
+
+			SetWindowLong(this->m_windowHandle, GWLP_USERDATA, (LONG)this);
+
+#endif
+		}
+	}
+
+	[[nodiscard]] Rect Window::GetWindowRectangle() const WS_NOEXCEPT { RECT rect; GetWindowRect(this->m_windowHandle, &rect); return rect; }
+	[[nodiscard]] Rect Window::GetClientRectangle() const WS_NOEXCEPT { RECT rect; GetClientRect(this->m_windowHandle, &rect); return rect; }
+
+	void Window::Show() const WS_NOEXCEPT { ShowWindow(this->m_windowHandle, SW_SHOWNORMAL); }
+	void Window::Hide() const WS_NOEXCEPT { ShowWindow(this->m_windowHandle, SW_MINIMIZE);   }
+
+	void Window::Close() WS_NOEXCEPT {
+#ifdef __WEISS__DEBUG_MODE
+
+		assert(this->m_windowHandle != NULL);
+
+#endif // __WEISS__DEBUG_MODE
+
+		if (WIN_FAILED(CloseWindow(this->m_windowHandle)))
+			WS_THROW("[WS] --> [WIN 32] Failed To Close Window");
+
+		this->m_windowHandle = NULL;
+		this->m_bIsRunning   = false;
+	}
+
+	void Window::Update() WS_NOEXCEPT
+	{
+		this->m_mouse.PrepareForUpdate();
+
+		MSG msg = { };
+		while (PeekMessage(&msg, this->m_windowHandle, 0, 0, PM_REMOVE) > 0) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+
+#elif defined(__WEISS__OS_LINUX)
+
+	 Window::Window(const char* title, const uint16_t width, const uint16_t height) WS_NOEXCEPT
+	{
+		// Fetch Display
+		this->m_pDisplayHandle = ::XOpenDisplay(0);
+
+		// Create Window
+		this->m_windowHandle = ::XCreateSimpleWindow(this->m_pDisplayHandle, DefaultRootWindow(this->m_pDisplayHandle),
+												     0, 0, width, height, 0,
+													 BlackPixel(this->m_pDisplayHandle, 0), WhitePixel(this->m_pDisplayHandle, 0));
+
+		// Receive WM_DELETE_WINDOW messages
+		this->m_deleteMessage = ::XInternAtom(this->m_pDisplayHandle,  "WM_DELETE_WINDOW", False);
+   		::XSetWMProtocols(this->m_pDisplayHandle, this->m_windowHandle, &this->m_deleteMessage, 1);
+
+		// Set Title
+		::XSetStandardProperties(this->m_pDisplayHandle, this->m_windowHandle, title, title, None, NULL, 0, NULL);
+
+		// Select Input Masks
+		constexpr const long xEventMasks = ExposureMask | // Window
+										   PointerMotionMask | ButtonPressMask | ButtonReleaseMask | // Mouse
+										   KeyPressMask | KeyReleaseMask; // Keyboard
+		
+		::XSelectInput(this->m_pDisplayHandle, this->m_windowHandle, xEventMasks);
+
+		this->Show();
+
+		this->m_bIsRunning = true;
+	}
+
+	void Window::Show() WS_NOEXCEPT
+	{
+		::XMapWindow(this->m_pDisplayHandle, this->m_windowHandle);
+		::XFlush(this->m_pDisplayHandle);
+	}
+
+	void Window::Hide() WS_NOEXCEPT
+	{
+		::XUnmapWindow(this->m_pDisplayHandle, this->m_windowHandle);
+		::XFlush(this->m_pDisplayHandle);
+	}
+
+	void Window::Close() WS_NOEXCEPT
+	{
+		// Destroy Window & Close Display
+		::XDestroyWindow(this->m_pDisplayHandle, this->m_windowHandle);
+		::XCloseDisplay(this->m_pDisplayHandle);
+
+		this->m_pDisplayHandle = nullptr;
+		this->m_bIsRunning     = false;
+	}
+
+	void Window::Minimize() WS_NOEXCEPT
+	{
+		::XIconifyWindow(this->m_pDisplayHandle, this->m_windowHandle, 0);
+		::XFlush(this->m_pDisplayHandle);
+	}
+
+	void Window::Update() WS_NOEXCEPT
+	{
+		this->m_mouse.PrepareForUpdate();
+
+		// Process Events
+		::XEvent xEvent;
+		while (XPending(this->m_pDisplayHandle))
+		{
+    		XNextEvent(this->m_pDisplayHandle, &xEvent);
+
+			switch (xEvent.type) {
+			// Window Events
+			case DestroyNotify:
+				this->Close();
+				return;
+			
+			case ClientMessage:
+				if ((::Atom)xEvent.xclient.data.l[0] == this->m_deleteMessage) {
+					this->Close();
+					return;
+				}
+				
+				break;
+			// Mouse Events
+			case ButtonPress:
+				switch (xEvent.xbutton.button) {
+				case Button1:
+					this->m_mouse.m_bIsLeftButtonDown = true;
+					break;
+				case Button3:
+					this->m_mouse.m_bIsRightButtonDown = true;
+					break;
+				case Button4:
+					this->m_mouse.m_wheelDelta += xEvent.xbutton.y;
+					break;
+				case Button5:
+					this->m_mouse.m_wheelDelta -= xEvent.xbutton.y;
+					break;
 				}
 
-				// Dispatch Message To Peripheral Devices
-				if (reinterpret_cast<WindowsMouse*>(this->m_pMouse)->__HandleMessage(msg, wParam, lParam)) return 0;
-				if (reinterpret_cast<WindowsKeyboard*>(this->m_pKeyboard)->__HandleMessage(msg, wParam, lParam)) return 0;
+				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
+											 static_cast<uint16_t>(xEvent.xmotion.y) };
 
-				// Otherwise Let Windows Handle The Message
-				return DefWindowProc(this->m_handle, msg, wParam, lParam);
-			}
-
-			void WindowsWindow::SetWindowSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT
-			{
-				if (SetWindowPos(this->m_handle, NULL, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER) == FALSE)
-					WS_THROW("[WIN] Failed To Set Window Position");
-			}
-
-			void WindowsWindow::SetClientSize(const uint16_t width, const uint16_t height) WS_NOEXCEPT
-			{
-				const uint16_t topBottomWindowPadding = this->GetWindowHeight() - this->GetClientHeight();
-				const uint16_t leftRightWindowPadding = this->GetWindowWidth() - this->GetClientWidth();
-
-				this->SetWindowSize(width + leftRightWindowPadding, height + topBottomWindowPadding);
-			}
-
-			void WindowsWindow::SetTitle(const char* title) const WS_NOEXCEPT
-			{
-				if (SetWindowTextA(this->m_handle, title) == FALSE)
-					WS_THROW("[WIN] Failed To Set Window Title");
-			}
-
-			void WindowsWindow::SetIcon(const char* pathname) WS_NOEXCEPT
-			{
-				const HICON hIcon = (HICON)LoadImageA(NULL, pathname, IMAGE_ICON, 0, 0, LR_LOADFROMFILE);
-
-				if (hIcon == NULL)
-					WS_THROW("Could Not Load Icon");
-
-				SendMessage(this->m_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-			}
-
-			void WindowsWindow::Update() WS_NOEXCEPT
-			{
-				reinterpret_cast<WindowsMouse*>(this->m_pMouse)->__OnWindowUpdateBegin();
-				reinterpret_cast<WindowsKeyboard*>(this->m_pKeyboard)->__OnWindowUpdateBegin();
-
-				MSG msg;
-				while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0)
-				{
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
+				break;
+			case ButtonRelease:
+				switch (xEvent.xbutton.button) {
+				case 1:
+					this->m_mouse.m_bIsLeftButtonDown = false;
+					break;
+				case 3:
+					this->m_mouse.m_bIsRightButtonDown = false;
+					break;
 				}
 
-				reinterpret_cast<WindowsMouse*>(this->m_pMouse)->__OnWindowUpdateEnd();
-				reinterpret_cast<WindowsKeyboard*>(this->m_pKeyboard)->__OnWindowUpdateEnd();
+				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
+											 static_cast<uint16_t>(xEvent.xmotion.y) };
+
+				break;
+			case MotionNotify:
+				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
+											 static_cast<uint16_t>(xEvent.xmotion.y) };
+
+				break;
+
+			// Keyboard Events
+			case KeyPress:
+				this->m_keyboard.m_downKeys[std::toupper(XLookupKeysym(&xEvent.xkey, 0))] = true;
+				break;
+			case KeyRelease:
+				this->m_keyboard.m_downKeys[std::toupper(XLookupKeysym(&xEvent.xkey, 0))] = false;
+				break;
 			}
+		}
+	}
 
-			void WindowsWindow::Destroy() WS_NOEXCEPT
-			{
-				this->m_isRunning = !DestroyWindow(this->m_handle);
-			}
+#endif
 
-			WindowsWindow::~WindowsWindow() WS_NOEXCEPT { this->Destroy(); }
-
-			LRESULT CALLBACK WindowProcessMessages(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-			{
-	#ifdef __WEISS__PLATFORM_X64
-
-					WindowsWindow* window = (WindowsWindow*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-	#else
-
-					WindowsWindow* window = (WindowsWindow*)GetWindowLong(hwnd, GWLP_USERDATA);
-
-	#endif
-
-					if (window != NULL)
-						return window->HandleMessage(msg, wParam, lParam);
-
-					return DefWindowProc(hwnd, msg, wParam, lParam);
-				}
-
-		}; // namespace WIN
-
-#endif // __WEISS__OS_WINDOWS
-
-	}; // namespace Internal
+	Window::~Window() WS_NOEXCEPT
+	{
+		if (this->m_bIsRunning)
+			this->Close();
+	}
 
 	/*
 	 * // ////////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -697,12 +624,9 @@ namespace WS {
 
 	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
 	{
-		mouse.OnMouseMove([sensitivity, this, &mouse](const Vecu16 position, const Veci16 delta)
-			{
-				if (mouse.IsCursorInWindow()) {
-					this->Rotate(Vecf32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
-				}
-			});
+		mouse.OnMouseMove([sensitivity, this, &mouse](const Vecu16 position, const Veci16 delta) {
+			this->Rotate(Vecf32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
+		});
 	}
 
 	void PerspectiveCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
@@ -797,7 +721,7 @@ namespace WS {
 
 				std::string fileContents((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
 				std::istringstream fileContentsStream(fileContents);
-
+				
 				std::string line, sourceCode;
 				bool isFirstLine = true, srcFound = false;
 				while (std::getline(fileContentsStream, line))
@@ -1022,7 +946,7 @@ namespace WS {
 
 				VkWin32SurfaceCreateInfoKHR createInfo = {};
 				createInfo.sType     = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-				createInfo.hwnd      = reinterpret_cast<const WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				createInfo.hwnd      = pWindow->GetHandle();
 				createInfo.hinstance = GetModuleHandle(NULL);
 
 				if (VK_FAILED(vkCreateWin32SurfaceKHR(*this->m_pInstance->GetPtr(), &createInfo, nullptr, &this->m_object)))
@@ -1586,8 +1510,13 @@ namespace WS {
 											   std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<VKTextureSampler> textureSamplers) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
-				const VkShaderModule vertexShaderModule = VKRenderPipeline::CreateShaderModule(device, pipelineDesc.vsFilename);
-				const VkShaderModule pixelShaderModule  = VKRenderPipeline::CreateShaderModule(device, pipelineDesc.psFilename);
+				const std::string vsSpirvSrc = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS VERTEX SHADER SOURCE CODE---", "---SPIR-V---");
+				const std::string psSpirvSrc = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS PIXEL SHADER SOURCE CODE---",  "---SPIR-V---");
+
+				//... Compile
+
+				const VkShaderModule vertexShaderModule = VKRenderPipeline::CreateShaderModule(device, vsSpirvSrc.c_str(), vsSpirvSrc.length());
+				const VkShaderModule pixelShaderModule  = VKRenderPipeline::CreateShaderModule(device, psSpirvSrc.c_str(), psSpirvSrc.length());
 
 				VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
 				vertShaderStageInfo.sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -1735,22 +1664,12 @@ namespace WS {
 					vkDestroyPipelineLayout(*this->m_pDevice, this->m_layout, nullptr);
 			}
 
-			VkShaderModule VKRenderPipeline::CreateShaderModule(const VKDevice& device, const char* filename) WS_NOEXCEPT
+			VkShaderModule VKRenderPipeline::CreateShaderModule(const VKDevice& device, const char* binaryShaderCode, const size_t size) WS_NOEXCEPT
 			{
-				std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-				if (!file.is_open())
-					WS_THROW("[VULKAN] Failed To Open Binary Shader File");
-
-				std::vector<char> contents(file.tellg());
-				file.seekg(0);
-				file.read(contents.data(), contents.size());
-				file.close();
-
 				VkShaderModuleCreateInfo createInfo{};
-				createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-				createInfo.codeSize = contents.size();
-				createInfo.pCode    = reinterpret_cast<const uint32_t*>(contents.data());
+				createInfo.sType    = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+				createInfo.codeSize = size;
+				createInfo.pCode    = reinterpret_cast<const uint32_t*>(binaryShaderCode);
 
 				VkShaderModule shaderModule;
 				if (VK_FAILED(vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule)))
@@ -2066,7 +1985,7 @@ namespace WS {
 				scd.SampleDesc.Quality = 0;
 				scd.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 				scd.BufferCount  = WEISS__FRAME_BUFFER_COUNT;
-				scd.OutputWindow = reinterpret_cast<WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				scd.OutputWindow = pWindow->GetHandle();
 				scd.Windowed     = TRUE;
 				scd.SwapEffect   = DXGI_SWAP_EFFECT_DISCARD;
 				scd.Flags = 0;
@@ -2197,7 +2116,7 @@ namespace WS {
 										         const char* sourceFilename, const std::vector<ShaderInputElement>& sies) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
-				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS VERTEX SHADER SOURCE CODE--", "---HLSL---");
+				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS VERTEX SHADER SOURCE CODE---", "---HLSL---");
 
 				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
 				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "vs_5_0", &pBinaryBlob);
@@ -2262,7 +2181,7 @@ namespace WS {
 			{
 				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
 
-				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS PIXEL SHADER SOURCE CODE--", "---HLSL---");
+				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS PIXEL SHADER SOURCE CODE---", "---HLSL---");
 
 				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "ps_5_0", &pBinaryBlob);
 
@@ -2929,7 +2848,7 @@ namespace WS {
 				swapChainDesc.BufferDesc   = backBufferDesc;
 				swapChainDesc.BufferUsage  = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 				swapChainDesc.SwapEffect   = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-				swapChainDesc.OutputWindow = reinterpret_cast<const WS::Internal::WIN::WindowsWindow*>(pWindow)->GetHandle();
+				swapChainDesc.OutputWindow = pWindow->GetHandle();
 				swapChainDesc.SampleDesc   = sampleDesc;
 				swapChainDesc.Windowed     = true;
 				swapChainDesc.Flags        = D3D12SwapChain::IsTearingSupported() ? DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING : 0;
@@ -3609,7 +3528,7 @@ namespace WS {
 
 				// Vertex Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderByteCode;
-				const std::string vsHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename , "---WS VERTEX SHADER SOURCE CODE--", "---HLSL---");
+				const std::string vsHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename , "---WS VERTEX SHADER SOURCE CODE---", "---HLSL---");
 
 				WS::Internal::Common::CompileDx11_12Shader(vsHlslSourceCode.c_str(), "vs_5_0", &pVertexShaderByteCode);
 
@@ -3619,7 +3538,7 @@ namespace WS {
 
 				// Pixel Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pPixelShaderByteCode;
-				const std::string psHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.psFilename, "---WS PIXEL SHADER SOURCE CODE--", "---HLSL---");
+				const std::string psHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.psFilename, "---WS PIXEL SHADER SOURCE CODE---", "---HLSL---");
 
 				WS::Internal::Common::CompileDx11_12Shader(psHlslSourceCode.c_str(), "ps_5_0", &pPixelShaderByteCode);
 
@@ -4030,18 +3949,18 @@ namespace WS {
 		this->m_renderHandle = RenderAPI::Create(apiName);
 	}
 
-	void GraphicsEngine::Init(WindowHandle windowHandle)
+	void GraphicsEngine::Init(Window* pWindow)
 	{
-		this->m_windowHandle = windowHandle;
+		this->m_pWindow = pWindow;
 
-		this->m_renderHandle->InitRenderAPI(windowHandle, 144u);
+		this->m_renderHandle->InitRenderAPI(pWindow, 144u);
 	}
 
 	void GraphicsEngine::Run(const size_t fps)
 	{
-		while (this->m_windowHandle->IsRunning())
+		while (this->m_pWindow->IsRunning())
 		{
-			this->m_windowHandle->Update();
+			this->m_pWindow->Update();
 
 			this->m_renderHandle->BeginDrawing();
 			this->m_renderHandle->EndDrawing();
@@ -4176,25 +4095,6 @@ namespace WS {
 		this->m_socket = INVALID_SOCKET;
 
 		closesocket(this->m_socket);
-	}
-
-	/*
-	 * // ////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||--------------------------::Create()--------------------------|| \\
-	 * // |\______________________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-///////////////////////////////// \\
-	 */
-
-	WindowHandle Window::Create(const WindowDescriptor &descriptor) WS_NOEXCEPT
-	{
-#ifdef __WEISS__OS_WINDOWS
-
-		return {new WS::Internal::WIN::WindowsWindow(descriptor)};
-
-#endif // __WEISS__OS_WINDOWS
-
-		WS_THROW("Could Not Create A Window For Your Operating System");
 	}
 
 	RenderAPIHandle RenderAPI::Create(const RenderAPIName &apiName) WS_NOEXCEPT
