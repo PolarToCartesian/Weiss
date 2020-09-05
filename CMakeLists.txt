@@ -11,7 +11,7 @@ SET(CMAKE_CXX_STANDARD 17)
 SET(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Create The Weiss Engine Library
-ADD_LIBRARY(WeissEngine STATIC "${PROJECT_BINARY_DIR}/Weiss.h" "${PROJECT_BINARY_DIR}/Weiss.cpp")
+ADD_LIBRARY(WeissEngine STATIC "${PROJECT_SOURCE_DIR}/Weiss.h" "${PROJECT_SOURCE_DIR}/Weiss.cpp")
 
 # Set Target Propreties
 SET_TARGET_PROPERTIES(WeissEngine PROPERTIES LINKER_LANGUAGE CXX)
@@ -27,9 +27,9 @@ TARGET_INCLUDE_DIRECTORIES(WeissEngine PUBLIC
                           "${Vulkan_INCLUDE_DIRS}")
 
 # Create A Sandbox Project That Includes WeissEngine
-ADD_EXECUTABLE(Sandbox "${PROJECT_BINARY_DIR}/samples/hello\ triangle/Source.cpp"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/shader_vert.ws"
-                       "${PROJECT_BINARY_DIR}/samples/hello\ triangle/shader_frag.ws")
+ADD_EXECUTABLE(Sandbox "${PROJECT_SOURCE_DIR}/samples/hello\ triangle/Source.cpp"
+                       "${PROJECT_SOURCE_DIR}/samples/hello\ triangle/vert.src.ws"
+                       "${PROJECT_SOURCE_DIR}/samples/hello\ triangle/frag.src.ws")
 
 # Set Target Propreties
 SET_TARGET_PROPERTIES(Sandbox PROPERTIES LINKER_LANGUAGE CXX)
