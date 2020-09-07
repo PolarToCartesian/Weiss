@@ -1,33 +1,33 @@
 ﻿#include "Weiss.h"
 
 /*
- *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
- *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
- *  | |           ██          ██    ██████████████      ██████████      ██████████████    ██████████████           | |
- *  | |           ██          ██    ██                      ██          ██                ██                       | |
- *  | |           ██          ██    ██                      ██          ██                ██                       | |
- *  | |           ██    ██    ██    ██████████████          ██          ██████████████    ██████████████           | |
- *  | |           ██    ██    ██    ██                      ██                      ██                ██           | |
- *  | |           ██  ██  ██  ██    ██                      ██                      ██                ██           | |
- *  | |             ██      ██      ██████████████      ██████████      ██████████████    ██████████████           | |
- *  | |                                                                                                            | |
- *  | |  ██████████████    ██          ██    ██████████████      ██████████      ██          ██    ██████████████  | |
- *  | |  ██                ████        ██    ██                      ██          ████        ██    ██              | |
- *  | |  ██                ██  ██      ██    ██                      ██          ██  ██      ██    ██              | |
- *  | |  ██████████████    ██    ██    ██    ██    ██████            ██          ██    ██    ██    ██████████████  | |
- *  | |  ██                ██      ██  ██    ██          ██          ██          ██      ██  ██    ██              | |
- *  | |  ██                ██        ████    ██          ██          ██          ██        ████    ██              | |
- *  | |  ██████████████    ██          ██    ████████████        ██████████      ██          ██    ██████████████  | |
- *  \ \____________________________________________________________________________________________________________/ /
- *   \______________________________________________________________________________________________________________/
+ *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+ *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
+ *  | |          ████████████      ██████████    ██              ██████████████  ████████████            | |
+ *  | |          ██          ██  ██          ██  ██              ██          ██  ██          ██          | |
+ *  | |          ██          ██  ██          ██  ██              ██          ██  ██          ██          | |
+ *  | |          ████████████    ██          ██  ██              ██████████████  ████████████            | |
+ *  | |          ██              ██          ██  ██              ██          ██  ██      ██              | |
+ *  | |          ██              ██          ██  ██              ██          ██  ██        ██            | |
+ *  | |          ██                ██████████    ██████████████  ██          ██  ██          ██          | |
+ *  | |																					                 | |
+ *  | |  ██████████████  ██          ██  ██████████████  ██████████████  ██          ██  ██████████████  | |
+ *  | |  ██              ████        ██  ██                    ██        ████        ██  ██              | |
+ *  | |  ██              ██  ██      ██  ██                    ██        ██  ██      ██  ██              | |
+ *  | |  ██████████████  ██    ██    ██  ██    ██████          ██        ██    ██    ██  ██████████████  | |
+ *  | |  ██              ██      ██  ██  ██          ██        ██        ██      ██  ██  ██              | |
+ *  | |  ██              ██        ████  ██          ██        ██        ██        ████  ██              | |
+ *  | |  ██████████████  ██          ██  ████████████    ██████████████  ██          ██  ██████████████  | |
+ *  \ \__________________________________________________________________________________________________/ /
+ *   \____________________________________________________________________________________________________/
  *
  * // ////////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
  * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
- * // ||-----------------------------INFO-----------------------------|| \\
- * // |\______________________________________________________________/| \\
+ * // ||-----------------------------INFO-----------------------------|| \\ A
+ * // |\______________________________________________________________/| \\ R
  * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--//////////////////////////////// \\
  *
- * Project    : Weiss Engine
+ * Project    : Polar Engine
  * Author     : Henry LE BERRE (PolarToCartesian)
  * Repository : https://github.com/PolarToCartesian/Weiss
  */
@@ -42,7 +42,7 @@
  * The "WS" namespace contains all of Weiss's classes, functions and variables
  * in order to avoid namespace leaks and conflicts with other libraries
  */
-namespace WS {
+namespace PL {
 
 	/*
 	 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
@@ -72,7 +72,7 @@ namespace WS {
 
 	void Transform::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = Matf32::MakeTranslation(this->m_translation);
+		this->m_transform = Mat4x4f32::MakeTranslation(this->m_translation);
 	}
 
 	/*
@@ -360,7 +360,7 @@ namespace WS {
 		// Step 1 : Register Window Class
 		WNDCLASS wc = { };
 		{
-			wc.lpfnWndProc = WS::WindowsWindowWindowProc;
+			wc.lpfnWndProc = PL::WindowsWindowWindowProc;
 			wc.hInstance = hInstance;
 			wc.lpszClassName = L"Weiss's Windows Window Class";
 
@@ -598,7 +598,7 @@ namespace WS {
 	PerspectiveCamera::PerspectiveCamera(Window* pWindow, const PerspectiveCameraDescriptor& descriptor) WS_NOEXCEPT
 		: Camera(descriptor.position, descriptor.rotation, descriptor.scale), m_fov(descriptor.fov), m_zNear(descriptor.zNear), m_zFar(descriptor.zFar)
 	{
-		auto recalculateAspectRatio = [this](const Vecu16& clientDims)
+		auto recalculateAspectRatio = [this](const Vec2<std::uint16_t>& clientDims)
 		{
 			this->m_InvAspectRatio = static_cast<float>(clientDims.y) / clientDims.x;
 		};
@@ -610,22 +610,22 @@ namespace WS {
 
 	void PerspectiveCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		const Matf32 rotationMatrix = Matf32::MakeRotation(this->m_rotation * (-1));
-		const Vecf32 focusPosition  = (FORWARD_VECTOR * rotationMatrix) + this->m_position;
-		const Vecf32 upDirection    = UP_VECTOR * rotationMatrix;
+		const Mat4x4f32 rotationMatrix = Mat4x4f32::MakeRotation(this->m_rotation * (-1));
+		const Vec4f32   focusPosition  = (rotationMatrix * FORWARD_VECTOR) + this->m_position;
+		const Vec4f32   upDirection    = rotationMatrix * UP_VECTOR;
 
-		this->m_forwardVector = FORWARD_VECTOR * rotationMatrix;
-		this->m_rightVector   = RIGHT_VECTOR   * rotationMatrix;
+		this->m_forwardVector = rotationMatrix * FORWARD_VECTOR;
+		this->m_rightVector   = rotationMatrix * RIGHT_VECTOR;
 
-		this->m_transform = Matf32::MakeScaling(this->m_scale)
-						  * Matf32::MakeLookAt(this->m_position, focusPosition, upDirection)
-						  * Matf32::MakePerspective(this->m_zNear, this->m_zFar, this->m_fov, this->m_InvAspectRatio);
+		this->m_transform = Mat4x4f32::MakeScaling(this->m_scale)
+						  * Mat4x4f32::MakeLookAt(this->m_position, focusPosition, upDirection)
+						  * Mat4x4f32::MakePerspective(this->m_zNear, this->m_zFar, this->m_fov, this->m_InvAspectRatio);
 	}
 
 	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
 	{
-		mouse.OnMouseMove([sensitivity, this, &mouse](const Vecu16 position, const Veci16 delta) {
-			this->Rotate(Vecf32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
+		mouse.OnMouseMove([sensitivity, this, &mouse](const Vec2<std::uint16_t> position, const Vec2<std::int16_t> delta) {
+			this->Rotate(Vec4f32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
 		});
 	}
 
@@ -656,9 +656,9 @@ namespace WS {
 	 */
 
 	OrthographicCamera::OrthographicCamera(Window* pWindow, const OrthographicCameraDescriptor& descriptor) WS_NOEXCEPT
-		: Camera(descriptor.position, Vecf32{ 0.0f, descriptor.ratation, 0.0f }, descriptor.scale)
+		: Camera(descriptor.position, Vec4f32{ 0.0f, descriptor.ratation, 0.0f }, descriptor.scale)
 	{
-		auto recalculateInvAspectRatio = [this](const Vecu16& clientDims)
+		auto recalculateInvAspectRatio = [this](const Vec2<std::uint16_t>& clientDims)
 		{
 			this->m_InvAspectRatio = clientDims.y / static_cast<float>(clientDims.x);
 		};
@@ -670,9 +670,9 @@ namespace WS {
 
 	void OrthographicCamera::CalculateTransform() WS_NOEXCEPT
 	{
-		this->m_transform = Matf32::MakeTranslation(this->m_position)
-						  * Matf32::MakeRotationZ(this->m_rotation.z)
-						  * Matf32::MakeScaling(Vecf32(this->m_scale.x * this->m_InvAspectRatio,
+		this->m_transform = Mat4x4f32::MakeTranslation(this->m_position)
+						  * Mat4x4f32::MakeRotationZ(this->m_rotation.z)
+						  * Mat4x4f32::MakeScaling(Vec4f32(this->m_scale.x * this->m_InvAspectRatio,
 													   this->m_scale.y, this->m_scale.z, 1.0f));
 	}
 
@@ -712,42 +712,6 @@ namespace WS {
 
 		namespace Common {
 
-			static std::string GetShaderSourceCodeFromWSShaderFile(const char* filename, const char* shaderCheckHeader, const char* langHeader) WS_NOEXCEPT
-			{
-				std::ifstream fileStream(filename);
-
-				if (!fileStream.is_open())
-					WS_THROW("[WS] Could Not Open/Read Weiss Shader FIle");
-
-				std::string fileContents((std::istreambuf_iterator<char>(fileStream)), (std::istreambuf_iterator<char>()));
-				std::istringstream fileContentsStream(fileContents);
-				
-				std::string line, sourceCode;
-				bool isFirstLine = true, srcFound = false;
-				while (std::getline(fileContentsStream, line))
-				{
-					if (isFirstLine)
-					{
-						if (line != shaderCheckHeader)
-							WS_THROW("[WS] Vertex Shader File's First Line wasn't correct");
-
-						isFirstLine = false;
-					}
-
-					if (srcFound && line.length() > 3)
-						if (line[0] == '-' && line[1] == '-' && line[2] == '-')
-							srcFound = false;
-
-					if (srcFound)
-						sourceCode += line + '\n';
-
-					if (line == langHeader)
-						srcFound = true;
-				}
-
-				return sourceCode;
-			}
-
 #ifdef __WEISS__OS_WINDOWS
 
 			static void CompileDx11_12Shader(const char* hlslSourceCode, const char* target, ID3DBlob** pOutputByteCode) WS_NOEXCEPT
@@ -756,7 +720,7 @@ namespace WS {
 
 				if (DX_FAILED(D3DCompile(hlslSourceCode, strlen(hlslSourceCode), NULL, NULL, NULL, "main", target, 0, 0, pOutputByteCode, &pErrorBlob)))
 				{
-					WS::LOG::Println(WS::LOG_TYPE::LOG_ERROR, "Failed To Compile Shader With Error Msg: ", (char*)pErrorBlob->GetBufferPointer());
+					PL::LOG::Println(PL::LOG_TYPE::LOG_ERROR, "Failed To Compile Shader With Error Msg: ", (char*)pErrorBlob->GetBufferPointer());
 
 					WS_THROW("Could Not Compile Shader");
 				}
@@ -798,10 +762,10 @@ namespace WS {
 			{
 				if (this->m_object != VK_NULL_HANDLE)
 				{
-					WS::LOG::Println(WS::LOG_TYPE::LOG_WARNING, "[VULKAN] Deleting Object Of Handle (", this->m_object, ")");
+					PL::LOG::Println(PL::LOG_TYPE::LOG_WARNING, "[VULKAN] Deleting Object Of Handle (", this->m_object, ")");
 					this->m_object = VK_NULL_HANDLE;
 				} else {
-					WS::LOG::Println(WS::LOG_TYPE::LOG_NORMAL, "[VULKAN] Deleting Object Of Handle (", this->m_object, ")");
+					PL::LOG::Println(PL::LOG_TYPE::LOG_NORMAL, "[VULKAN] Deleting Object Of Handle (", this->m_object, ")");
 				}
 			}
 
@@ -819,7 +783,7 @@ namespace WS {
 																		  void* pUserData)
 			{
 				WS_ERROR_MESSAGE(pCallbackData->pMessage);
-				WS::LOG::Println(WS::LOG_TYPE::LOG_ERROR, pCallbackData->pMessage);
+				PL::LOG::Println(PL::LOG_TYPE::LOG_ERROR, pCallbackData->pMessage);
 
 				return VK_FALSE;
 			}
@@ -1510,8 +1474,8 @@ namespace WS {
 											   std::vector<ConstantBuffer*>& pConstantBuffers, std::vector<Texture*> pTextures, std::vector<VKTextureSampler> textureSamplers) WS_NOEXCEPT
 				: m_pDevice(&device)
 			{
-				const std::string vsSpirvSrc = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS VERTEX SHADER SOURCE CODE---", "---SPIR-V---");
-				const std::string psSpirvSrc = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS PIXEL SHADER SOURCE CODE---",  "---SPIR-V---");
+				const std::string vsSpirvSrc = "";// PL::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS VERTEX SHADER SOURCE CODE---", "---SPIR-V---");
+				const std::string psSpirvSrc = "";// PL::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename, "---WS PIXEL SHADER SOURCE CODE---",  "---SPIR-V---");
 
 				//... Compile
 
@@ -1841,7 +1805,7 @@ namespace WS {
 				this->m_gfxQueue      = VKQueue(this->m_device, *this->m_device.GetPhysicalDeviceData().graphicsQueueIndex);
 				this->m_commandBuffer = VKCommandBuffer(this->m_device, this->m_commandPool, this->m_gfxQueue);
 
-				WS::Internal::VK::VKRenderPass::CreateRenderPasses(this->m_device, this->m_swapChain);
+				PL::Internal::VK::VKRenderPass::CreateRenderPasses(this->m_device, this->m_swapChain);
 
 				this->m_swapChain.CreateFrameBuffers();
 			}
@@ -2116,10 +2080,12 @@ namespace WS {
 										         const char* sourceFilename, const std::vector<ShaderInputElement>& sies) WS_NOEXCEPT
 				: m_pDeviceContext(pDeviceContext)
 			{
-				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS VERTEX SHADER SOURCE CODE---", "---HLSL---");
+				std::ifstream shaderFile(sourceFilename);
+				std::string   shaderSourceCode((std::istreambuf_iterator<char>(shaderFile)),
+												std::istreambuf_iterator<char>());
 
 				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
-				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "vs_5_0", &pBinaryBlob);
+				PL::Internal::Common::CompileDx11_12Shader(shaderSourceCode.c_str(), "vs_5_0", &pBinaryBlob);
 
 				if (DX_FAILED(pDevice->CreateVertexShader(pBinaryBlob->GetBufferPointer(), pBinaryBlob->GetBufferSize(), nullptr, &this->m_pShader)))
 					WS_THROW("Could Not Create Vertex Shader");
@@ -2181,9 +2147,11 @@ namespace WS {
 			{
 				Microsoft::WRL::ComPtr<ID3DBlob> pBinaryBlob;
 
-				const std::string hlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(sourceFilename, "---WS PIXEL SHADER SOURCE CODE---", "---HLSL---");
+				std::ifstream shaderFile(sourceFilename);
+				std::string   shaderSourceCode((std::istreambuf_iterator<char>(shaderFile)),
+												std::istreambuf_iterator<char>());
 
-				WS::Internal::Common::CompileDx11_12Shader(hlslSourceCode.c_str(), "ps_5_0", &pBinaryBlob);
+				PL::Internal::Common::CompileDx11_12Shader(shaderSourceCode.c_str(), "ps_5_0", &pBinaryBlob);
 
 				if (pDevice->CreatePixelShader(pBinaryBlob->GetBufferPointer(), pBinaryBlob->GetBufferSize(), nullptr, &this->m_pShader) != S_OK)
 					WS_THROW("Could Not Create Pixel Shader");
@@ -3528,9 +3496,13 @@ namespace WS {
 
 				// Vertex Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pVertexShaderByteCode;
-				const std::string vsHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.vsFilename , "---WS VERTEX SHADER SOURCE CODE---", "---HLSL---");
 
-				WS::Internal::Common::CompileDx11_12Shader(vsHlslSourceCode.c_str(), "vs_5_0", &pVertexShaderByteCode);
+				std::ifstream vsShaderFile(pipelineDesc.vsFilename);
+
+				std::string   vsShaderSourceCode((std::istreambuf_iterator<char>(vsShaderFile)),
+					std::istreambuf_iterator<char>());
+
+				PL::Internal::Common::CompileDx11_12Shader(vsShaderSourceCode.c_str(), "vs_5_0", &pVertexShaderByteCode);
 
 				D3D12_SHADER_BYTECODE vertexShaderBytecode = {};
 				vertexShaderBytecode.BytecodeLength  = pVertexShaderByteCode->GetBufferSize();
@@ -3538,9 +3510,11 @@ namespace WS {
 
 				// Pixel Shader
 				Microsoft::WRL::ComPtr<ID3DBlob> pPixelShaderByteCode;
-				const std::string psHlslSourceCode = WS::Internal::Common::GetShaderSourceCodeFromWSShaderFile(pipelineDesc.psFilename, "---WS PIXEL SHADER SOURCE CODE---", "---HLSL---");
+				std::ifstream psShaderFile(pipelineDesc.psFilename);
+				std::string   psShaderSourceCode((std::istreambuf_iterator<char>(psShaderFile)),
+					std::istreambuf_iterator<char>());
 
-				WS::Internal::Common::CompileDx11_12Shader(psHlslSourceCode.c_str(), "ps_5_0", &pPixelShaderByteCode);
+				PL::Internal::Common::CompileDx11_12Shader(psShaderSourceCode.c_str(), "ps_5_0", &pPixelShaderByteCode);
 
 				D3D12_SHADER_BYTECODE pixelShaderBytecode = {};
 				pixelShaderBytecode.BytecodeLength  = pPixelShaderByteCode->GetBufferSize();
@@ -4102,14 +4076,14 @@ namespace WS {
 		switch (apiName)
 		{
 		case RenderAPIName::VULKAN:
-			return new WS::Internal::VK::VKRenderAPI();
+			return new PL::Internal::VK::VKRenderAPI();
 
 #ifdef __WEISS__OS_WINDOWS
 
 		case RenderAPIName::DIRECTX11:
-			return new WS::Internal::D3D11::D3D11RenderAPI();
+			return new PL::Internal::D3D11::D3D11RenderAPI();
 		case RenderAPIName::DIRECTX12:
-			return new WS::Internal::D3D12::D3D12RenderAPI();
+			return new PL::Internal::D3D12::D3D12RenderAPI();
 
 #endif // __WEISS__OS_WINDOWS
 		}
@@ -4141,7 +4115,7 @@ int main(int argc, char** argv)
 
 #endif // __WEISS__OS_WINDOWS
 
-	const int returnCode = WS::WeissEntryPoint(argc, argv);
+	const int returnCode = PL::WeissEntryPoint(argc, argv);
 
 #ifdef __WEISS__OS_WINDOWS
 
@@ -4164,10 +4138,10 @@ int main(int argc, char** argv)
  */
 
 // LOG Static Class
-std::mutex                WS::LOG::m_sPrintMutex = std::mutex();
+std::mutex                PL::LOG::m_sPrintMutex = std::mutex();
 
 // VKRenderPass
-std::vector<VkRenderPass> WS::Internal::VK::VKRenderPass::m_renderPasses = { };
+std::vector<VkRenderPass> PL::Internal::VK::VKRenderPass::m_renderPasses = { };
 
 /*
  * Let's be honest, you just came down here to see the SLOC.
@@ -4178,23 +4152,24 @@ std::vector<VkRenderPass> WS::Internal::VK::VKRenderPass::m_renderPasses = { };
  * // |\_________________________________________________________________/| \\
  * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\-////////////////////////////////// \\
  *
- *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
- *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
- *  | |           ██          ██    ██████████████      ██████████      ██████████████    ██████████████           | |
- *  | |           ██          ██    ██                      ██          ██                ██                       | |
- *  | |           ██          ██    ██                      ██          ██                ██                       | |
- *  | |           ██    ██    ██    ██████████████          ██          ██████████████    ██████████████           | |
- *  | |           ██    ██    ██    ██                      ██                      ██                ██           | |
- *  | |           ██  ██  ██  ██    ██                      ██                      ██                ██           | |
- *  | |             ██      ██      ██████████████      ██████████      ██████████████    ██████████████           | |
- *  | |                                                                                                            | |
- *  | |  ██████████████    ██          ██    ██████████████      ██████████      ██          ██    ██████████████  | |
- *  | |  ██                ████        ██    ██                      ██          ████        ██    ██              | |
- *  | |  ██                ██  ██      ██    ██                      ██          ██  ██      ██    ██              | |
- *  | |  ██████████████    ██    ██    ██    ██    ██████            ██          ██    ██    ██    ██████████████  | |
- *  | |  ██                ██      ██  ██    ██          ██          ██          ██      ██  ██    ██              | |
- *  | |  ██                ██        ████    ██          ██          ██          ██        ████    ██              | |
- *  | |  ██████████████    ██          ██    ████████████        ██████████      ██          ██    ██████████████  | |
- *  \ \____________________________________________________________________________________________________________/ /
- *   \______________________________________________________________________________________________________________/
- */
+ *
+ *   /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\
+ *  / /‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\ \
+ *  | |          ████████████      ██████████    ██              ██████████████  ████████████            | |
+ *  | |          ██          ██  ██          ██  ██              ██          ██  ██          ██          | |
+ *  | |          ██          ██  ██          ██  ██              ██          ██  ██          ██          | |
+ *  | |          ████████████    ██          ██  ██              ██████████████  ████████████            | |
+ *  | |          ██              ██          ██  ██              ██          ██  ██      ██              | |
+ *  | |          ██              ██          ██  ██              ██          ██  ██        ██            | |
+ *  | |          ██                ██████████    ██████████████  ██          ██  ██          ██          | |
+ *  | |																					                 | |
+ *  | |  ██████████████  ██          ██  ██████████████  ██████████████  ██          ██  ██████████████  | |
+ *  | |  ██              ████        ██  ██                    ██        ████        ██  ██              | |
+ *  | |  ██              ██  ██      ██  ██                    ██        ██  ██      ██  ██              | |
+ *  | |  ██████████████  ██    ██    ██  ██    ██████          ██        ██    ██    ██  ██████████████  | |
+ *  | |  ██              ██      ██  ██  ██          ██        ██        ██      ██  ██  ██              | |
+ *  | |  ██              ██        ████  ██          ██        ██        ██        ████  ██              | |
+ *  | |  ██████████████  ██          ██  ████████████    ██████████████  ██          ██  ██████████████  | |
+ *  \ \__________________________________________________________________________________________________/ /
+ *   \____________________________________________________________________________________________________/
+ */ 
