@@ -45,37 +45,6 @@
 namespace PL {
 
 	/*
-	 * // ///////////////////////--\\\\\\\\\\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||--------------------Rect--------------------|| \\
-	 * // |\____________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\--/////////////////////// \\
-	 */
-
-#ifdef __WEISS__OS_WINDOWS
-
-		Rect::Rect(const RECT& rect) WS_NOEXCEPT
-		{
-			this->left   = static_cast<uint16_t>(rect.left);
-			this->top    = static_cast<uint16_t>(rect.top);
-			this->right  = static_cast<uint16_t>(rect.right);
-			this->bottom = static_cast<uint16_t>(rect.bottom);
-		}
-
-#endif // __WEISS__OS_WINDOWS
-
-	// ///////////////-\\\\\\\\\\\\\\\ \\
-	// [/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	// |----------Transform----------| \\
-	// |\___________________________/| \\
-	// \\\\\\\\\\\\\\\-/////////////// \\
-
-	void Transform::CalculateTransform() WS_NOEXCEPT
-	{
-		this->m_transform = Mat4x4f32::MakeTranslation(this->m_translation);
-	}
-
-	/*
 	 * // ////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||-----------------------Internal-----------------------|| \\
@@ -263,331 +232,6 @@ namespace PL {
 	}; // Internal
 
 	/*
-	 * // //////////////////////////////--\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
-	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
-	 * // ||--------------------------WINDOW--------------------------|| \\
-	 * // |\__________________________________________________________/| \\
-	 * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--////////////////////////////// \\
-	 */
-
-	#ifdef __WEISS__OS_WINDOWS
-
-	static LRESULT CALLBACK WindowsWindowWindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-	{
-#ifdef __WEISS__PLATFORM_X64
-		Window* pWindow = reinterpret_cast<Window*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-#else
-		Window* pWindow = reinterpret_cast<Window*>(GetWindowLong(hwnd, GWLP_USERDATA));
-#endif
-
-		if (pWindow != nullptr) {
-			switch (msg) {
-				// Window Updates
-			case WM_SIZE:
-				return 0;
-			case WM_DESTROY:
-				pWindow->Close();
-
-				return 0;
-				// Mouse Events
-			case WM_INPUT:
-			{
-				UINT size = 0;
-
-				if (!GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, nullptr, &size, sizeof(RAWINPUTHEADER)))
-				{
-					std::vector<char> rawBuffer(size);
-
-					if (GetRawInputData(reinterpret_cast<HRAWINPUT>(lParam), RID_INPUT, rawBuffer.data(), &size, sizeof(RAWINPUTHEADER)) == size)
-					{
-						const RAWINPUT& ri = reinterpret_cast<const RAWINPUT&>(*rawBuffer.data());
-
-						if (ri.header.dwType == RIM_TYPEMOUSE && (ri.data.mouse.lLastX != 0 || ri.data.mouse.lLastY != 0))
-						{
-							pWindow->m_mouse.m_deltaPosition.x += static_cast<int16_t>(ri.data.mouse.lLastX);
-							pWindow->m_mouse.m_deltaPosition.y += static_cast<int16_t>(ri.data.mouse.lLastY);
-						}
-					}
-				}
-
-				return 0;
-			}
-			case WM_MOUSEMOVE:
-				pWindow->m_mouse.m_position = { static_cast<uint16_t>(GET_X_LPARAM(lParam)),
-											    static_cast<uint16_t>(GET_Y_LPARAM(lParam)) };
-
-				return 0;
-			case WM_LBUTTONDOWN:
-				pWindow->m_mouse.m_bIsLeftButtonDown = true;
-
-				return 0;
-			case WM_LBUTTONUP:
-				pWindow->m_mouse.m_bIsLeftButtonDown = false;
-
-				return 0;
-			case WM_RBUTTONDOWN:
-				pWindow->m_mouse.m_bIsRightButtonDown = true;
-
-				return 0;
-			case WM_RBUTTONUP:
-				pWindow->m_mouse.m_bIsRightButtonDown = false;
-
-				return 0;
-			case WM_MOUSEWHEEL:
-				pWindow->m_mouse.m_wheelDelta += GET_WHEEL_DELTA_WPARAM(wParam);
-
-				return 0;
-				// Keyboard Events
-			case WM_KEYDOWN:
-				pWindow->m_keyboard.m_downKeys[static_cast<uint8_t>(wParam)] = true;
-
-				return 0;
-
-			case WM_KEYUP:
-				pWindow->m_keyboard.m_downKeys[static_cast<uint8_t>(wParam)] = false;
-
-				return 0;
-			}
-		}
-
-		return DefWindowProc(hwnd, msg, wParam, lParam);
-	}
-
-	Window::Window(const WindowDescriptor& descriptor) WS_NOEXCEPT
-	{
-		const HINSTANCE hInstance = GetModuleHandle(NULL);
-
-		// Step 1 : Register Window Class
-		WNDCLASS wc = { };
-		{
-			wc.lpfnWndProc = PL::WindowsWindowWindowProc;
-			wc.hInstance = hInstance;
-			wc.lpszClassName = L"Weiss's Windows Window Class";
-
-			RegisterClass(&wc);
-		}
-
-		{ // Step 2 : Create Window
-			// Convert "const char* title" to "wchar_t* title"
-			std::unique_ptr<wchar_t[]> titleW;
-			{
-				const size_t length = std::strlen(descriptor.title);
-				titleW = std::make_unique<wchar_t[]>(length + 1u);
-				mbstowcs(titleW.get(), descriptor.title, length);
-			}
-
-			// Get The Desired Window Rect From The desired Client Rect
-			RECT rect{ 0, 0, descriptor.width, descriptor.height };
-			{
-				if (WIN_FAILED(AdjustWindowRect(&rect, NULL, false)))
-					WS_THROW("[WS] --> [WIN 32] Failed To Ajust Window Rect");
-			}
-
-			this->m_windowHandle = CreateWindowEx(
-				0, L"Weiss's Windows Window Class",
-				titleW.get(), WS_OVERLAPPEDWINDOW,
-				CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top,
-				NULL, NULL, hInstance, NULL
-			);
-
-			if (this->m_windowHandle == NULL) {
-				WS_THROW("[WS] --> [WIN 32] Window Creation Failed");
-			} else {
-				this->m_bIsRunning = true;
-			}
-		}
-
-		// Step 3 : Show Window
-		ShowWindow(this->m_windowHandle, SW_SHOWNORMAL);
-
-		// Step 4 : Set Window Pointer
-		{
-#ifdef __WEISS__PLATFORM_X64
-
-			SetWindowLongPtr(this->m_windowHandle, GWLP_USERDATA, (LONG_PTR)this);
-
-#else
-
-			SetWindowLong(this->m_windowHandle, GWLP_USERDATA, (LONG)this);
-
-#endif
-		}
-	}
-
-	[[nodiscard]] Rect Window::GetWindowRectangle() const WS_NOEXCEPT { RECT rect; GetWindowRect(this->m_windowHandle, &rect); return rect; }
-	[[nodiscard]] Rect Window::GetClientRectangle() const WS_NOEXCEPT { RECT rect; GetClientRect(this->m_windowHandle, &rect); return rect; }
-
-	void Window::Show() const WS_NOEXCEPT { ShowWindow(this->m_windowHandle, SW_SHOWNORMAL); }
-	void Window::Hide() const WS_NOEXCEPT { ShowWindow(this->m_windowHandle, SW_MINIMIZE);   }
-
-	void Window::Close() WS_NOEXCEPT {
-#ifdef __WEISS__DEBUG_MODE
-
-		assert(this->m_windowHandle != NULL);
-
-#endif // __WEISS__DEBUG_MODE
-
-		if (WIN_FAILED(CloseWindow(this->m_windowHandle)))
-			WS_THROW("[WS] --> [WIN 32] Failed To Close Window");
-
-		this->m_windowHandle = NULL;
-		this->m_bIsRunning   = false;
-	}
-
-	void Window::Update() WS_NOEXCEPT
-	{
-		this->m_mouse.PrepareForUpdate();
-
-		MSG msg = { };
-		while (PeekMessage(&msg, this->m_windowHandle, 0, 0, PM_REMOVE) > 0) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-
-#elif defined(__WEISS__OS_LINUX)
-
-	 Window::Window(const char* title, const uint16_t width, const uint16_t height) WS_NOEXCEPT
-	{
-		// Fetch Display
-		this->m_pDisplayHandle = ::XOpenDisplay(0);
-
-		// Create Window
-		this->m_windowHandle = ::XCreateSimpleWindow(this->m_pDisplayHandle, DefaultRootWindow(this->m_pDisplayHandle),
-												     0, 0, width, height, 0,
-													 BlackPixel(this->m_pDisplayHandle, 0), WhitePixel(this->m_pDisplayHandle, 0));
-
-		// Receive WM_DELETE_WINDOW messages
-		this->m_deleteMessage = ::XInternAtom(this->m_pDisplayHandle,  "WM_DELETE_WINDOW", False);
-   		::XSetWMProtocols(this->m_pDisplayHandle, this->m_windowHandle, &this->m_deleteMessage, 1);
-
-		// Set Title
-		::XSetStandardProperties(this->m_pDisplayHandle, this->m_windowHandle, title, title, None, NULL, 0, NULL);
-
-		// Select Input Masks
-		constexpr const long xEventMasks = ExposureMask | // Window
-										   PointerMotionMask | ButtonPressMask | ButtonReleaseMask | // Mouse
-										   KeyPressMask | KeyReleaseMask; // Keyboard
-		
-		::XSelectInput(this->m_pDisplayHandle, this->m_windowHandle, xEventMasks);
-
-		this->Show();
-
-		this->m_bIsRunning = true;
-	}
-
-	void Window::Show() WS_NOEXCEPT
-	{
-		::XMapWindow(this->m_pDisplayHandle, this->m_windowHandle);
-		::XFlush(this->m_pDisplayHandle);
-	}
-
-	void Window::Hide() WS_NOEXCEPT
-	{
-		::XUnmapWindow(this->m_pDisplayHandle, this->m_windowHandle);
-		::XFlush(this->m_pDisplayHandle);
-	}
-
-	void Window::Close() WS_NOEXCEPT
-	{
-		// Destroy Window & Close Display
-		::XDestroyWindow(this->m_pDisplayHandle, this->m_windowHandle);
-		::XCloseDisplay(this->m_pDisplayHandle);
-
-		this->m_pDisplayHandle = nullptr;
-		this->m_bIsRunning     = false;
-	}
-
-	void Window::Minimize() WS_NOEXCEPT
-	{
-		::XIconifyWindow(this->m_pDisplayHandle, this->m_windowHandle, 0);
-		::XFlush(this->m_pDisplayHandle);
-	}
-
-	void Window::Update() WS_NOEXCEPT
-	{
-		this->m_mouse.PrepareForUpdate();
-
-		// Process Events
-		::XEvent xEvent;
-		while (XPending(this->m_pDisplayHandle))
-		{
-    		XNextEvent(this->m_pDisplayHandle, &xEvent);
-
-			switch (xEvent.type) {
-			// Window Events
-			case DestroyNotify:
-				this->Close();
-				return;
-			
-			case ClientMessage:
-				if ((::Atom)xEvent.xclient.data.l[0] == this->m_deleteMessage) {
-					this->Close();
-					return;
-				}
-				
-				break;
-			// Mouse Events
-			case ButtonPress:
-				switch (xEvent.xbutton.button) {
-				case Button1:
-					this->m_mouse.m_bIsLeftButtonDown = true;
-					break;
-				case Button3:
-					this->m_mouse.m_bIsRightButtonDown = true;
-					break;
-				case Button4:
-					this->m_mouse.m_wheelDelta += xEvent.xbutton.y;
-					break;
-				case Button5:
-					this->m_mouse.m_wheelDelta -= xEvent.xbutton.y;
-					break;
-				}
-
-				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
-											 static_cast<uint16_t>(xEvent.xmotion.y) };
-
-				break;
-			case ButtonRelease:
-				switch (xEvent.xbutton.button) {
-				case 1:
-					this->m_mouse.m_bIsLeftButtonDown = false;
-					break;
-				case 3:
-					this->m_mouse.m_bIsRightButtonDown = false;
-					break;
-				}
-
-				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
-											 static_cast<uint16_t>(xEvent.xmotion.y) };
-
-				break;
-			case MotionNotify:
-				this->m_mouse.m_position = { static_cast<uint16_t>(xEvent.xmotion.x),
-											 static_cast<uint16_t>(xEvent.xmotion.y) };
-
-				break;
-
-			// Keyboard Events
-			case KeyPress:
-				this->m_keyboard.m_downKeys[std::toupper(XLookupKeysym(&xEvent.xkey, 0))] = true;
-				break;
-			case KeyRelease:
-				this->m_keyboard.m_downKeys[std::toupper(XLookupKeysym(&xEvent.xkey, 0))] = false;
-				break;
-			}
-		}
-	}
-
-#endif
-
-	Window::~Window() WS_NOEXCEPT
-	{
-		if (this->m_bIsRunning)
-			this->Close();
-	}
-
-	/*
 	 * // ////////////////////////////////////-\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ \\
 	 * // |/‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾\| \\
 	 * // ||--------------------------PERSPECTIVE CAMERA--------------------------|| \\
@@ -622,28 +266,28 @@ namespace PL {
 						  * Mat4x4f32::MakePerspective(this->m_zNear, this->m_zFar, this->m_fov, this->m_InvAspectRatio);
 	}
 
-	void PerspectiveCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
+	void PerspectiveCamera::HandleMouseMovements(Window& window, const float sensitivity) WS_NOEXCEPT
 	{
-		mouse.OnMouseMove([sensitivity, this, &mouse](const Vec2<std::uint16_t> position, const Vec2<std::int16_t> delta) {
+		window.OnMouseMove([sensitivity, this, &window](const Vec2<std::uint16_t> position, const Vec2<std::int16_t> delta) {
 			this->Rotate(Vec4f32( sensitivity * delta.y, sensitivity * delta.x, 0.0f ));
 		});
 	}
 
-	void PerspectiveCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
+	void PerspectiveCamera::HandleKeyboardInputs(Window& window, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
-		if (keyboard.IsKeyDown(forward))
+		if (window.IsKeyDown(forward))
 			this->m_position += this->m_forwardVector * speed;
-		if (keyboard.IsKeyDown(backward))
+		if (window.IsKeyDown(backward))
 			this->m_position += this->m_forwardVector * (-speed);
 
-		if (keyboard.IsKeyDown(right))
+		if (window.IsKeyDown(right))
 			this->m_position += this->m_rightVector * speed;
-		if (keyboard.IsKeyDown(left))
+		if (window.IsKeyDown(left))
 			this->m_position += this->m_rightVector * (-speed);
 
-		if (keyboard.IsKeyDown(up))
+		if (window.IsKeyDown(up))
 			this->m_position += UP_VECTOR * speed;
-		if (keyboard.IsKeyDown(down))
+		if (window.IsKeyDown(down))
 			this->m_position += UP_VECTOR * (-speed);
 	}
 
@@ -676,21 +320,21 @@ namespace PL {
 													   this->m_scale.y, this->m_scale.z, 1.0f));
 	}
 
-	void OrthographicCamera::HandleMouseMovements(Mouse& mouse, const float sensitivity) WS_NOEXCEPT
+	void OrthographicCamera::HandleMouseMovements(Window& window, const float sensitivity) WS_NOEXCEPT
 	{
 
 	}
 
-	void OrthographicCamera::HandleKeyboardInputs(Keyboard& keyboard, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
+	void OrthographicCamera::HandleKeyboardInputs(Window& window, const float speed, const char forward, const char backward, const char left, const char right, const char up, const char down) WS_NOEXCEPT
 	{
-		if (keyboard.IsKeyDown(right))
+		if (window.IsKeyDown(right))
 			this->m_position.x += speed;
-		if (keyboard.IsKeyDown(left))
+		if (window.IsKeyDown(left))
 			this->m_position.x -= speed;
 
-		if (keyboard.IsKeyDown(up))
+		if (window.IsKeyDown(up))
 			this->m_position.y += speed;
-		if (keyboard.IsKeyDown(down))
+		if (window.IsKeyDown(down))
 			this->m_position.y -= speed;
 	}
 
@@ -2492,7 +2136,12 @@ namespace PL {
 
 			void D3D11RenderAPI::InitRenderAPI(Window* pWindow, const uint16_t maxFps) WS_NOEXCEPT
 			{
-				if (D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, this->m_pDevice.GetPtr(), nullptr, this->m_pDeviceContext.GetPtr()) != S_OK)
+				UINT creationFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+#if defined(__POLAR__TARGET_DEBUG)
+				creationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
+				if (DX_FAILED(D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, creationFlags, nullptr, 0, D3D11_SDK_VERSION, this->m_pDevice.GetPtr(), nullptr, this->m_pDeviceContext.GetPtr())))
 					WS_THROW("Could Not Create Device");
 
 				this->m_pSwapChain    = D3D11SwapChain(this->m_pDevice, pWindow);
@@ -4136,9 +3785,6 @@ int main(int argc, char** argv)
  * // |\_______________________________________________________________/| \\
  * // \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\--///////////////////////////////// \\
  */
-
-// LOG Static Class
-std::mutex                PL::LOG::m_sPrintMutex = std::mutex();
 
 // VKRenderPass
 std::vector<VkRenderPass> PL::Internal::VK::VKRenderPass::m_renderPasses = { };

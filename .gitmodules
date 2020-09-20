@@ -1,0 +1,3 @@
+[submodule "Polar-Lib"]
+	path = Polar-Lib
+	url = https://github.com/PolarToCartesian/Polar-Lib

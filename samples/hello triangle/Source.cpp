@@ -23,11 +23,9 @@ int PL::WeissEntryPoint(int argc, char** argv)
     WIN_ENABLE_CONSOLE();
     try
     {
-        WindowDescriptor desc = { 1920u, 1080u, 0u, 0u, "test" };
+        Window window("Weiss Test Window", 1920, 1080);
 
-        Window window(desc);
-
-        RenderAPIHandle renderAPI = RenderAPI::Create(RenderAPIName::DIRECTX12);
+        RenderAPIHandle renderAPI = RenderAPI::Create(RenderAPIName::DIRECTX11);
 
         TestCB cbuff;
 
@@ -64,8 +62,8 @@ int PL::WeissEntryPoint(int argc, char** argv)
             renderAPI->CreateIndexBuffer(indices.size())
         };
 
-        PerspectiveCamera cam(&window, { Vec4f32{0.0f, 0.0f, -2.0f}, Vec4f32{}, PL::HALF_PI, 0.01f, 1000.f, Vec4f32{0.2f, 0.2f, 0.2f, 0.2f} });
-        //OrthographicCamera cam(&window, { Vec4f32{0.0f, 0.0f, 0.0f, 1.0f}, 0.0f, Vec4f32{0.2f,0.2f,0.2f} });
+        //PerspectiveCamera cam(&window, { Vec4f32{0.0f, 0.0f, -2.0f}, Vec4f32{}, PL::HALF_PI, 0.01f, 1000.f, Vec4f32{0.2f, 0.2f, 0.2f, 0.2f} });
+        OrthographicCamera cam(&window, { Vec4f32{0.0f, 0.0f, 0.0f, 1.0f}, 0.0f, Vec4f32{0.2f,0.2f,0.2f} });
 
         cbuff.transform = cam.GetTransposedTransform();
 
@@ -75,13 +73,13 @@ int PL::WeissEntryPoint(int argc, char** argv)
         renderAPI->GetVertexBuffer(drawable.vertexBufferIndex).Update();
         renderAPI->GetIndexBuffer(drawable.indexBufferIndex.value()).Update();
 
-        cam.HandleMouseMovements(window.GetMouse(), 0.001f);
+        cam.HandleMouseMovements(window, 0.001f);
 
         while (window.IsRunning())
         {
             window.Update();
 
-            cam.HandleKeyboardInputs(window.GetKeyboard(), 0.1f, 'W', 'S', 'A', 'D',
+            cam.HandleKeyboardInputs(window, 0.1f, 'W', 'S', 'A', 'D',
                 VK_SPACE, VK_SHIFT);
 
             cam.CalculateTransform();
