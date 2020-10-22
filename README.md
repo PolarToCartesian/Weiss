@@ -1,6 +1,6 @@
 ![Weiss Logo](logo.png)
 
-> Weiss is a cross-platform, api-agnostic and header-only rendering engine built with c++17. It is intended to be a wrapper around low-level apis to make the developpement of 2D and 3D applications simpler and faster.
+> Weiss is a cross-platform, api-agnostic and header-only rendering engine built with c++17. It is intended to be a wrapper around low-level apis to make the development of 2D and 3D applications simpler and faster.
 
 ## Contributions
 
